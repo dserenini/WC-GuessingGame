@@ -1,0 +1,76 @@
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:copa2026/shared/models/bet.dart';
+
+final myLeaguesProvider = FutureProvider<List<LeagueModel>>((ref) async {
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) return [];
+
+  final data = await Supabase.instance.client
+      .from('league_members')
+      .select('leagues(*)')
+      .eq('user_id', userId);
+
+  return (data as List)
+      .map((r) => LeagueModel.fromJson(
+          (r as Map<String, dynamic>)['leagues'] as Map<String, dynamic>))
+      .toList();
+});
+
+final leagueNotifierProvider =
+    StateNotifierProvider<LeagueNotifier, AsyncValue<void>>((ref) {
+  return LeagueNotifier(ref);
+});
+
+class LeagueNotifier extends StateNotifier<AsyncValue<void>> {
+  LeagueNotifier(this.ref) : super(const AsyncData(null));
+  final Ref ref;
+  final _client = Supabase.instance.client;
+
+  Future<void> createLeague(String name) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    state = const AsyncLoading();
+    try {
+      final result = await _client
+          .from('leagues')
+          .insert({'name': name, 'owner_id': userId})
+          .select()
+          .single();
+
+      // Auto-join as owner
+      await _client.from('league_members').insert({
+        'league_id': result['id'],
+        'user_id': userId,
+      });
+
+      ref.invalidate(myLeaguesProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> joinLeague(String inviteCode) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    state = const AsyncLoading();
+    try {
+      final league = await _client
+          .from('leagues')
+          .select('id')
+          .eq('invite_code', inviteCode.toUpperCase())
+          .single();
+
+      await _client.from('league_members').insert({
+        'league_id': league['id'],
+        'user_id': userId,
+      });
+
+      ref.invalidate(myLeaguesProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+}

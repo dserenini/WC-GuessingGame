@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA / SEO -->
+  <title>Copa 2026 — Bolão da Copa</title>
+  <meta name="description"
+        content="Bolão particular para a Copa do Mundo 2026. Aposte nos placares da fase de grupos com seus amigos.">
+  <meta name="theme-color" content="#1B5E20">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Copa 2026">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="icons/Icon-192.png">
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #1B5E20;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Splash screen */
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1B5E20, #4CAF50);
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    #splash h1 {
+      color: white;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 12px 0 4px;
+    }
+
+    #splash p {
+      color: rgba(255,255,255,0.75);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    #splash .ball {
+      font-size: 56px;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-16px); }
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash screen shown during Flutter boot -->
+  <div id="splash">
+    <div class="ball">⚽</div>
+    <h1>Copa 2026</h1>
+    <p>Carregando...</p>
+  </div>
+
+  <script>
+    // Remove splash once Flutter is ready
+    window.addEventListener('flutter-first-frame', function() {
+      const splash = document.getElementById('splash');
+      splash.classList.add('hidden');
+      setTimeout(() => splash.remove(), 500);
+    });
+  </script>
+
+  <!-- Flutter bootstrap -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

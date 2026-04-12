@@ -1,0 +1,224 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:copa2026/l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/models/match.dart';
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Admin: list of all matches for override
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
+  final response = await Supabase.instance.client
+      .from('matches')
+      .select('''
+        id, group_letter, match_date, home_score, away_score, status, api_match_id,
+        home_team:teams!matches_home_team_id_fkey(id, name, flag_url, group_letter),
+        away_team:teams!matches_away_team_id_fkey(id, name, flag_url, group_letter)
+      ''')
+      .order('group_letter')
+      .order('match_date');
+
+  return (response as List)
+      .map((m) => MatchModel.fromJson(m as Map<String, dynamic>))
+      .toList();
+});
+
+class AdminScreen extends ConsumerWidget {
+  const AdminScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final matchesAsync = ref.watch(allMatchesProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('🔧 ${l.adminPanel}')),
+      drawer: const AppDrawer(),
+      body: matchesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text(e.toString())),
+        data: (matches) {
+          // Group by letter
+          final grouped = <String, List<MatchModel>>{};
+          for (final m in matches) {
+            grouped.putIfAbsent(m.groupLetter, () => []).add(m);
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: grouped.entries.map((e) {
+              return _AdminGroupSection(
+                groupLetter: e.key,
+                matches: e.value,
+                ref: ref,
+              );
+            }).toList(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AdminGroupSection extends StatelessWidget {
+  final String groupLetter;
+  final List<MatchModel> matches;
+  final WidgetRef ref;
+
+  const _AdminGroupSection({
+    required this.groupLetter,
+    required this.matches,
+    required this.ref,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+          child: Text(
+            'GRUPO $groupLetter',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: cs.primary,
+              letterSpacing: 1.5,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        ...matches.map((m) => _AdminMatchTile(match: m, ref: ref)),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class _AdminMatchTile extends StatelessWidget {
+  final MatchModel match;
+  final WidgetRef ref;
+
+  const _AdminMatchTile({required this.match, required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        title: Text(
+          '${match.homeTeam.name} Ã— ${match.awayTeam.name}',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: _buildScoreSubtitle(context),
+        trailing: IconButton(
+          icon: Icon(Icons.edit, color: cs.primary),
+          onPressed: () => _showOverrideDialog(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreSubtitle(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (match.homeScore != null && match.awayScore != null) {
+      return Text(
+        '${match.homeScore} – ${match.awayScore}   [${match.status.name}]',
+        style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
+      );
+    }
+    return Text(
+      match.status.name,
+      style: TextStyle(color: cs.onSurface.withOpacity(0.5)),
+    );
+  }
+
+  void _showOverrideDialog(BuildContext context) {
+    final homeCtrl = TextEditingController(
+        text: match.homeScore?.toString() ?? '');
+    final awayCtrl = TextEditingController(
+        text: match.awayScore?.toString() ?? '');
+    MatchStatus selectedStatus = match.status;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text('${match.homeTeam.name} Ã— ${match.awayTeam.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: homeCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration:
+                          InputDecoration(labelText: match.homeTeam.name),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('–', style: TextStyle(fontSize: 20)),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: awayCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration:
+                          InputDecoration(labelText: match.awayTeam.name),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<MatchStatus>(
+                initialValue: selectedStatus,
+                decoration:
+                    const InputDecoration(labelText: 'Status'),
+                items: MatchStatus.values
+                    .map((s) => DropdownMenuItem(
+                          value: s,
+                          child: Text(s.name),
+                        ))
+                    .toList(),
+                onChanged: (v) => setState(() => selectedStatus = v!),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final home = int.tryParse(homeCtrl.text);
+                final away = int.tryParse(awayCtrl.text);
+                await Supabase.instance.client
+                    .from('matches')
+                    .update({
+                      if (home != null) 'home_score': home,
+                      if (away != null) 'away_score': away,
+                      'status': selectedStatus.name,
+                    })
+                    .eq('id', match.id);
+
+                // ignore: use_build_context_synchronously
+                if (ctx.mounted) Navigator.pop(ctx);
+                ref.invalidate(allMatchesProvider);
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "@@locale": "pt",
+
+  "loginSubtitle": "Aposte no seu grupo com os amigos",
+  "login": "Entrar",
+  "signUp": "Cadastrar",
+  "email": "E-mail",
+  "password": "Senha",
+  "username": "Nome de usuário",
+  "confirm": "Confirmar",
+  "cancel": "Cancelar",
+  "yes": "Sim, vai fundo!",
+  "save": "Salvar",
+
+  "group": "Grupo",
+  "groups": "GRUPOS",
+  "ranking": "Ranking",
+  "privateLeagues": "Ligas Privadas",
+  "settings": "Configurações",
+  "adminPanel": "Painel Admin",
+  "signOut": "Sair",
+
+  "betsLocked": "Apostas encerradas — prazo expirado",
+  "betsOpen": "Apostas abertas",
+  "betDeadline": "Prazo das Apostas",
+
+  "result": "Resultado",
+  "agentOfChaos": "Agente do Caos",
+  "chaosRandomAll": "Aleatorizar tudo",
+  "chaosRandomAllSub": "Preenche placares vazios aleatoriamente",
+  "chaosGuidedHint": "Toque na bandeira para vitória aleatória. Toque no 'X' para empate aleatório.",
+  "chaosMaxGoals": "Bolas no máximo",
+
+  "wackyGoalAlert": "Você está colocando mais de 20 gols... É sério isso? 😱",
+
+  "appearance": "Aparência",
+  "themeSystem": "Sistema",
+  "themeLight": "Claro",
+  "themeDark": "Escuro",
+  "language": "Idioma",
+  "account": "Conta",
+
+  "joinLeague": "Entrar em liga",
+  "createLeague": "Criar liga",
+  "joinOrCreate": "Entrar ou criar",
+  "inviteCode": "Código de convite",
+  "leagueName": "Nome da liga",
+  "noLeagues": "Nenhuma liga ainda",
+  "noLeaguesSub": "Entre em uma liga com um código ou crie a sua",
+  "codeCopied": "Código copiado!"
+}

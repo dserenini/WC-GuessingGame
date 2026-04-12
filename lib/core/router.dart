@@ -1,0 +1,71 @@
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:copa2026/core/constants.dart';
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/features/auth/screens/login_screen.dart';
+import 'package:copa2026/features/groups/screens/group_screen.dart';
+import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
+import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
+import 'package:copa2026/features/settings/screens/settings_screen.dart';
+import 'package:copa2026/features/admin/screens/admin_screen.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
+  return GoRouter(
+    initialLocation: '/groups/A',
+    redirect: (context, state) {
+      final session = authState.valueOrNull;
+      final isLoggedIn = session != null;
+      final isLoginPage = state.matchedLocation == '/login';
+
+      if (!isLoggedIn && !isLoginPage) return '/login';
+      if (isLoggedIn && isLoginPage) return '/groups/A';
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/groups/:group',
+        name: 'group',
+        builder: (_, state) {
+          final group = state.pathParameters['group'] ?? 'A';
+          return GroupScreen(groupLetter: group);
+        },
+      ),
+      GoRoute(
+        path: '/ranking',
+        name: 'ranking',
+        builder: (_, __) => const RankingScreen(),
+      ),
+      GoRoute(
+        path: '/leagues',
+        name: 'leagues',
+        builder: (_, __) => const LeaguesScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        name: 'admin',
+        builder: (_, __) => const AdminScreen(),
+        redirect: (context, state) {
+          final user = Supabase.instance.client.auth.currentUser;
+          if (user == null || !kAdminUids.contains(user.id)) {
+            return '/groups/A';
+          }
+          return null;
+        },
+      ),
+    ],
+  );
+});

@@ -1,6 +1,6 @@
 ﻿import 'dart:math';
 
-/// Agent of Chaos service â€” generates random scores
+/// Agent of Chaos service — generates random scores
 class ChaosService {
   static final _rng = Random();
 

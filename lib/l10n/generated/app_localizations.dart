@@ -205,7 +205,7 @@ abstract class AppLocalizations {
   /// No description provided for @betsLocked.
   ///
   /// In pt, this message translates to:
-  /// **'Apostas encerradas â€” prazo expirado'**
+  /// **'Apostas encerradas — prazo expirado'**
   String get betsLocked;
 
   /// No description provided for @betsOpen.

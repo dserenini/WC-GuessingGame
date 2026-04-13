@@ -43,7 +43,7 @@ class FlagAvatar extends StatelessWidget {
     return Container(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: const Center(
-        child: Text('ðŸ³', style: TextStyle(fontSize: 16)),
+        child: Text('🏳️', style: TextStyle(fontSize: 16)),
       ),
     );
   }

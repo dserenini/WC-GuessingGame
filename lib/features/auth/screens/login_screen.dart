@@ -77,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ],
                 ),
                 child: const Center(
-                  child: Text('âš½', style: TextStyle(fontSize: 40)),
+                  child: Text('⚽', style: TextStyle(fontSize: 40)),
                 ),
               ),
               const SizedBox(height: 20),

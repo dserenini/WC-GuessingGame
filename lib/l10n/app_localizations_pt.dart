@@ -60,7 +60,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get signOut => 'Sair';
 
   @override
-  String get betsLocked => 'Apostas encerradas â€” prazo expirado';
+  String get betsLocked => 'Apostas encerradas — prazo expirado';
 
   @override
   String get betsOpen => 'Apostas abertas';

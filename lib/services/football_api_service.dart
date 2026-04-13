@@ -9,7 +9,7 @@
 //   3. In lib/core/constants.dart, set: kFootballApiKey = 'your-key-here'
 //   4. The syncMatches() call below will automatically start working.
 //
-// Free plan limits: 100 requests/day â€” enough for daily syncing during WC2026.
+// Free plan limits: 100 requests/day — enough for daily syncing during WC2026.
 // =============================================================================
 
 import 'dart:convert';
@@ -30,21 +30,21 @@ class FootballApiService {
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static Future<void> syncMatches() async {
     if (kFootballApiKey.isEmpty) {
-      debugPrint('âš½ FootballApiService: Manual mode â€” no API key set.');
+      debugPrint('⚽ FootballApiService: Manual mode — no API key set.');
       return;
     }
 
     try {
       final fixtures = await _fetchLiveAndFinished();
       await _upsertToSupabase(fixtures);
-      debugPrint('âš½ FootballApiService: Synced ${fixtures.length} matches.');
+      debugPrint('⚽ FootballApiService: Synced ${fixtures.length} matches.');
     } catch (e) {
-      debugPrint('âš½ FootballApiService error: $e');
+      debugPrint('⚽ FootballApiService error: $e');
     }
   }
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // FETCH â€” GET /fixtures?league={id}&season=2026&round=Group Stage
+  // FETCH — GET /fixtures?league={id}&season=2026&round=Group Stage
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   static Future<List<_Fixture>> _fetchLiveAndFinished() async {
     // TODO: Confirm kWorldCup2026Id once API-Football publishes it

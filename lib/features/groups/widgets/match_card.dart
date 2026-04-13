@@ -325,7 +325,7 @@ class _ScoreBox extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            value?.toString() ?? 'â€”',
+            value?.toString() ?? '—',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: locked

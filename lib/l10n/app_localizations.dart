@@ -19,7 +19,7 @@ class AppLocalizations {
   String get settings => "Configurações";
   String get adminPanel => "Painel Admin";
   String get signOut => "Sair";
-  String get betsLocked => "Apostas encerradas â€” prazo expirado";
+  String get betsLocked => "Apostas encerradas — prazo expirado";
   String get betsOpen => "Apostas abertas";
   String get betDeadline => "Prazo das Apostas";
   String get result => "Resultado";

@@ -60,7 +60,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get signOut => 'Esci';
 
   @override
-  String get betsLocked => 'Scommesse chiuse â€” scadenza superata';
+  String get betsLocked => 'Scommesse chiuse — scadenza superata';
 
   @override
   String get betsOpen => 'Scommesse aperte';

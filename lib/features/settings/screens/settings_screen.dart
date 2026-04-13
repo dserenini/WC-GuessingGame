@@ -19,7 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('âš™ï¸ ${l.settings}')),
+      appBar: AppBar(title: Text('⚙️ ${l.settings}')),
       drawer: const AppDrawer(),
       body: ListView(
         padding: const EdgeInsets.all(16),

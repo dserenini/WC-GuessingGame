@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign Out';
 
   @override
-  String get betsLocked => 'Bets closed â€” deadline has passed';
+  String get betsLocked => 'Bets closed — deadline has passed';
 
   @override
   String get betsOpen => 'Bets are open';

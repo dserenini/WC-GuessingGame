@@ -18,7 +18,7 @@ class RankingScreen extends ConsumerWidget {
     final currentUid = Supabase.instance.client.auth.currentUser?.id;
 
     return Scaffold(
-      appBar: AppBar(title: Text('ðŸ† ${l.ranking}')),
+      appBar: AppBar(title: Text('🏆 ${l.ranking}')),
       drawer: const AppDrawer(),
       body: rankingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

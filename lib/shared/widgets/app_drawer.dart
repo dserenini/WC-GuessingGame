@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
@@ -21,7 +21,7 @@ class AppDrawer extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Header ───────────────────────
             Container(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
               child: Column(
@@ -41,7 +41,7 @@ class AppDrawer extends ConsumerWidget {
                           shape: BoxShape.circle,
                         ),
                         child: const Center(
-                          child: Text('âš½', style: TextStyle(fontSize: 22)),
+                          child: Text('⚽', style: TextStyle(fontSize: 22)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -75,9 +75,9 @@ class AppDrawer extends ConsumerWidget {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // â”€â”€ Ranking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Ranking ──────────────────────
             _DrawerItem(
-              icon: 'ðŸ†',
+              icon: '🏆',
               label: l.ranking,
               selected: currentPath == '/ranking',
               onTap: () {
@@ -97,7 +97,7 @@ class AppDrawer extends ConsumerWidget {
 
             const Divider(height: 24),
 
-            // â”€â”€ Groups A–L â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Groups A–L ───────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
@@ -129,9 +129,9 @@ class AppDrawer extends ConsumerWidget {
 
             const Divider(height: 1),
 
-            // â”€â”€ Bottom items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Bottom items ─────────────────
             _DrawerItem(
-              icon: 'âš™ï¸',
+              icon: '⚙️',
               label: l.settings,
               onTap: () {
                 Navigator.pop(context);

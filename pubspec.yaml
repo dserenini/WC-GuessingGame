@@ -24,6 +24,9 @@ dependencies:
   # i18n
   intl: ^0.20.2
 
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
   # Images
   cached_network_image: ^3.3.1
   flutter_svg: ^2.0.10+1
@@ -44,5 +47,6 @@ flutter:
 
   assets:
     - assets/images/
+    - .env
 
 

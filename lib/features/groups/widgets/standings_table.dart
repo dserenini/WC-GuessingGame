@@ -1,10 +1,15 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 
 class StandingsTable extends StatelessWidget {
   final List<StandingEntry> standings;
+  final Set<String> top8ThirdPlaces;
 
-  const StandingsTable({super.key, required this.standings});
+  const StandingsTable({
+    super.key,
+    required this.standings,
+    this.top8ThirdPlaces = const {},
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class StandingsTable extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Header ────────────────────────
           Container(
             decoration: BoxDecoration(
               color: cs.primary.withOpacity(0.08),
@@ -32,24 +37,44 @@ class StandingsTable extends StatelessWidget {
               children: [
                 _header(context, '#', width: 28, align: TextAlign.center),
                 _header(context, 'Time', flex: 3),
-                _header(context, 'J', width: 28, align: TextAlign.center),
-                _header(context, 'G', width: 28, align: TextAlign.center),
-                _header(context, 'SG', width: 32, align: TextAlign.center),
                 _header(context, 'Pts', width: 32, align: TextAlign.center),
+                _header(context, 'J', width: 28, align: TextAlign.center),
+                _header(context, 'SG', width: 32, align: TextAlign.center),
+                _header(context, 'GP', width: 28, align: TextAlign.center),
+                _headerIcon(context, Colors.yellow, width: 20),
+                _headerIcon(context, Colors.red, width: 20),
               ],
             ),
           ),
           const Divider(height: 1),
-          // â”€â”€ Rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Rows ──────────────────────────
           ...standings.asMap().entries.map((e) {
             final i = e.key;
             final s = e.value;
-            final qualified = i < 2;
+            final isTop2 = i < 2;
+            final isBest3rd = i == 2 && top8ThirdPlaces.contains(s.teamName);
+
+            Color bgColor;
+            if (isTop2) {
+              bgColor = cs.primary.withOpacity(0.04);
+            } else if (isBest3rd) {
+              bgColor = Colors.green.withOpacity(0.06);
+            } else {
+              bgColor = Colors.transparent;
+            }
+
+            Color numColor;
+            if (isTop2) {
+              numColor = cs.primary;
+            } else if (isBest3rd) {
+              numColor = Colors.green.shade600;
+            } else {
+              numColor = cs.onSurface.withOpacity(0.5);
+            }
+
             return Container(
               decoration: BoxDecoration(
-                color: qualified
-                    ? cs.primary.withOpacity(0.04)
-                    : Colors.transparent,
+                color: bgColor,
                 borderRadius: i == standings.length - 1
                     ? const BorderRadius.vertical(
                         bottom: Radius.circular(16))
@@ -68,7 +93,7 @@ class StandingsTable extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: tt.bodySmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: qualified ? cs.primary : cs.onSurface.withOpacity(0.5),
+                        color: numColor,
                       ),
                     ),
                   ),
@@ -100,16 +125,18 @@ class StandingsTable extends StatelessWidget {
                       ],
                     ),
                   ),
-                  _cell(context, '${s.played}'),
-                  _cell(context, '${s.goalsFor}:${s.goalsAgainst}', width: 28),
-                  _cell(context, '${s.goalDiff > 0 ? '+' : ''}${s.goalDiff}', width: 32),
                   _cell(
                     context,
                     '${s.points}',
                     width: 32,
                     bold: true,
-                    color: qualified ? cs.primary : null,
+                    color: isTop2 ? cs.primary : (isBest3rd ? Colors.green.shade700 : null),
                   ),
+                  _cell(context, '${s.played}', width: 28),
+                  _cell(context, '${s.goalDiff > 0 ? '+' : ''}${s.goalDiff}', width: 32),
+                  _cell(context, '${s.goalsFor}', width: 28),
+                  _cell(context, '0', width: 20),
+                  _cell(context, '0', width: 20),
                 ],
               ),
             );
@@ -136,6 +163,23 @@ class StandingsTable extends StatelessWidget {
     );
     if (width != null) return SizedBox(width: width, child: w);
     return Expanded(flex: flex, child: w);
+  }
+
+  Widget _headerIcon(BuildContext context, Color color, {double width = 28}) {
+    return SizedBox(
+      width: width,
+      child: Center(
+        child: Container(
+          width: 8,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(1),
+            border: Border.all(color: Colors.black12, width: 0.5),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _cell(

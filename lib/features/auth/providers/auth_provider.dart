@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -50,14 +50,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
-      await _client.auth.signUp(
+      final res = await _client.auth.signUp(
         email: email,
         password: password,
         data: {'username': username},
       );
-      state = const AsyncData(null);
+      
+      if (res.session == null) {
+        // Supabase 'Confirm Email' is Enabled
+        state = AsyncError(
+            "Cadastro realizado! Verifique seu e-mail (ou a pasta Spam) e clique no link de confirmacao para entrar.",
+            StackTrace.current);
+      } else {
+        state = const AsyncData(null);
+      }
+    } on AuthException catch (e) {
+      state = AsyncError(e.message, StackTrace.current);
     } catch (e, st) {
-      state = AsyncError(e, st);
+      state = AsyncError(e.toString(), st);
     }
   }
 

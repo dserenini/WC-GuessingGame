@@ -1,15 +1,15 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/core/constants.dart';
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MATCHES PER GROUP
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-final groupMatchesProvider =
-    FutureProvider.family<List<MatchModel>, String>((ref, groupLetter) async {
+// ─────────────────────────────────────────────
+// GLOBAL MATCHES & BETS
+// ─────────────────────────────────────────────
+final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
   final response = await Supabase.instance.client
       .from('matches')
       .select('''
@@ -23,7 +23,6 @@ final groupMatchesProvider =
         home_team:teams!matches_home_team_id_fkey(id, name, flag_url, group_letter),
         away_team:teams!matches_away_team_id_fkey(id, name, flag_url, group_letter)
       ''')
-      .eq('group_letter', groupLetter)
       .order('match_date', ascending: true);
 
   return (response as List)
@@ -31,28 +30,14 @@ final groupMatchesProvider =
       .toList();
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// USER BETS FOR A GROUP
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-final groupBetsProvider =
-    FutureProvider.family<Map<String, BetModel>, String>((ref, groupLetter) async {
+final allBetsProvider = FutureProvider<Map<String, BetModel>>((ref) async {
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return {};
-
-  // Get all match IDs for this group first
-  final matchIds = await Supabase.instance.client
-      .from('matches')
-      .select('id')
-      .eq('group_letter', groupLetter);
-
-  final ids = (matchIds as List).map((m) => m['id'] as String).toList();
-  if (ids.isEmpty) return {};
 
   final bets = await Supabase.instance.client
       .from('bets')
       .select()
-      .eq('user_id', userId)
-      .inFilter('match_id', ids);
+      .eq('user_id', userId);
 
   return {
     for (final b in (bets as List))
@@ -60,9 +45,56 @@ final groupBetsProvider =
   };
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────
+// SPECIFIC GROUP SCOPE (Derived)
+// ─────────────────────────────────────────────
+final groupMatchesProvider = Provider.family<AsyncValue<List<MatchModel>>, String>((ref, groupLetter) {
+  return ref.watch(allMatchesProvider).whenData(
+    (matches) => matches.where((m) => m.groupLetter == groupLetter).toList(),
+  );
+});
+
+final groupBetsProvider = Provider.family<AsyncValue<Map<String, BetModel>>, String>((ref, groupLetter) {
+  return ref.watch(allBetsProvider);
+});
+
+// ─────────────────────────────────────────────
+// BEST 3RD PLACES ACROSS TOURNAMENT
+// ─────────────────────────────────────────────
+final bestThirdPlacesProvider = Provider<Set<String>>((ref) {
+  final matches = ref.watch(allMatchesProvider).valueOrNull;
+  final bets = ref.watch(allBetsProvider).valueOrNull;
+
+  if (matches == null || bets == null) return {};
+
+  final Map<String, List<MatchModel>> groupedMatches = {};
+  for (final m in matches) {
+    groupedMatches.putIfAbsent(m.groupLetter, () => []).add(m);
+  }
+
+  final List<StandingEntry> thirdPlaces = [];
+  for (final group in groupedMatches.values) {
+    final standings = computeStandings(matches: group, bets: bets);
+    if (standings.length > 2) {
+      thirdPlaces.add(standings[2]); // Index 2 is the 3rd placed team
+    }
+  }
+
+  // Sort them mathematically: Pts -> GoalDiff -> GoalsFor
+  thirdPlaces.sort((a, b) {
+    if (b.points != a.points) return b.points.compareTo(a.points);
+    if (b.goalDiff != a.goalDiff) return b.goalDiff.compareTo(a.goalDiff);
+    if (b.goalsFor != a.goalsFor) return b.goalsFor.compareTo(a.goalsFor);
+    return a.teamName.compareTo(b.teamName); // Fallback alphabetical
+  });
+
+  // Top 8 advance
+  return thirdPlaces.take(8).map((e) => e.teamName).toSet();
+});
+
+// ─────────────────────────────────────────────
 // BET SAVE NOTIFIER
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────
 final betNotifierProvider =
     StateNotifierProvider<BetNotifier, AsyncValue<void>>((ref) {
   return BetNotifier(ref);
@@ -93,7 +125,55 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
       }, onConflict: 'user_id,match_id');
 
       // Invalidate to refresh
-      ref.invalidate(groupBetsProvider(groupLetter));
+      ref.invalidate(allBetsProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> deleteBet({
+    required String matchId,
+    required String groupLetter,
+  }) async {
+    if (isBettingLocked) return;
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    state = const AsyncLoading();
+    try {
+      await Supabase.instance.client
+          .from('bets')
+          .delete()
+          .eq('user_id', userId)
+          .eq('match_id', matchId);
+
+      ref.invalidate(allBetsProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> clearGroupBets({
+    required List<String> matchIds,
+    required String groupLetter,
+  }) async {
+    if (isBettingLocked || matchIds.isEmpty) return;
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    state = const AsyncLoading();
+    try {
+      await Supabase.instance.client
+          .from('bets')
+          .delete()
+          .eq('user_id', userId)
+          .inFilter('match_id', matchIds);
+
+      ref.invalidate(allBetsProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -192,7 +272,35 @@ List<StandingEntry> computeStandings({
     ..sort((a, b) {
       if (b.points != a.points) return b.points.compareTo(a.points);
       if (b.goalDiff != a.goalDiff) return b.goalDiff.compareTo(a.goalDiff);
-      return b.goalsFor.compareTo(a.goalsFor);
+      if (b.goalsFor != a.goalsFor) return b.goalsFor.compareTo(a.goalsFor);
+
+      // Head-to-Head
+      final match = matches.firstWhereOrNull((m) =>
+          (m.homeTeam.name == a.teamName && m.awayTeam.name == b.teamName) ||
+          (m.homeTeam.name == b.teamName && m.awayTeam.name == a.teamName));
+
+      if (match != null) {
+        int? scoreA;
+        int? scoreB;
+
+        if (match.status == MatchStatus.finished) {
+          scoreA = match.homeTeam.name == a.teamName ? match.homeScore : match.awayScore;
+          scoreB = match.homeTeam.name == b.teamName ? match.homeScore : match.awayScore;
+        } else {
+          final bet = bets[match.id];
+          if (bet != null) {
+            scoreA = match.homeTeam.name == a.teamName ? bet.homeScoreBet : bet.awayScoreBet;
+            scoreB = match.homeTeam.name == b.teamName ? bet.homeScoreBet : bet.awayScoreBet;
+          }
+        }
+
+        if (scoreA != null && scoreB != null) {
+          if (scoreB != scoreA) return scoreB.compareTo(scoreA); // Winner goes above
+        }
+      }
+
+      // Alphabetical
+      return a.teamName.compareTo(b.teamName);
     });
 
   return list;

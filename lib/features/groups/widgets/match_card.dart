@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
@@ -28,6 +28,7 @@ class MatchCard extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final locked = isBettingLocked || match.isLocked;
+    final chaosModeActive = ref.watch(chaosModeProvider);
 
     final homeScore = bet?.homeScoreBet;
     final awayScore = bet?.awayScoreBet;
@@ -50,6 +51,14 @@ class MatchCard extends ConsumerWidget {
                       color: cs.onSurface.withOpacity(0.5),
                     ),
                   ),
+                if (bet != null && !locked) ...[
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => _confirmDeleteBet(context, ref),
+                    child: Icon(Icons.delete_outline,
+                        size: 20, color: cs.error.withOpacity(0.7)),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 16),
@@ -60,7 +69,7 @@ class MatchCard extends ConsumerWidget {
                 // Home team
                 Expanded(
                   child: GestureDetector(
-                    onTap: locked
+                    onTap: locked || !chaosModeActive
                         ? null
                         : () => _randomWin(context, ref, isHome: true),
                     child: Column(
@@ -101,7 +110,7 @@ class MatchCard extends ConsumerWidget {
                         ),
                       ),
                       GestureDetector(
-                        onTap: locked
+                        onTap: locked || !chaosModeActive
                             ? null
                             : () => _randomDraw(context, ref),
                         child: Padding(
@@ -132,7 +141,7 @@ class MatchCard extends ConsumerWidget {
                 // Away team
                 Expanded(
                   child: GestureDetector(
-                    onTap: locked
+                    onTap: locked || !chaosModeActive
                         ? null
                         : () => _randomWin(context, ref, isHome: false),
                     child: Column(
@@ -277,6 +286,32 @@ class MatchCard extends ConsumerWidget {
           homeScore: scores.$1,
           awayScore: scores.$2,
         );
+  }
+
+  Future<void> _confirmDeleteBet(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Deletar Aposta'),
+        content: const Text('Deseja apagar sua aposta para este jogo?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.cancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Deletar', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await ref.read(betNotifierProvider.notifier).deleteBet(
+            matchId: match.id,
+            groupLetter: groupLetter,
+          );
+    }
   }
 
   String _formatDate(DateTime d) {

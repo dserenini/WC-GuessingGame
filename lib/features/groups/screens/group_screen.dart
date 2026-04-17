@@ -34,7 +34,7 @@ class GroupScreen extends ConsumerWidget {
                   value: chaosActive,
                   onChanged: (val) =>
                       ref.read(chaosModeProvider.notifier).state = val,
-                  activeColor: Theme.of(context).colorScheme.primary,
+                  activeThumbColor: Theme.of(context).colorScheme.primary,
                 );
               },
             ),

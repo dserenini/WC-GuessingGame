@@ -1,20 +1,18 @@
-# Builder Stage
-FROM dart:stable AS build
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 1: Build Flutter Web
+# ─────────────────────────────────────────────────────────────────────────────
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 
-# Clone Flutter SDK
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter -b stable
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-# Install flutter and accept licenses
-RUN flutter channel stable && flutter upgrade && flutter doctor -v
-
-# Copy project files
-COPY . .
+# Copy dependency manifests first (layer caching)
+COPY pubspec.yaml pubspec.lock ./
 
 # Fetch dependencies
 RUN flutter pub get
+
+# Copy the rest of the project
+COPY . .
 
 # Ingest Supabase Env Vars safely during build
 ARG SUPABASE_URL
@@ -25,7 +23,9 @@ RUN flutter build web --release \
     --dart-define=SUPABASE_URL=$SUPABASE_URL \
     --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 
-# Serve Stage
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 2: Serve with Nginx
+# ─────────────────────────────────────────────────────────────────────────────
 FROM nginx:alpine
 
 # Copy compiled flutter web output to Nginx serving directory

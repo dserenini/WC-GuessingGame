@@ -1,33 +1,18 @@
-version: '3.8'
-
 services:
   app-bolao:
-    build: 
+    build:
       context: .
       args:
         - SUPABASE_URL=${SUPABASE_URL}
         - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    image: bolao-copa:latest
     container_name: app-bolao-web
     restart: unless-stopped
-    expose:
-      - "80"
-    networks:
-      - proxy_network
-
-  nginx-proxy-manager:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: nginx-proxy-manager
-    restart: unless-stopped
     ports:
-      - "80:80"      # HTTP
-      - "81:81"      # NPM Admin Dashboard
-      - "443:443"    # HTTPS
-    volumes:
-      - ./data/npm:/data
-      - ./data/letsencrypt:/etc/letsencrypt
+      - "8002:80"
     networks:
-      - proxy_network
+      - npm_default
 
 networks:
-  proxy_network:
-    name: proxy_network
+  npm_default:
+    external: true

@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Dart/Flutter build artifacts
+.dart_tool
+build
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Local dev files
+*.log
+fix_encoding.py
+scratch_l10n
+future_ideas.md
+
+# Docker meta (don't nest)
+docker-compose.yml
+Dockerfile
+
+# OS
+.DS_Store
+Thumbs.db

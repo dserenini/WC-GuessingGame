@@ -124,3 +124,17 @@ INSERT INTO admins (user_id) VALUES
   ('11111111-1111-1111-1111-111111111111'),
   ('22222222-2222-2222-2222-222222222222'),
   ('33333333-3333-3333-3333-333333333333');
+
+-- ─────────────────────────────────────────────
+-- POPULATE API MATCH IDs
+-- Assigns a sequential api_match_id to each match
+-- ─────────────────────────────────────────────
+WITH numbered_matches AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY match_date, group_letter) as seq_id
+  FROM matches
+)
+UPDATE matches
+SET api_match_id = numbered_matches.seq_id::TEXT
+FROM numbered_matches
+WHERE matches.id = numbered_matches.id;
+

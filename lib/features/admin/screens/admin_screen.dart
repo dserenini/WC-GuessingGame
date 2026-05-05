@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:copa2026/services/master_data_service.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/models/match.dart';
@@ -25,16 +27,66 @@ final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
       .toList();
 });
 
-class AdminScreen extends ConsumerWidget {
+
+
+class AdminScreen extends ConsumerStatefulWidget {
   const AdminScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminScreen> createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends ConsumerState<AdminScreen> {
+  bool _isSyncing = false;
+
+  Future<void> _syncMasterData() async {
+    setState(() => _isSyncing = true);
+    try {
+      final (updated, errors) = await MasterDataService.syncMatchesFromSheet();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Planilha sincronizada: $updated atualizados, $errors erros.')),
+        );
+        ref.invalidate(allMatchesProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(allMatchesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('🔧 ${l.adminPanel}')),
+      appBar: AppBar(
+        title: Text('🔧 ${l.adminPanel}'),
+        actions: [
+          _isSyncing
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.sync),
+                  tooltip: 'Sincronizar Planilha',
+                  onPressed: _syncMasterData,
+                ),
+        ],
+      ),
       drawer: const AppDrawer(),
       body: matchesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

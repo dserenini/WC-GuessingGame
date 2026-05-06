@@ -6,6 +6,8 @@ import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/core/constants.dart';
 
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
+
 // ─────────────────────────────────────────────
 // GLOBAL MATCHES & BETS
 // ─────────────────────────────────────────────
@@ -31,6 +33,7 @@ final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
 });
 
 final allBetsProvider = FutureProvider<Map<String, BetModel>>((ref) async {
+  ref.watch(authStateProvider);
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return {};
 
@@ -49,9 +52,15 @@ final allBetsProvider = FutureProvider<Map<String, BetModel>>((ref) async {
 // SPECIFIC GROUP SCOPE (Derived)
 // ─────────────────────────────────────────────
 final groupMatchesProvider = Provider.family<AsyncValue<List<MatchModel>>, String>((ref, groupLetter) {
-  return ref.watch(allMatchesProvider).whenData(
-    (matches) => matches.where((m) => m.groupLetter == groupLetter).toList(),
-  );
+  return ref.watch(allMatchesProvider).whenData((matches) {
+    final groupMatches = matches.where((m) => m.groupLetter == groupLetter).toList();
+    groupMatches.sort((a, b) {
+      final idA = int.tryParse(a.apiMatchId ?? '') ?? 0;
+      final idB = int.tryParse(b.apiMatchId ?? '') ?? 0;
+      return idA.compareTo(idB);
+    });
+    return groupMatches;
+  });
 });
 
 final groupBetsProvider = Provider.family<AsyncValue<Map<String, BetModel>>, String>((ref, groupLetter) {

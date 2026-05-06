@@ -7,6 +7,7 @@ import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/shared/widgets/score_bottom_sheet.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 
@@ -39,14 +40,22 @@ class MatchCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // â”€â”€ Status chip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Status chip ────────────────────
             Row(
               children: [
+                Text(
+                  '#${match.apiMatchId ?? match.id.substring(0, 4)}',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _StatusChip(status: match.status),
                 const Spacer(),
                 if (match.matchDate != null)
                   Text(
-                    _formatDate(match.matchDate!),
+                    _formatDate(match.matchDate!, ref.watch(timezoneProvider)),
                     style: tt.labelSmall?.copyWith(
                       color: cs.onSurface.withOpacity(0.5),
                     ),
@@ -314,11 +323,12 @@ class MatchCard extends ConsumerWidget {
     }
   }
 
-  String _formatDate(DateTime d) {
-    return '${d.day.toString().padLeft(2, '0')}/'
-        '${d.month.toString().padLeft(2, '0')} '
-        '${d.hour.toString().padLeft(2, '0')}:'
-        '${d.minute.toString().padLeft(2, '0')}';
+  String _formatDate(DateTime d, Duration offset) {
+    final localTime = d.toUtc().add(offset);
+    return '${localTime.day.toString().padLeft(2, '0')}/'
+        '${localTime.month.toString().padLeft(2, '0')} '
+        '${localTime.hour.toString().padLeft(2, '0')}:'
+        '${localTime.minute.toString().padLeft(2, '0')}';
   }
 }
 

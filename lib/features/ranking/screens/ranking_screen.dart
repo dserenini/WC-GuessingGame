@@ -4,6 +4,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:copa2026/core/constants.dart';
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
@@ -15,7 +16,7 @@ class RankingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final rankingAsync = ref.watch(rankingProvider);
-    final currentUid = Supabase.instance.client.auth.currentUser?.id;
+    final currentUid = ref.watch(currentUserProvider)?.id;
 
     return Scaffold(
       appBar: AppBar(title: Text('🏆 ${l.ranking}')),

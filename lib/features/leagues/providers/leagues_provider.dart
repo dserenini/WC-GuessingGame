@@ -1,8 +1,11 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/shared/models/bet.dart';
 
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
+
 final myLeaguesProvider = FutureProvider<List<LeagueModel>>((ref) async {
+  ref.watch(authStateProvider);
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return [];
 

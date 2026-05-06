@@ -70,24 +70,19 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('🔧 ${l.adminPanel}'),
-        actions: [
-          _isSyncing
-              ? const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.sync),
-                  tooltip: 'Sincronizar Planilha',
-                  onPressed: _syncMasterData,
-                ),
-        ],
       ),
       drawer: const AppDrawer(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isSyncing ? null : _syncMasterData,
+        icon: _isSyncing
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.sync),
+        label: const Text('Atualizar'),
+      ),
       body: matchesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
@@ -98,12 +93,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             grouped.putIfAbsent(m.groupLetter, () => []).add(m);
           }
 
+          final keys = grouped.keys.toList()..sort();
+
           return ListView(
-            padding: const EdgeInsets.all(16),
-            children: grouped.entries.map((e) {
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+            children: keys.map((key) {
               return _AdminGroupSection(
-                groupLetter: e.key,
-                matches: e.value,
+                groupLetter: key,
+                matches: grouped[key]!,
                 ref: ref,
               );
             }).toList(),
@@ -128,24 +125,24 @@ class _AdminGroupSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-          child: Text(
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
             'GRUPO $groupLetter',
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: cs.primary,
               letterSpacing: 1.5,
-              fontSize: 12,
+              fontSize: 14,
             ),
           ),
+          children: matches.map((m) => _AdminMatchTile(match: m, ref: ref)).toList(),
         ),
-        ...matches.map((m) => _AdminMatchTile(match: m, ref: ref)),
-        const SizedBox(height: 8),
-      ],
+      ),
     );
   }
 }

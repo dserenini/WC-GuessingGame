@@ -1,4 +1,4 @@
-﻿class BetModel {
+class BetModel {
   final String id;
   final String userId;
   final String matchId;
@@ -51,13 +51,13 @@ class RankingEntry {
     required this.rank,
   });
 
-  factory RankingEntry.fromJson(Map<String, dynamic> json) => RankingEntry(
+      factory RankingEntry.fromJson(Map<String, dynamic> json) => RankingEntry(
         userId: json['user_id'] as String,
         username: json['username'] as String,
         avatarUrl: json['avatar_url'] as String?,
-        totalPoints: json['total_points'] as int,
-        totalBets: json['total_bets'] as int,
-        rank: json['rank'] as int,
+        totalPoints: (json['total_points'] as num?)?.toInt() ?? 0,
+        totalBets: (json['total_bets'] as num?)?.toInt() ?? 0,
+        rank: (json['rank'] as num?)?.toInt() ?? 0,
       );
 }
 

@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/providers/theme_provider.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/core/constants.dart';
 
@@ -102,7 +103,37 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Agent of Chaos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Fuso Horário ───────────────────────
+          _SectionHeader(title: 'Fuso Horário'),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.access_time),
+              title: const Text('Fuso Horário Atual'),
+              subtitle: Text(
+                'GMT${ref.watch(timezoneProvider).inHours >= 0 ? '+' : ''}${ref.watch(timezoneProvider).inHours}',
+              ),
+              trailing: DropdownButton<int>(
+                value: ref.watch(timezoneProvider).inHours,
+                underline: const SizedBox(),
+                items: List.generate(25, (index) {
+                  final offset = index - 12; // -12 to +12
+                  final label = 'GMT${offset >= 0 ? '+' : ''}$offset';
+                  return DropdownMenuItem(
+                    value: offset,
+                    child: Text(label),
+                  );
+                }),
+                onChanged: (value) {
+                  if (value != null) {
+                    ref.read(timezoneProvider.notifier).setTimezone(value);
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Agent of Chaos ────────────────────────────────────
           _SectionHeader(title: '🎲 ${l.agentOfChaos}'),
           Card(
             child: _MaxGoalsTile(),

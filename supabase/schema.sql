@@ -50,6 +50,21 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
+-- Lookup email by username (for login by username)
+CREATE OR REPLACE FUNCTION public.get_email_by_username(p_username TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  v_email TEXT;
+BEGIN
+  SELECT u.email INTO v_email
+    FROM auth.users u
+    JOIN public.profiles p ON p.id = u.id
+   WHERE LOWER(p.username) = LOWER(p_username)
+   LIMIT 1;
+  RETURN v_email;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ─────────────────────────────────────────────
 -- ADMINS
 -- ─────────────────────────────────────────────
@@ -229,7 +244,8 @@ CREATE POLICY "Users can leave leagues"
 -- RANKING VIEW
 -- Aggregates total points per user across all bets
 -- ─────────────────────────────────────────────
-CREATE OR REPLACE VIEW user_rankings AS
+CREATE OR REPLACE VIEW user_rankings
+WITH (security_invoker = on) AS
 SELECT
   p.id        AS user_id,
   p.username,
@@ -244,7 +260,8 @@ GROUP BY p.id, p.username, p.avatar_url;
 -- ─────────────────────────────────────────────
 -- LEAGUE RANKING VIEW
 -- ─────────────────────────────────────────────
-CREATE OR REPLACE VIEW league_rankings AS
+CREATE OR REPLACE VIEW league_rankings
+WITH (security_invoker = on) AS
 SELECT
   lm.league_id,
   l.name        AS league_name,
@@ -264,3 +281,141 @@ GROUP BY lm.league_id, l.name, p.id, p.username, p.avatar_url;
 -- ─────────────────────────────────────────────
 ALTER PUBLICATION supabase_realtime ADD TABLE bets;
 ALTER PUBLICATION supabase_realtime ADD TABLE matches;
+
+-- =============================================================================
+-- AUDIT & RECOVERY SYSTEM
+-- =============================================================================
+
+-- ─────────────────────────────────────────────
+-- AUDIT LOG TABLE
+-- Tracks every INSERT, UPDATE, DELETE on critical tables
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_log (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  table_name  TEXT        NOT NULL,
+  record_id   TEXT        NOT NULL,
+  operation   TEXT        NOT NULL CHECK (operation IN ('INSERT','UPDATE','DELETE')),
+  old_data    JSONB,
+  new_data    JSONB,
+  changed_by  UUID,
+  changed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for fast lookups by table and record
+CREATE INDEX IF NOT EXISTS idx_audit_log_table_record
+  ON audit_log (table_name, record_id);
+
+-- Index for time-based queries (e.g. "what changed in the last hour?")
+CREATE INDEX IF NOT EXISTS idx_audit_log_changed_at
+  ON audit_log (changed_at DESC);
+
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+
+-- Only admins can read audit logs
+CREATE POLICY "Only admins can read audit_log"
+  ON audit_log FOR SELECT USING (is_admin());
+
+-- Only the system (triggers) can insert — no direct user inserts
+CREATE POLICY "System can insert audit_log"
+  ON audit_log FOR INSERT WITH CHECK (true);
+
+-- ─────────────────────────────────────────────
+-- GENERIC AUDIT TRIGGER FUNCTION
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION audit_trigger_func()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO audit_log (table_name, record_id, operation, old_data, new_data, changed_by)
+    VALUES (TG_TABLE_NAME, NEW.id::TEXT, 'INSERT', NULL, to_jsonb(NEW), auth.uid());
+    RETURN NEW;
+
+  ELSIF TG_OP = 'UPDATE' THEN
+    INSERT INTO audit_log (table_name, record_id, operation, old_data, new_data, changed_by)
+    VALUES (TG_TABLE_NAME, NEW.id::TEXT, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW), auth.uid());
+    RETURN NEW;
+
+  ELSIF TG_OP = 'DELETE' THEN
+    INSERT INTO audit_log (table_name, record_id, operation, old_data, new_data, changed_by)
+    VALUES (TG_TABLE_NAME, OLD.id::TEXT, 'DELETE', to_jsonb(OLD), NULL, auth.uid());
+    RETURN OLD;
+  END IF;
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ─────────────────────────────────────────────
+-- ATTACH AUDIT TRIGGERS TO CRITICAL TABLES
+-- ─────────────────────────────────────────────
+
+-- Audit all changes to matches (scores, status)
+DROP TRIGGER IF EXISTS audit_matches ON matches;
+CREATE TRIGGER audit_matches
+  AFTER INSERT OR UPDATE OR DELETE ON matches
+  FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
+
+-- Audit all changes to bets (scores, points)
+DROP TRIGGER IF EXISTS audit_bets ON bets;
+CREATE TRIGGER audit_bets
+  AFTER INSERT OR UPDATE OR DELETE ON bets
+  FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
+
+-- ─────────────────────────────────────────────
+-- ROLLBACK MATCH SCORING
+-- Resets a match and all its bets to pre-scoring state.
+-- Usage:  SELECT * FROM rollback_match_scoring('match-uuid-here');
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION rollback_match_scoring(p_match_id UUID)
+RETURNS TABLE (
+  match_reset   BOOLEAN,
+  bets_affected BIGINT,
+  old_home      INT,
+  old_away      INT,
+  old_status    TEXT
+) AS $$
+DECLARE
+  v_home   INT;
+  v_away   INT;
+  v_status TEXT;
+  v_count  BIGINT;
+BEGIN
+  -- Only admins can rollback
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Apenas administradores podem executar rollback.';
+  END IF;
+
+  -- Capture current match state before reset
+  SELECT m.home_score, m.away_score, m.status::TEXT
+    INTO v_home, v_away, v_status
+    FROM matches m
+   WHERE m.id = p_match_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Partida % não encontrada.', p_match_id;
+  END IF;
+
+  -- Reset all bet points for this match
+  UPDATE bets
+     SET points = 0,
+         updated_at = NOW()
+   WHERE match_id = p_match_id;
+
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+
+  -- Reset match to scheduled state (clear scores)
+  UPDATE matches
+     SET home_score = NULL,
+         away_score = NULL,
+         status = 'scheduled'
+   WHERE id = p_match_id;
+
+  -- Return summary of what was rolled back
+  RETURN QUERY SELECT
+    TRUE          AS match_reset,
+    v_count       AS bets_affected,
+    v_home        AS old_home,
+    v_away        AS old_away,
+    v_status      AS old_status;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

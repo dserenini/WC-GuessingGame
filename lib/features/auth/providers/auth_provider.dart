@@ -29,11 +29,25 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   final _client = Supabase.instance.client;
 
   Future<void> signIn({
-    required String email,
+    required String emailOrUsername,
     required String password,
   }) async {
     state = const AsyncLoading();
     try {
+      String email = emailOrUsername;
+
+      // If input doesn't look like an email, resolve username → email
+      if (!emailOrUsername.contains('@')) {
+        final result = await _client.rpc(
+          'get_email_by_username',
+          params: {'p_username': emailOrUsername},
+        );
+        if (result == null || (result as String).isEmpty) {
+          throw Exception('Usuário não encontrado.');
+        }
+        email = result;
+      }
+
       await _client.auth.signInWithPassword(
         email: email,
         password: password,

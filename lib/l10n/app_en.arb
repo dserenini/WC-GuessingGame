@@ -47,5 +47,11 @@
   "leagueName": "League name",
   "noLeagues": "No leagues yet",
   "noLeaguesSub": "Join a league with an invite code or create your own",
-  "codeCopied": "Code copied!"
+  "codeCopied": "Code copied!",
+
+  "myProfile": "My Profile",
+  "betsFilled": "Bets Filled",
+  "totalPoints": "Total Points",
+  "exactHits": "Exact Score",
+  "resultHits": "Correct Result"
 }

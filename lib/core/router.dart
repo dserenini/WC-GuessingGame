@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -10,22 +10,28 @@ import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
+import 'package:copa2026/features/profile/screens/profile_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/groups/A',
+    initialLocation: '/profile',
     redirect: (context, state) {
       final session = authState.valueOrNull;
       final isLoggedIn = session != null;
       final isLoginPage = state.matchedLocation == '/login';
 
       if (!isLoggedIn && !isLoginPage) return '/login';
-      if (isLoggedIn && isLoginPage) return '/groups/A';
+      if (isLoggedIn && isLoginPage) return '/profile';
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (_, __) => const ProfileScreen(),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',

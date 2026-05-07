@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 
 class AppLocalizations {
   static AppLocalizations? of(BuildContext context) => AppLocalizations();
@@ -43,6 +43,12 @@ class AppLocalizations {
   String get noLeagues => "Nenhuma liga ainda";
   String get noLeaguesSub => "Entre em uma liga com um código ou crie a sua";
   String get codeCopied => "Código copiado!";
+
+  String get myProfile => "Meu Perfil";
+  String get betsFilled => "Apostas Preenchidas";
+  String get totalPoints => "Pontos Totais";
+  String get exactHits => "Acerto no Placar";
+  String get resultHits => "Acerto no Resultado";
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 }

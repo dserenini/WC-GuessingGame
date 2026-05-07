@@ -56,7 +56,8 @@ class AppDrawer extends ConsumerWidget {
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           Text(
-                            currentUser?.email ?? '',
+                            currentUser?.userMetadata?['username'] as String? ??
+                                currentUser?.email ?? '',
                             style: Theme.of(context)
                                 .textTheme
                                 .labelSmall
@@ -75,6 +76,17 @@ class AppDrawer extends ConsumerWidget {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
+            // ── Perfil ────────────────────────
+            _DrawerItem(
+              icon: '👤',
+              label: l.myProfile,
+              selected: currentPath == '/profile',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/profile');
+              },
+            ),
+
             // ── Ranking ──────────────────────
             _DrawerItem(
               icon: '🏆',
@@ -86,7 +98,7 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             _DrawerItem(
-              icon: '🛡️',
+              icon: '🏅',
               label: l.privateLeagues,
               selected: currentPath == '/leagues',
               onTap: () {

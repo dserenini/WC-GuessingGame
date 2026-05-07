@@ -47,5 +47,11 @@
   "leagueName": "Nome della lega",
   "noLeagues": "Nessuna lega ancora",
   "noLeaguesSub": "Entra in una lega con un codice o creane una tua",
-  "codeCopied": "Codice copiato!"
+  "codeCopied": "Codice copiato!",
+
+  "myProfile": "Il mio Profilo",
+  "betsFilled": "Scommesse Compilate",
+  "totalPoints": "Punti Totali",
+  "exactHits": "Punteggio Esatto",
+  "resultHits": "Risultato Corretto"
 }

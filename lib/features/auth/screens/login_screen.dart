@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
@@ -135,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       onSubmit: () => ref
                           .read(authNotifierProvider.notifier)
                           .signIn(
-                              email: _emailCtrl.text.trim(),
+                              emailOrUsername: _emailCtrl.text.trim(),
                               password: _passCtrl.text),
                     ),
                     _SignUpForm(
@@ -191,10 +191,10 @@ class _LoginForm extends StatelessWidget {
       children: [
         TextField(
           controller: emailCtrl,
-          keyboardType: TextInputType.emailAddress,
+          keyboardType: TextInputType.text,
           decoration: InputDecoration(
-            labelText: l.email,
-            prefixIcon: const Icon(Icons.email_outlined),
+            labelText: '${l.username} / ${l.email}',
+            prefixIcon: const Icon(Icons.person_outline),
           ),
         ),
         const SizedBox(height: 14),

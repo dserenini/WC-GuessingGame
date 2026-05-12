@@ -5,6 +5,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/features/groups/providers/group_provider.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -16,6 +17,9 @@ class AppDrawer extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isAdmin = kAdminUids.contains(currentUser?.id);
+
+    final allMatches = ref.watch(allMatchesProvider).valueOrNull ?? [];
+    final allBets = ref.watch(allBetsProvider).valueOrNull ?? {};
 
     return Drawer(
       child: SafeArea(
@@ -127,9 +131,35 @@ class AppDrawer extends ConsumerWidget {
                 itemBuilder: (_, i) {
                   final g = kGroups[i];
                   final path = '/groups/$g';
+                  
+                  final groupMatches = allMatches.where((m) => m.groupLetter == g).toList();
+                  final totalMatches = groupMatches.length;
+                  final placedBets = groupMatches.where((m) => allBets.containsKey(m.id)).length;
+                  
+                  Widget? trailingIndicator;
+                  if (totalMatches > 0) {
+                    final isComplete = placedBets == totalMatches;
+                    trailingIndicator = Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isComplete ? cs.primary.withOpacity(0.15) : cs.onSurface.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '$placedBets/$totalMatches',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isComplete ? FontWeight.bold : FontWeight.w500,
+                          color: isComplete ? cs.primary : cs.onSurface.withOpacity(0.4),
+                        ),
+                      ),
+                    );
+                  }
+
                   return _DrawerItem(
                     label: '${l.group} $g',
                     selected: currentPath == path,
+                    trailing: trailingIndicator,
                     onTap: () {
                       Navigator.pop(context);
                       context.go(path);
@@ -179,12 +209,14 @@ class _DrawerItem extends StatelessWidget {
   final String? icon;
   final String label;
   final bool selected;
+  final Widget? trailing;
   final VoidCallback onTap;
 
   const _DrawerItem({
     this.icon,
     required this.label,
     this.selected = false,
+    this.trailing,
     required this.onTap,
   });
 
@@ -210,6 +242,7 @@ class _DrawerItem extends StatelessWidget {
             fontSize: 14,
           ),
         ),
+        trailing: trailing,
         onTap: onTap,
       ),
     );

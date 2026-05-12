@@ -161,7 +161,7 @@ class _AdminMatchTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(
-          '${match.homeTeam.name} Ã— ${match.awayTeam.name}',
+          '${match.homeTeam.name} X ${match.awayTeam.name}',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: _buildScoreSubtitle(context),
@@ -198,7 +198,7 @@ class _AdminMatchTile extends StatelessWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: Text('${match.homeTeam.name} Ã— ${match.awayTeam.name}'),
+          title: Text('${match.homeTeam.name} X ${match.awayTeam.name}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

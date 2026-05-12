@@ -7,21 +7,117 @@ import 'package:copa2026/shared/providers/theme_provider.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/shared/providers/max_goals_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  ThemeMode? _pendingTheme;
+  String? _pendingLocale;
+  int? _pendingTimezone;
+  int? _pendingMaxGoals;
+
+  bool get _hasChanges =>
+      _pendingTheme != null ||
+      _pendingLocale != null ||
+      _pendingTimezone != null ||
+      _pendingMaxGoals != null;
+
+  void _saveChanges() {
+    if (_pendingTheme != null) ref.read(themeModeProvider.notifier).setTheme(_pendingTheme!);
+    if (_pendingLocale != null) ref.read(localeProvider.notifier).setLocale(_pendingLocale!);
+    if (_pendingTimezone != null) ref.read(timezoneProvider.notifier).setTimezone(_pendingTimezone!);
+    if (_pendingMaxGoals != null) ref.read(maxGoalsProvider.notifier).setMaxGoals(_pendingMaxGoals!);
+
+    setState(() {
+      _pendingTheme = null;
+      _pendingLocale = null;
+      _pendingTimezone = null;
+      _pendingMaxGoals = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Configurações salvas com sucesso!')),
+    );
+  }
+
+  Future<void> _cancelChanges() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('As alterações não salvas serão perdidas.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Não'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Sim, descartar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _pendingTheme = null;
+        _pendingLocale = null;
+        _pendingTimezone = null;
+        _pendingMaxGoals = null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final themeMode = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeProvider);
+    
+    final ThemeMode themeMode = _pendingTheme ?? ref.watch(themeModeProvider);
+    final String localeCode = _pendingLocale ?? ref.watch(localeProvider).languageCode;
+    final int timezoneOffset = _pendingTimezone ?? ref.watch(timezoneProvider).inHours;
+    final int maxGoals = _pendingMaxGoals ?? ref.watch(maxGoalsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text('⚙️ ${l.settings}')),
       drawer: const AppDrawer(),
+      bottomNavigationBar: _hasChanges
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _cancelChanges,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                        child: const Text('Cancelar'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveChanges,
+                        child: const Text('Salvar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -36,9 +132,9 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: Radio<ThemeMode>(
                     value: ThemeMode.system,
                     groupValue: themeMode,
-                    onChanged: (v) =>
-                        ref.read(themeModeProvider.notifier).setTheme(v!),
+                    onChanged: (v) => setState(() => _pendingTheme = v),
                   ),
+                  onTap: () => setState(() => _pendingTheme = ThemeMode.system),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -47,9 +143,9 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: Radio<ThemeMode>(
                     value: ThemeMode.light,
                     groupValue: themeMode,
-                    onChanged: (v) =>
-                        ref.read(themeModeProvider.notifier).setTheme(v!),
+                    onChanged: (v) => setState(() => _pendingTheme = v),
                   ),
+                  onTap: () => setState(() => _pendingTheme = ThemeMode.light),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -58,9 +154,9 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: Radio<ThemeMode>(
                     value: ThemeMode.dark,
                     groupValue: themeMode,
-                    onChanged: (v) =>
-                        ref.read(themeModeProvider.notifier).setTheme(v!),
+                    onChanged: (v) => setState(() => _pendingTheme = v),
                   ),
+                  onTap: () => setState(() => _pendingTheme = ThemeMode.dark),
                 ),
               ],
             ),
@@ -76,27 +172,24 @@ class SettingsScreen extends ConsumerWidget {
                   flag: '🇧🇷',
                   label: 'Português',
                   code: 'pt',
-                  current: locale.languageCode,
-                  onTap: () =>
-                      ref.read(localeProvider.notifier).setLocale('pt'),
+                  current: localeCode,
+                  onTap: () => setState(() => _pendingLocale = 'pt'),
                 ),
                 const Divider(height: 1),
                 _LocaleTile(
                   flag: '🇺🇸',
                   label: 'English',
                   code: 'en',
-                  current: locale.languageCode,
-                  onTap: () =>
-                      ref.read(localeProvider.notifier).setLocale('en'),
+                  current: localeCode,
+                  onTap: () => setState(() => _pendingLocale = 'en'),
                 ),
                 const Divider(height: 1),
                 _LocaleTile(
                   flag: '🇮🇹',
                   label: 'Italiano',
                   code: 'it',
-                  current: locale.languageCode,
-                  onTap: () =>
-                      ref.read(localeProvider.notifier).setLocale('it'),
+                  current: localeCode,
+                  onTap: () => setState(() => _pendingLocale = 'it'),
                 ),
               ],
             ),
@@ -110,10 +203,10 @@ class SettingsScreen extends ConsumerWidget {
               leading: const Icon(Icons.access_time),
               title: const Text('Fuso Horário Atual'),
               subtitle: Text(
-                'GMT${ref.watch(timezoneProvider).inHours >= 0 ? '+' : ''}${ref.watch(timezoneProvider).inHours}',
+                'GMT${timezoneOffset >= 0 ? '+' : ''}$timezoneOffset',
               ),
               trailing: DropdownButton<int>(
-                value: ref.watch(timezoneProvider).inHours,
+                value: timezoneOffset,
                 underline: const SizedBox(),
                 items: List.generate(25, (index) {
                   final offset = index - 12; // -12 to +12
@@ -125,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
                 }),
                 onChanged: (value) {
                   if (value != null) {
-                    ref.read(timezoneProvider.notifier).setTimezone(value);
+                    setState(() => _pendingTimezone = value);
                   }
                 },
               ),
@@ -136,7 +229,10 @@ class SettingsScreen extends ConsumerWidget {
           // ── Agent of Chaos ────────────────────────────────────
           _SectionHeader(title: '🎲 ${l.agentOfChaos}'),
           Card(
-            child: _MaxGoalsTile(),
+            child: _MaxGoalsTile(
+              maxGoals: maxGoals,
+              onChanged: (v) => setState(() => _pendingMaxGoals = v),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -159,19 +255,146 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Account ───────────────────────
           _SectionHeader(title: l.account),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: Text(l.signOut,
-                  style: const TextStyle(color: Colors.red)),
-              onTap: () =>
-                  ref.read(authNotifierProvider.notifier).signOut(),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.password),
+                  title: const Text('Trocar Senha'),
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (ctx) => const _ChangePasswordDialog(),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: Text(l.signOut,
+                      style: const TextStyle(color: Colors.red)),
+                  onTap: () =>
+                      ref.read(authNotifierProvider.notifier).signOut(),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _passCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  bool _isLoading = false;
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _passCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updatePassword() async {
+    final pass = _passCtrl.text;
+    final confirm = _confirmCtrl.text;
+
+    if (pass.isEmpty || pass.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    if (pass != confirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('As senhas não coincidem.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: pass),
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Senha atualizada com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Trocar Senha'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _passCtrl,
+            obscureText: _obscure,
+            decoration: InputDecoration(
+              labelText: 'Nova Senha',
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _confirmCtrl,
+            obscureText: _obscure,
+            decoration: const InputDecoration(
+              labelText: 'Confirmar Senha',
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        _isLoading
+            ? const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : ElevatedButton(
+                onPressed: _updatePassword,
+                child: const Text('Salvar'),
+              ),
+      ],
     );
   }
 }
@@ -227,13 +450,11 @@ class _LocaleTile extends StatelessWidget {
   }
 }
 
-class _MaxGoalsTile extends ConsumerStatefulWidget {
-  @override
-  ConsumerState<_MaxGoalsTile> createState() => _MaxGoalsTileState();
-}
+class _MaxGoalsTile extends StatelessWidget {
+  final int maxGoals;
+  final ValueChanged<int> onChanged;
 
-class _MaxGoalsTileState extends ConsumerState<_MaxGoalsTile> {
-  int _maxGoals = kDefaultMaxGoals;
+  const _MaxGoalsTile({required this.maxGoals, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -243,13 +464,13 @@ class _MaxGoalsTileState extends ConsumerState<_MaxGoalsTile> {
     return ListTile(
       title: Text(l.chaosMaxGoals),
       subtitle: Slider(
-        value: _maxGoals.toDouble(),
+        value: maxGoals.toDouble(),
         min: 1,
         max: 20,
         divisions: 19,
-        label: '$_maxGoals',
+        label: '$maxGoals',
         activeColor: cs.primary,
-        onChanged: (v) => setState(() => _maxGoals = v.round()),
+        onChanged: (v) => onChanged(v.round()),
       ),
       trailing: Container(
         width: 40,
@@ -260,7 +481,7 @@ class _MaxGoalsTileState extends ConsumerState<_MaxGoalsTile> {
         ),
         child: Center(
           child: Text(
-            '$_maxGoals',
+            '$maxGoals',
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: cs.primary,

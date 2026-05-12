@@ -37,6 +37,7 @@ class ChaosService {
   static Map<String, (int, int)> generateRankedBets({
     required List<MatchModel> matches,
     required List<String> rankedTeamNames,
+    int max = 5,
   }) {
     const int maxIterations = 1000;
 
@@ -45,7 +46,7 @@ class ChaosService {
       final Map<String, BetModel> simulatedBets = {};
 
       for (final m in matches) {
-        final scores = randomScore(max: 5);
+        final scores = randomScore(max: max);
         candidateScores[m.id] = scores;
         simulatedBets[m.id] = BetModel(
           id: 'tmp',
@@ -80,9 +81,9 @@ class ChaosService {
       final awayRank = rankedTeamNames.indexOf(m.awayTeam.name);
 
       if (homeRank < awayRank) {
-        fallbackScores[m.id] = randomWin(isHome: true);
+        fallbackScores[m.id] = randomWin(isHome: true, max: max);
       } else {
-        fallbackScores[m.id] = randomWin(isHome: false);
+        fallbackScores[m.id] = randomWin(isHome: false, max: max);
       }
     }
     return fallbackScores;

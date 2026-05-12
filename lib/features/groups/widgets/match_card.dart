@@ -10,6 +10,7 @@ import 'package:copa2026/shared/widgets/score_bottom_sheet.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
+import 'package:copa2026/shared/providers/max_goals_provider.dart';
 
 class MatchCard extends ConsumerWidget {
   final MatchModel match;
@@ -276,7 +277,7 @@ class MatchCard extends ConsumerWidget {
     WidgetRef ref, {
     required bool isHome,
   }) async {
-    final maxGoals = kDefaultMaxGoals; // TODO: read from user prefs
+    final maxGoals = ref.read(maxGoalsProvider);
     final scores = ChaosService.randomWin(isHome: isHome, max: maxGoals);
     await ref.read(betNotifierProvider.notifier).saveBet(
           matchId: match.id,
@@ -287,7 +288,7 @@ class MatchCard extends ConsumerWidget {
   }
 
   Future<void> _randomDraw(BuildContext context, WidgetRef ref) async {
-    final maxGoals = kDefaultMaxGoals;
+    final maxGoals = ref.read(maxGoalsProvider);
     final scores = ChaosService.randomDraw(max: maxGoals);
     await ref.read(betNotifierProvider.notifier).saveBet(
           matchId: match.id,

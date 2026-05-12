@@ -9,6 +9,7 @@ import 'package:copa2026/features/groups/widgets/standings_table.dart';
 import 'package:copa2026/features/groups/widgets/match_card.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/providers/max_goals_provider.dart';
 
 class GroupScreen extends ConsumerWidget {
   final String groupLetter;
@@ -243,7 +244,8 @@ class GroupScreen extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary),
                   onPressed: () async {
                     Navigator.pop(ctx);
-                    final scores = ChaosService.generateRankedBets(matches: matches, rankedTeamNames: teamNames);
+                    final maxGoals = ref.read(maxGoalsProvider);
+                    final scores = ChaosService.generateRankedBets(matches: matches, rankedTeamNames: teamNames, max: maxGoals);
                     for (final m in matches) {
                       if (scores.containsKey(m.id)) {
                         await ref.read(betNotifierProvider.notifier).saveBet(
@@ -274,7 +276,8 @@ class GroupScreen extends ConsumerWidget {
       if (bets.containsKey(match.id)) continue;
       if (match.isLocked) continue;
 
-      final scores = ChaosService.randomScore();
+      final maxGoals = ref.read(maxGoalsProvider);
+      final scores = ChaosService.randomScore(max: maxGoals);
       await ref.read(betNotifierProvider.notifier).saveBet(
             matchId: match.id,
             groupLetter: groupLetter,

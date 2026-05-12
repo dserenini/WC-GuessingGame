@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 
@@ -43,8 +44,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.listen(authNotifierProvider, (_, next) {
       if (next is AsyncError) {
+        String msg = next.error.toString();
+        if (msg.contains('Invalid login credentials') || msg.contains('Usuário não encontrado')) {
+          msg = 'Login/Senha incorretos.';
+        } else {
+          msg = msg.replaceAll('Exception: ', '');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(next.error.toString()),
+          content: Text(msg),
           backgroundColor: cs.error,
         ));
       }
@@ -210,7 +218,14 @@ class _LoginForm extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => _showForgotPasswordDialog(context),
+            child: const Text('Esqueci minha senha'),
+          ),
+        ),
+        const SizedBox(height: 12),
         loading
             ? const CircularProgressIndicator()
             : ElevatedButton(
@@ -218,6 +233,60 @@ class _LoginForm extends StatelessWidget {
                 child: Text(l.login),
               ),
       ],
+    );
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    final emailCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Recuperar Senha'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Digite o seu e-mail para receber um link de recuperação.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'E-mail',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = emailCtrl.text.trim();
+              if (email.isEmpty || !email.contains('@')) return;
+              
+              try {
+                await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Link de recuperação enviado! Verifique seu e-mail.')),
+                  );
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erro: ${e.toString()}'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
     );
   }
 }

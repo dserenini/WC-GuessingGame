@@ -9,6 +9,7 @@ import 'package:copa2026/features/groups/widgets/standings_table.dart';
 import 'package:copa2026/features/groups/widgets/match_card.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
 
 class GroupScreen extends ConsumerWidget {
@@ -25,7 +26,20 @@ class GroupScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${l.group} $groupLetter'),
+        title: Text(' '),
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            const NotificationBell(),
+          ],
+        ),
+
         actions: [
           if (!isBettingLocked) ...[
             Consumer(

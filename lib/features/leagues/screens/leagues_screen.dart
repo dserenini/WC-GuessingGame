@@ -8,6 +8,7 @@ import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 class LeaguesScreen extends ConsumerWidget {
   const LeaguesScreen({super.key});
@@ -18,7 +19,21 @@ class LeaguesScreen extends ConsumerWidget {
     final leaguesAsync = ref.watch(myLeaguesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('🛡️ ${l.privateLeagues}')),
+      appBar: AppBar(
+        title: Text('🛡️  '),
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            const NotificationBell(),
+          ],
+        ),
+      ),
       drawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showJoinOrCreateSheet(context, ref),

@@ -10,6 +10,10 @@ import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
+import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
+import 'package:copa2026/features/settings/screens/export_bets_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -88,7 +92,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final int maxGoals = _pendingMaxGoals ?? ref.watch(maxGoalsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('⚙️ ${l.settings}')),
+      appBar: AppBar(
+        title: Text('⚙️ ${l.settings}'),
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            const NotificationBell(),
+          ],
+        ),
+      ),
       drawer: const AppDrawer(),
       bottomNavigationBar: _hasChanges
           ? SafeArea(
@@ -251,6 +269,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: Text(
                 isBettingLocked ? l.betsLocked : l.betsOpen,
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Export ───────────────────────
+          _SectionHeader(title: 'Exportar'),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.ios_share),
+              title: const Text('Exportar minhas apostas'),
+              subtitle: const Text('Gere uma imagem para salvar ou compartilhar!'),
+              onTap: () {
+                final allMatches = ref.read(allMatchesProvider).valueOrNull;
+                final allBets = ref.read(allBetsProvider).valueOrNull;
+                final profileStats = ref.read(profileStatsProvider).valueOrNull;
+                
+                if (allMatches == null || allBets == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Aguarde os dados carregarem primeiro...')),
+                  );
+                  return;
+                }
+                
+                final String userName = profileStats?.username.isNotEmpty == true 
+                  ? profileStats!.username 
+                  : (Supabase.instance.client.auth.currentUser?.userMetadata?['username'] ?? 'Usuário');
+
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ExportBetsScreen(
+                      matches: allMatches, 
+                      bets: allBets,
+                      userName: userName,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),

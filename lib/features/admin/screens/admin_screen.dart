@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/services/master_data_service.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/shared/models/match.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -67,9 +68,30 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final l = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(allMatchesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('🔧 ${l.adminPanel}'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(' 👑'),
+          leadingWidth: 100,
+          leading: Row(
+            children: [
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+              const NotificationBell(),
+            ],
+          ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.sports_soccer), text: 'Partidas'),
+              Tab(icon: Icon(Icons.notifications_active), text: 'Notificar'),
+            ],
+          ),
+
       ),
       drawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton.extended(
@@ -83,10 +105,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             : const Icon(Icons.sync),
         label: const Text('Atualizar'),
       ),
-      body: matchesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-        data: (matches) {
+      body: TabBarView(
+        children: [
+          matchesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text(e.toString())),
+            data: (matches) {
           // Group by letter
           final grouped = <String, List<MatchModel>>{};
           for (final m in matches) {
@@ -105,9 +129,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               );
             }).toList(),
           );
-        },
+            },
+          ),
+          const _AdminNotificationsTab(),
+        ],
       ),
-    );
+    ));
   }
 }
 
@@ -268,6 +295,128 @@ class _AdminMatchTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+class _AdminNotificationsTab extends StatefulWidget {
+  const _AdminNotificationsTab();
+
+  @override
+  State<_AdminNotificationsTab> createState() => _AdminNotificationsTabState();
+}
+
+class _AdminNotificationsTabState extends State<_AdminNotificationsTab> {
+  final _titleCtrl = TextEditingController();
+  final _msgCtrl = TextEditingController();
+  String _filter = 'all';
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _msgCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_titleCtrl.text.isEmpty || _msgCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha título e mensagem.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.rpc(
+        'admin_send_notification',
+        params: {
+          'p_title': _titleCtrl.text,
+          'p_message': _msgCtrl.text,
+          'p_filter': _filter,
+        },
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notificações enviadas com sucesso!')),
+        );
+        _titleCtrl.clear();
+        _msgCtrl.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao enviar: ${e.toString()}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const Text(
+          'Enviar Notificação em Massa',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _titleCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Título da Notificação',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _msgCtrl,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Mensagem Completa',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text('Enviar para:', style: TextStyle(fontWeight: FontWeight.bold)),
+        RadioListTile<String>(
+          title: const Text('Todos os Usuários'),
+          value: 'all',
+          groupValue: _filter,
+          onChanged: (v) => setState(() => _filter = v!),
+          contentPadding: EdgeInsets.zero,
+        ),
+        RadioListTile<String>(
+          title: const Text('Usuários com apostas incompletas'),
+          value: 'missing_bets',
+          groupValue: _filter,
+          onChanged: (v) => setState(() => _filter = v!),
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: _isLoading ? null : _send,
+            icon: _isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.send),
+            label: const Text('Disparar Notificações'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

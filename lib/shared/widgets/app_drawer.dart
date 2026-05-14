@@ -139,18 +139,31 @@ class AppDrawer extends ConsumerWidget {
                   Widget? trailingIndicator;
                   if (totalMatches > 0) {
                     final isComplete = placedBets == totalMatches;
+                    final isZero = placedBets == 0;
+                    
+                    Color statusColor;
+                    if (isComplete) {
+                      statusColor = Colors.greenAccent.shade400;
+                    } else if (isZero) {
+                      statusColor = Colors.redAccent.shade400;
+                    } else {
+                      statusColor = Colors.amberAccent.shade400;
+                    }
+
                     trailingIndicator = Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isComplete ? cs.primary.withOpacity(0.15) : cs.onSurface.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(4),
+                        color: statusColor.withOpacity(0.15),
+                        border: Border.all(color: statusColor.withOpacity(0.5)),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         '$placedBets/$totalMatches',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isComplete ? FontWeight.bold : FontWeight.w500,
-                          color: isComplete ? cs.primary : cs.onSurface.withOpacity(0.4),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     );

@@ -8,6 +8,7 @@ import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 class RankingScreen extends ConsumerWidget {
   const RankingScreen({super.key});
@@ -19,7 +20,21 @@ class RankingScreen extends ConsumerWidget {
     final currentUid = ref.watch(currentUserProvider)?.id;
 
     return Scaffold(
-      appBar: AppBar(title: Text('🏆 ${l.ranking}')),
+      appBar: AppBar(
+        title: Text('🏆 ${l.ranking}'),
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            const NotificationBell(),
+          ],
+        ),
+      ),
       drawer: const AppDrawer(),
       body: rankingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

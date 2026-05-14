@@ -1,8 +1,0 @@
-# Implementado:
-* **Tela de Login**: Arrumar a mensagem de quando a pessoa erra o login e/ou senha. Colocar uma opção de "esqueci a senha" ainda que seja tipo, se esqueceu, manda mensagem pra um ADM q ele reseta pra você.
-* **Tela de Login**: Implementar uma função para TROCAR A SENHA do usuário
-* **Tela dos Admin**: ta com caractere especial maluco. Tudo desformatado
-* **Botão Salvar**: Na tela de configurações, é importante ter um botão "Salvar" pra garantir que as suas novas configurações são aquelas.
-* **Aleatório Controlado**: Com o switch de aleatório ligado, o app não ta seguindo a recomendação máxima de número de gols por seleção. Quando eu selecionar 3 bolas la na página de configuração, é pra gerar NO MAXIMO 3 gols pra seleção que ganhar o jogo (ou empate de 3-3 no maximo).
-* **Menu Geral**: Indicação de quantas apostas foram preenchidas em cada grupo.
-* **Ajuste Front-end responsivo**: Restrição dinâmica da largura máxima da aplicação baseada na proporção da altura da tela (10:16), integrando a cor do background da área excedente para gerar um visual fluído em monitores grandes sem distorcer as métricas mobile.

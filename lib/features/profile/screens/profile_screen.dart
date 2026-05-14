@@ -6,6 +6,7 @@ import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -17,7 +18,21 @@ class ProfileScreen extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text('👤 ${l.myProfile}')),
+      appBar: AppBar(
+        title: Text('👤 ${l.myProfile}'),
+        leadingWidth: 100,
+        leading: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            const NotificationBell(),
+          ],
+        ),
+      ),
       drawer: const AppDrawer(),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/utils/downloader.dart' as downloader;
 
 class ExportBetsScreen extends StatefulWidget {
@@ -27,6 +25,8 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isCapturing = false;
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   static String _getTeamAbbr(String name) {
     final map = {
       'Países Baixos': 'NED', 'Nova Zelândia': 'NZL', 'Costa Rica': 'CRC',
@@ -35,12 +35,18 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
       'Irã': 'IRN',
     };
     if (map.containsKey(name)) return map[name]!;
-    
-    String clean = name.replaceAll('í', 'i').replaceAll('á', 'a').replaceAll('é', 'e').replaceAll('ã', 'a').replaceAll('ç', 'c').toUpperCase();
+
+    String clean = name
+        .replaceAll('í', 'i')
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('ã', 'a')
+        .replaceAll('ç', 'c')
+        .toUpperCase();
     if (clean.contains(' ')) {
       final parts = clean.split(' ').where((s) => s.isNotEmpty).toList();
       if (parts.length >= 2) {
-        String res = '${parts[0][0]}${parts[1]}';
+        final res = '${parts[0][0]}${parts[1]}';
         if (res.length >= 3) return res.substring(0, 3);
         return res.padRight(3, 'A');
       }
@@ -49,34 +55,80 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
     return clean.padRight(3, 'A');
   }
 
-  Future<void> _captureAndShare() async {
+  // ── Captura ─────────────────────────────────────────────────────────────────
+
+  /// Captura a screenshot e retorna os bytes. Exibe SnackBar de erro se falhar.
+  Future<Uint8List?> _captureImage() async {
     setState(() => _isCapturing = true);
     try {
-      // Usando capture() direto, que tira foto do widget que JÁ ESTÁ na tela. É 100% à prova de falhas.
-      final image = await _screenshotController.capture(delay: const Duration(milliseconds: 20));
-      
-      if (image != null && mounted) {
-        if (kIsWeb) {
-          downloader.downloadImage(image, 'minhas_apostas.png');
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Download iniciado! Verifique sua pasta de downloads.')));
-        } else {
-          final xFile = XFile.fromData(image, mimeType: 'image/png', name: 'apostas.png');
-          await Share.shareXFiles([xFile], text: 'Minhas apostas para a Copa 2026!');
-        }
-      }
+      return await _screenshotController.capture(
+        delay: const Duration(milliseconds: 20),
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao capturar imagem: $e')),
+        );
       }
+      return null;
     } finally {
       if (mounted) setState(() => _isCapturing = false);
     }
   }
 
+  // ── Ações ────────────────────────────────────────────────────────────────────
+
+  /// Download direto da imagem — funciona em desktop e mobile browser.
+  Future<void> _captureAndDownload() async {
+    final image = await _captureImage();
+    if (image == null || !mounted) return;
+
+    downloader.downloadImage(image, 'apostas_${widget.userName}.png');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Download iniciado! Verifique sua pasta de downloads.'),
+      ),
+    );
+  }
+
+  /// Compartilha via Web Share API — no mobile browser abre o seletor nativo
+  /// do sistema operacional (Android/iOS) com WhatsApp como opção direta.
+  /// Fallback automático: faz o download se o browser não suportar a API.
+  Future<void> _captureAndShareWhatsApp() async {
+    final image = await _captureImage();
+    if (image == null || !mounted) return;
+
+    const text = '🏆 Minhas apostas para a Copa 2026! #BolaoCopa2026';
+
+    final shared = await downloader.shareImageNative(
+      image,
+      'apostas_${widget.userName}.png',
+      text,
+    );
+
+    if (!mounted) return;
+
+    if (!shared) {
+      // Fallback: browser não suporta Web Share API — salva a imagem
+      downloader.downloadImage(image, 'apostas_${widget.userName}.png');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Compartilhamento não disponível neste browser. '
+            'Imagem salva — envie pelo WhatsApp a partir da sua galeria.',
+          ),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final Map<String, List<MatchModel>> groups = {};
-    for (var m in widget.matches) {
+    for (final m in widget.matches) {
       groups.putIfAbsent(m.groupLetter, () => []).add(m);
     }
     final sortedGroups = groups.keys.toList()..sort();
@@ -90,7 +142,11 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
         children: [
           const Text(
             '🏆 Bolão Copa 2026',
-            style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -118,16 +174,35 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
         title: const Text('Exportar Apostas'),
         actions: [
           if (_isCapturing)
-            const Center(child: Padding(padding: EdgeInsets.only(right: 16), child: CircularProgressIndicator()))
-          else
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else ...[
+            // Botão Download — sempre visível
             IconButton(
-              icon: Icon(kIsWeb ? Icons.download : Icons.share),
-              onPressed: _captureAndShare,
-              tooltip: kIsWeb ? 'Baixar Imagem' : 'Compartilhar',
+              icon: const Icon(Icons.download),
+              onPressed: _captureAndDownload,
+              tooltip: 'Baixar Imagem',
             ),
+            // Botão WhatsApp — apenas na web (mobile e desktop),
+            // pois é onde a Web Share API funciona
+            if (kIsWeb)
+              IconButton(
+                icon: const Icon(Icons.ios_share, color: Color(0xFF25D366)),
+                onPressed: _captureAndShareWhatsApp,
+                tooltip: 'Compartilhar no WhatsApp',
+              ),
+          ],
         ],
       ),
-      // InteractiveViewer allows the user to pinch-zoom the big 1200px image on mobile
+      // InteractiveViewer permite pinch-zoom na imagem grande no mobile
       body: InteractiveViewer(
         constrained: false,
         boundaryMargin: const EdgeInsets.all(32),
@@ -141,7 +216,11 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
     );
   }
 
-  Widget _buildColumn(List<String> groupLetters, Map<String, List<MatchModel>> groups, Map<String, BetModel> bets) {
+  Widget _buildColumn(
+    List<String> groupLetters,
+    Map<String, List<MatchModel>> groups,
+    Map<String, BetModel> bets,
+  ) {
     return Expanded(
       child: Column(
         children: groupLetters.map((g) {
@@ -151,7 +230,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
             final dateB = b.matchDate ?? DateTime.now();
             return dateA.compareTo(dateB);
           });
-          
+
           return Container(
             margin: const EdgeInsets.all(8),
             padding: const EdgeInsets.all(12),
@@ -163,7 +242,14 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('GRUPO $g', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 18)),
+                Text(
+                  'GRUPO $g',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                    fontSize: 18,
+                  ),
+                ),
                 const Divider(color: Colors.white24),
                 ...gMatches.map((m) {
                   final bet = bets[m.id];
@@ -171,12 +257,16 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
                   final awayAbbr = _getTeamAbbr(m.awayTeam.name);
                   final homeScore = bet?.homeScoreBet.toString() ?? '-';
                   final awayScore = bet?.awayScoreBet.toString() ?? '-';
-                  
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Text(
                       '$homeAbbr  $homeScore x $awayScore  $awayAbbr',
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   );
                 }),

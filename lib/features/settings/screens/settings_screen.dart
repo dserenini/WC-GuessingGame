@@ -12,7 +12,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
-import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/settings/screens/export_bets_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -280,26 +279,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               leading: const Icon(Icons.ios_share),
               title: const Text('Exportar minhas apostas'),
               subtitle: const Text('Gere uma imagem para salvar ou compartilhar!'),
-              onTap: () {
+              onTap: () async {
                 final allMatches = ref.read(allMatchesProvider).valueOrNull;
                 final allBets = ref.read(allBetsProvider).valueOrNull;
-                final profileStats = ref.read(profileStatsProvider).valueOrNull;
-                
+
                 if (allMatches == null || allBets == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Aguarde os dados carregarem primeiro...')),
                   );
                   return;
                 }
-                
-                final String userName = profileStats?.username.isNotEmpty == true 
-                  ? profileStats!.username 
-                  : (Supabase.instance.client.auth.currentUser?.userMetadata?['username'] ?? 'Usuário');
+
+                // Busca username diretamente no Supabase para garantir que sempre vem o valor correto,
+                // independente do estado do profileStatsProvider no momento do tap.
+                final client = Supabase.instance.client;
+                final user = client.auth.currentUser;
+                String userName = user?.id ?? 'usuario'; // fallback absoluto
+
+                try {
+                  final profile = await client
+                      .from('profiles')
+                      .select('username')
+                      .eq('id', user!.id)
+                      .single();
+                  final fetched = profile['username'] as String?;
+                  if (fetched != null && fetched.isNotEmpty) {
+                    userName = fetched;
+                  } else {
+                    // 2º fallback: metadado do auth
+                    userName = (user.userMetadata?['username'] as String?)?.isNotEmpty == true
+                        ? user.userMetadata!['username'] as String
+                        : user.id;
+                  }
+                } catch (_) {
+                  // Se a query falhar, usa metadado do auth ou user.id
+                  userName = (user?.userMetadata?['username'] as String?)?.isNotEmpty == true
+                      ? user!.userMetadata!['username'] as String
+                      : (user?.id ?? 'usuario');
+                }
+
+                if (!context.mounted) return;
 
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ExportBetsScreen(
-                      matches: allMatches, 
+                      matches: allMatches,
                       bets: allBets,
                       userName: userName,
                     ),

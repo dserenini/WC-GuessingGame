@@ -23,7 +23,7 @@ class Copa2026App extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
-      title: 'Copa 2026',
+      title: 'Make Bolão Great Again',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: AppTheme.light,

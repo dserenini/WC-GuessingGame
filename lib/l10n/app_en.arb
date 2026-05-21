@@ -53,5 +53,40 @@
   "betsFilled": "Bets Filled",
   "totalPoints": "Total Points",
   "exactHits": "Exact Score",
-  "resultHits": "Correct Result"
+  "resultHits": "Correct Result",
+
+  "superPalpites": "Super Bets",
+  "superPalpitesRemaining": "You have {count} edits left after the deadline.",
+  "@superPalpitesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "forgotPassword": "Forgot my password",
+  "recoverPassword": "Recover Password",
+  "recoverPasswordHint": "Enter your email to receive a recovery link.",
+  "recoveryLinkSent": "Recovery link sent! Check your email.",
+  "send": "Send",
+  "errorGeneric": "Error: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidLogin": "Invalid login/password.",
+
+  "chooseLanguage": "Choose your language",
+  "continueBtn": "Continue",
+  "advancedStats": "Advanced Stats",
+  "advancedStatsSub": "By group, round, team — coming soon!",
+  "deleteBet": "Delete Bet",
+  "deleteBetConfirm": "Do you want to delete your bet for this match?",
+  "delete": "Delete",
+
+  "appTitle": "Make Bolão Great Again"
 }

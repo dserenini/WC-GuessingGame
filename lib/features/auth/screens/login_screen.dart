@@ -90,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               const SizedBox(height: 20),
               Text(
-                'Copa 2026',
+                'Make Bolão Great Again',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.primary,

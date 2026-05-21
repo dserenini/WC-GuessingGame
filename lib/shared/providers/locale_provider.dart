@@ -1,26 +1,30 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('sharedPreferencesProvider must be overridden');
+});
+
 final localeProvider =
     StateNotifierProvider<LocaleNotifier, Locale>((ref) {
-  return LocaleNotifier();
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return LocaleNotifier(prefs);
 });
 
 class LocaleNotifier extends StateNotifier<Locale> {
-  LocaleNotifier() : super(const Locale('pt')) {
-    _load();
-  }
+  final SharedPreferences _prefs;
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString('locale') ?? 'pt';
-    state = Locale(code);
-  }
+  LocaleNotifier(this._prefs) : super(Locale(_prefs.getString('locale') ?? 'pt'));
 
   Future<void> setLocale(String languageCode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('locale', languageCode);
+    await _prefs.setString('locale', languageCode);
+    // Automatically flag that onboarding language selection is done
+    await _prefs.setBool('has_selected_lang', true);
     state = Locale(languageCode);
   }
+
+  bool get hasSelectedLanguage => _prefs.getBool('has_selected_lang') ?? false;
 }

@@ -11,9 +11,12 @@ import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
+import 'package:copa2026/features/auth/screens/onboarding_screen.dart';
+import 'package:copa2026/shared/providers/locale_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final localeNotifier = ref.watch(localeProvider.notifier);
 
   return GoRouter(
     initialLocation: '/profile',
@@ -21,12 +24,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = authState.valueOrNull;
       final isLoggedIn = session != null;
       final isLoginPage = state.matchedLocation == '/login';
+      final isOnboarding = state.matchedLocation == '/onboarding';
+      final hasSelectedLanguage = localeNotifier.hasSelectedLanguage;
 
       if (!isLoggedIn && !isLoginPage) return '/login';
-      if (isLoggedIn && isLoginPage) return '/profile';
+      
+      if (isLoggedIn) {
+        if (!hasSelectedLanguage && !isOnboarding) return '/onboarding';
+        if (hasSelectedLanguage && (isLoginPage || isOnboarding)) return '/profile';
+      }
+      
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (_, __) => const OnboardingScreen(),
+      ),
       GoRoute(
         path: '/profile',
         name: 'profile',

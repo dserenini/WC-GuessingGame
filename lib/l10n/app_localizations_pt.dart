@@ -1,4 +1,4 @@
-﻿// ignore: unused_import
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
@@ -132,4 +132,76 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get codeCopied => 'Código copiado!';
+
+  @override
+  String get myProfile => 'Meu Perfil';
+
+  @override
+  String get betsFilled => 'Apostas Preenchidas';
+
+  @override
+  String get totalPoints => 'Pontos Totais';
+
+  @override
+  String get exactHits => 'Acerto no Placar';
+
+  @override
+  String get resultHits => 'Acerto no Resultado';
+
+  @override
+  String get superPalpites => 'Super Palpites';
+
+  @override
+  String superPalpitesRemaining(int count) {
+    return 'Você tem $count alterações após o prazo limite.';
+  }
+
+  @override
+  String get forgotPassword => 'Esqueci minha senha';
+
+  @override
+  String get recoverPassword => 'Recuperar Senha';
+
+  @override
+  String get recoverPasswordHint =>
+      'Digite o seu e-mail para receber um link de recuperação.';
+
+  @override
+  String get recoveryLinkSent =>
+      'Link de recuperação enviado! Verifique seu e-mail.';
+
+  @override
+  String get send => 'Enviar';
+
+  @override
+  String errorGeneric(String error) {
+    return 'Erro: $error';
+  }
+
+  @override
+  String get invalidLogin => 'Login/Senha incorretos.';
+
+  @override
+  String get chooseLanguage => 'Escolha seu idioma';
+
+  @override
+  String get continueBtn => 'Continuar';
+
+  @override
+  String get advancedStats => 'Estatísticas Avançadas';
+
+  @override
+  String get advancedStatsSub => 'Por grupo, rodada, seleção — em breve!';
+
+  @override
+  String get deleteBet => 'Deletar Aposta';
+
+  @override
+  String get deleteBetConfirm => 'Deseja apagar sua aposta para este jogo?';
+
+  @override
+  String get delete => 'Deletar';
+
+  @override
+  String get appTitle => 'Make Bolão Great Again';
 }

@@ -53,7 +53,7 @@ class AppDrawer extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Copa 2026',
+                            'Make Bolão Great Again',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium

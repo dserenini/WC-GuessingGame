@@ -10,6 +10,7 @@ class ProfileStats {
   final int totalPoints;
   final int exactHits;   // points == 3 (acerto no placar)
   final int resultHits;  // points == 1 (acerto no resultado)
+  final int superPalpitesUsed;
 
   const ProfileStats({
     required this.username,
@@ -20,6 +21,7 @@ class ProfileStats {
     required this.totalPoints,
     required this.exactHits,
     required this.resultHits,
+    required this.superPalpitesUsed,
   });
 }
 
@@ -34,7 +36,7 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
   // Fetch profile
   final profileData = await client
       .from('profiles')
-      .select('username, avatar_url')
+      .select('username, avatar_url, super_palpites_used')
       .eq('id', user.id)
       .single();
 
@@ -73,5 +75,6 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
     totalPoints: totalPoints,
     exactHits: exactHits,
     resultHits: resultHits,
+    superPalpitesUsed: (profileData['super_palpites_used'] as num?)?.toInt() ?? 0,
   );
 });

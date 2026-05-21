@@ -1,4 +1,4 @@
-﻿// ignore: unused_import
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
@@ -133,4 +133,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get codeCopied => 'Code copied!';
+
+  @override
+  String get myProfile => 'My Profile';
+
+  @override
+  String get betsFilled => 'Bets Filled';
+
+  @override
+  String get totalPoints => 'Total Points';
+
+  @override
+  String get exactHits => 'Exact Score';
+
+  @override
+  String get resultHits => 'Correct Result';
+
+  @override
+  String get superPalpites => 'Super Bets';
+
+  @override
+  String superPalpitesRemaining(int count) {
+    return 'You have $count edits left after the deadline.';
+  }
+
+  @override
+  String get forgotPassword => 'Forgot my password';
+
+  @override
+  String get recoverPassword => 'Recover Password';
+
+  @override
+  String get recoverPasswordHint =>
+      'Enter your email to receive a recovery link.';
+
+  @override
+  String get recoveryLinkSent => 'Recovery link sent! Check your email.';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String errorGeneric(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get invalidLogin => 'Invalid login/password.';
+
+  @override
+  String get chooseLanguage => 'Choose your language';
+
+  @override
+  String get continueBtn => 'Continue';
+
+  @override
+  String get advancedStats => 'Advanced Stats';
+
+  @override
+  String get advancedStatsSub => 'By group, round, team — coming soon!';
+
+  @override
+  String get deleteBet => 'Delete Bet';
+
+  @override
+  String get deleteBetConfirm =>
+      'Do you want to delete your bet for this match?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get appTitle => 'Make Bolão Great Again';
 }

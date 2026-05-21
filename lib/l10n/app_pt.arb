@@ -53,5 +53,40 @@
   "betsFilled": "Apostas Preenchidas",
   "totalPoints": "Pontos Totais",
   "exactHits": "Acerto no Placar",
-  "resultHits": "Acerto no Resultado"
+  "resultHits": "Acerto no Resultado",
+
+  "superPalpites": "Super Palpites",
+  "superPalpitesRemaining": "Você tem {count} alterações após o prazo limite.",
+  "@superPalpitesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "forgotPassword": "Esqueci minha senha",
+  "recoverPassword": "Recuperar Senha",
+  "recoverPasswordHint": "Digite o seu e-mail para receber um link de recuperação.",
+  "recoveryLinkSent": "Link de recuperação enviado! Verifique seu e-mail.",
+  "send": "Enviar",
+  "errorGeneric": "Erro: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidLogin": "Login/Senha incorretos.",
+
+  "chooseLanguage": "Escolha seu idioma",
+  "continueBtn": "Continuar",
+  "advancedStats": "Estatísticas Avançadas",
+  "advancedStatsSub": "Por grupo, rodada, seleção — em breve!",
+  "deleteBet": "Deletar Aposta",
+  "deleteBetConfirm": "Deseja apagar sua aposta para este jogo?",
+  "delete": "Deletar",
+
+  "appTitle": "Make Bolão Great Again"
 }

@@ -11,6 +11,7 @@ import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
+import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 
 class MatchCard extends ConsumerWidget {
   final MatchModel match;
@@ -29,7 +30,14 @@ class MatchCard extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final locked = isBettingLocked || match.isLocked;
+    final profileStats = ref.watch(profileStatsProvider).valueOrNull;
+    final superPalpitesUsed = profileStats?.superPalpitesUsed ?? 0;
+    final hasSuperPalpites = superPalpitesUsed < kMaxSuperPalpites;
+
+    final isTooCloseToMatch = match.matchDate != null &&
+        match.matchDate!.isBefore(DateTime.now().toUtc().add(const Duration(hours: 1)));
+
+    final locked = match.isLocked || isTooCloseToMatch || (isBettingLocked && !hasSuperPalpites);
     final chaosModeActive = ref.watch(chaosModeProvider);
 
     final homeScore = bet?.homeScoreBet;
@@ -263,12 +271,23 @@ class MatchCard extends ConsumerWidget {
     }
 
     if (context.mounted) {
-      await ref.read(betNotifierProvider.notifier).saveBet(
-            matchId: match.id,
-            groupLetter: groupLetter,
-            homeScore: home,
-            awayScore: away,
+      try {
+        await ref.read(betNotifierProvider.notifier).saveBet(
+              matchId: match.id,
+              groupLetter: groupLetter,
+              homeScore: home,
+              awayScore: away,
+            );
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
           );
+        }
+      }
     }
   }
 
@@ -279,23 +298,45 @@ class MatchCard extends ConsumerWidget {
   }) async {
     final maxGoals = ref.read(maxGoalsProvider);
     final scores = ChaosService.randomWin(isHome: isHome, max: maxGoals);
-    await ref.read(betNotifierProvider.notifier).saveBet(
-          matchId: match.id,
-          groupLetter: groupLetter,
-          homeScore: scores.$1,
-          awayScore: scores.$2,
+    try {
+      await ref.read(betNotifierProvider.notifier).saveBet(
+            matchId: match.id,
+            groupLetter: groupLetter,
+            homeScore: scores.$1,
+            awayScore: scores.$2,
+          );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
+      }
+    }
   }
 
   Future<void> _randomDraw(BuildContext context, WidgetRef ref) async {
     final maxGoals = ref.read(maxGoalsProvider);
     final scores = ChaosService.randomDraw(max: maxGoals);
-    await ref.read(betNotifierProvider.notifier).saveBet(
-          matchId: match.id,
-          groupLetter: groupLetter,
-          homeScore: scores.$1,
-          awayScore: scores.$2,
+    try {
+      await ref.read(betNotifierProvider.notifier).saveBet(
+            matchId: match.id,
+            groupLetter: groupLetter,
+            homeScore: scores.$1,
+            awayScore: scores.$2,
+          );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
+      }
+    }
   }
 
   Future<void> _confirmDeleteBet(BuildContext context, WidgetRef ref) async {

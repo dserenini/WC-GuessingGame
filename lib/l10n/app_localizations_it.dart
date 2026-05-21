@@ -1,4 +1,4 @@
-﻿// ignore: unused_import
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
@@ -33,7 +33,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cancel => 'Annulla';
 
   @override
-  String get yes => 'SÃ¬, ci credo!';
+  String get yes => 'Sì, ci credo!';
 
   @override
   String get save => 'Salva';
@@ -132,4 +132,77 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get codeCopied => 'Codice copiato!';
+
+  @override
+  String get myProfile => 'Il mio Profilo';
+
+  @override
+  String get betsFilled => 'Scommesse Compilate';
+
+  @override
+  String get totalPoints => 'Punti Totali';
+
+  @override
+  String get exactHits => 'Punteggio Esatto';
+
+  @override
+  String get resultHits => 'Risultato Corretto';
+
+  @override
+  String get superPalpites => 'Super Scommessa';
+
+  @override
+  String superPalpitesRemaining(int count) {
+    return 'Hai $count modifiche rimaste dopo la scadenza.';
+  }
+
+  @override
+  String get forgotPassword => 'Ho dimenticato la password';
+
+  @override
+  String get recoverPassword => 'Recupera Password';
+
+  @override
+  String get recoverPasswordHint =>
+      'Inserisci la tua email per ricevere un link di recupero.';
+
+  @override
+  String get recoveryLinkSent =>
+      'Link di recupero inviato! Controlla la tua email.';
+
+  @override
+  String get send => 'Invia';
+
+  @override
+  String errorGeneric(String error) {
+    return 'Errore: $error';
+  }
+
+  @override
+  String get invalidLogin => 'Login/Password errati.';
+
+  @override
+  String get chooseLanguage => 'Scegli la tua lingua';
+
+  @override
+  String get continueBtn => 'Continua';
+
+  @override
+  String get advancedStats => 'Statistiche Avanzate';
+
+  @override
+  String get advancedStatsSub => 'Per gruppo, turno, squadra — in arrivo!';
+
+  @override
+  String get deleteBet => 'Elimina Scommessa';
+
+  @override
+  String get deleteBetConfirm =>
+      'Vuoi eliminare la tua scommessa per questa partita?';
+
+  @override
+  String get delete => 'Elimina';
+
+  @override
+  String get appTitle => 'Make Bolão Great Again';
 }

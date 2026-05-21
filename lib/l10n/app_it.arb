@@ -53,5 +53,40 @@
   "betsFilled": "Scommesse Compilate",
   "totalPoints": "Punti Totali",
   "exactHits": "Punteggio Esatto",
-  "resultHits": "Risultato Corretto"
+  "resultHits": "Risultato Corretto",
+
+  "superPalpites": "Super Scommessa",
+  "superPalpitesRemaining": "Hai {count} modifiche rimaste dopo la scadenza.",
+  "@superPalpitesRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "forgotPassword": "Ho dimenticato la password",
+  "recoverPassword": "Recupera Password",
+  "recoverPasswordHint": "Inserisci la tua email per ricevere un link di recupero.",
+  "recoveryLinkSent": "Link di recupero inviato! Controlla la tua email.",
+  "send": "Invia",
+  "errorGeneric": "Errore: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidLogin": "Login/Password errati.",
+
+  "chooseLanguage": "Scegli la tua lingua",
+  "continueBtn": "Continua",
+  "advancedStats": "Statistiche Avanzate",
+  "advancedStatsSub": "Per gruppo, turno, squadra — in arrivo!",
+  "deleteBet": "Elimina Scommessa",
+  "deleteBetConfirm": "Vuoi eliminare la tua scommessa per questa partita?",
+  "delete": "Elimina",
+
+  "appTitle": "Make Bolão Great Again"
 }

@@ -10,6 +10,16 @@ final kBetDeadline = DateTime(2026, 6, 10, 23, 59, 0).toUtc().add(
 bool get isBettingLocked => DateTime.now().toUtc().isAfter(kBetDeadline);
 
 // ─────────────────────────────────────────────
+// APP VERSION
+// ─────────────────────────────────────────────
+const String kAppVersion = '0.0';
+
+// ─────────────────────────────────────────────
+// SUPER PALPITES
+// ─────────────────────────────────────────────
+const int kMaxSuperPalpites = 10;
+
+// ─────────────────────────────────────────────
 // SCORING RULES
 // ─────────────────────────────────────────────
 const int kPointsExactScore = 3;

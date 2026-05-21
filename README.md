@@ -1,4 +1,4 @@
-# Copa 2026 — World Cup Group Stage Prediction PWA
+# Make Bolão Great Again
 
 A Flutter Web PWA for predicting World Cup 2026 group-stage scores with friends.
 

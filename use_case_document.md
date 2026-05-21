@@ -1,6 +1,6 @@
-# Documento de Casos de Uso - BolãoCopa 2026
+# Documento de Casos de Uso - Make Bolão Great Again
 
-Este documento detalha as funcionalidades e a jornada do usuário dentro do sistema BolãoCopa 2026. Ele serve como base técnica e funcional para a criação do Manual do Usuário.
+Este documento detalha as funcionalidades e a jornada do usuário dentro do sistema Make Bolão Great Again. Ele serve como base técnica e funcional para a criação do Manual do Usuário.
 
 ---
 

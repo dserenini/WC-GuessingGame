@@ -119,7 +119,7 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
     required int homeScore,
     required int awayScore,
   }) async {
-    if (isBettingLocked) return;
+    // The database enforces the deadline and Super Palpite limits via trigger.
 
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
@@ -138,6 +138,8 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
+      // Re-throw to allow UI to show error message
+      rethrow;
     }
   }
 

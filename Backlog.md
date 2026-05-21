@@ -1,5 +1,6 @@
 # Backlog de implementações (Bugs/Fix/Ajustes Necessários)
-
+* **Página de Configuração**: Adicionar uma informação de "versão" do sistema no final, pra saber se uma melhoria realmente subiu e pra ver se ta funcionando conforme esperado.
+* **Página de Configuração**: Testar os internacionais e fazer funcionar
 
 # Implementado:
 

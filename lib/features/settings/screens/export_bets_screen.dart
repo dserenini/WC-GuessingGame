@@ -98,7 +98,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
     final image = await _captureImage();
     if (image == null || !mounted) return;
 
-    const text = '🏆 Minhas apostas para a Copa 2026! #BolaoCopa2026';
+    const text = '🏆 Minhas apostas para o Make Bolão Great Again! #MakeBolaoGreatAgain';
 
     final shared = await downloader.shareImageNative(
       image,
@@ -141,7 +141,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            '🏆 Bolão Copa 2026',
+            '🏆 Make Bolão Great Again',
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,

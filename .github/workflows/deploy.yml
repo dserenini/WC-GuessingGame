@@ -7,6 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-deploy:
@@ -16,10 +17,6 @@ jobs:
       packages: write
 
     steps:
-      - name: set lowercase image name
-        run: |
-          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -62,12 +59,16 @@ jobs:
             docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
             
             # Stop and remove the old container
-            docker stop bolao_app || true
-            docker rm bolao_app || true
+            docker stop app-bolao-web || true
+            docker rm app-bolao-web || true
             
-            # Run the new container
-            # Assuming it exposes port 80 internally
-            docker run -d --name bolao_app -p 80:80 --restart unless-stopped ghcr.io/${{ env.IMAGE_NAME }}:latest
+            # Run the new container matching docker-compose.yml specs
+            docker run -d \
+              --name app-bolao-web \
+              --restart unless-stopped \
+              --network npm_default \
+              -p 8002:80 \
+              ghcr.io/${{ env.IMAGE_NAME }}:latest
             
             # Clean up old unused images
             docker image prune -f

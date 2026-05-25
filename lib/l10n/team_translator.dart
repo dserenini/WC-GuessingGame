@@ -4,102 +4,181 @@ import 'package:copa2026/l10n/app_localizations.dart';
 String translateTeam(BuildContext context, String dbTeamName) {
   final l = AppLocalizations.of(context)!;
 
-  switch (dbTeamName) {
-    case 'Mexico':
+  final name = dbTeamName.trim().toLowerCase();
+  
+  switch (name) {
+    case 'mexico':
+    case 'méxico':
+    case 'messico':
       return l.teamMexico;
-    case 'South Africa':
+    case 'south africa':
+    case 'áfrica do sul':
+    case 'sudafrica':
       return l.teamSouthAfrica;
-    case 'South Korea':
+    case 'south korea':
+    case 'coreia do sul':
+    case 'corea del sud':
       return l.teamSouthKorea;
-    case 'Czechia':
+    case 'czechia':
+    case 'chéquia':
+    case 'cechia':
+    case 'czech republic':
       return l.teamCzechia;
-    case 'Canada':
+    case 'canada':
+    case 'canadá':
       return l.teamCanada;
-    case 'Switzerland':
+    case 'switzerland':
+    case 'suíça':
+    case 'svizzera':
       return l.teamSwitzerland;
-    case 'Qatar':
+    case 'qatar':
+    case 'catar':
       return l.teamQatar;
-    case 'Bosnia and Herzegovina':
+    case 'bosnia and herzegovina':
+    case 'bósnia e herzegovina':
+    case 'bosnia ed erzegovina':
       return l.teamBosniaAndHerzegovina;
-    case 'Brazil':
+    case 'brazil':
+    case 'brasil':
+    case 'brasile':
       return l.teamBrazil;
-    case 'Morocco':
+    case 'morocco':
+    case 'marrocos':
+    case 'marocco':
       return l.teamMorocco;
-    case 'Haiti':
+    case 'haiti':
       return l.teamHaiti;
-    case 'Scotland':
+    case 'scotland':
+    case 'escócia':
+    case 'scozia':
       return l.teamScotland;
-    case 'United States':
+    case 'united states':
+    case 'estados unidos':
+    case 'stati uniti':
+    case 'usa':
       return l.teamUnitedStates;
-    case 'Paraguay':
+    case 'paraguay':
+    case 'paraguai':
       return l.teamParaguay;
-    case 'Australia':
+    case 'australia':
+    case 'austrália':
       return l.teamAustralia;
-    case 'Türkiye':
+    case 'türkiye':
+    case 'turkey':
+    case 'turquia':
+    case 'turchia':
       return l.teamTurkiye;
-    case 'Germany':
+    case 'germany':
+    case 'alemanha':
+    case 'germania':
       return l.teamGermany;
-    case 'Curaçao':
+    case 'curaçao':
+    case 'curacao':
       return l.teamCuracao;
-    case 'Ivory Coast':
+    case 'ivory coast':
+    case 'costa do marfim':
+    case 'costa d\'avorio':
+    case 'cote d\'ivoire':
       return l.teamIvoryCoast;
-    case 'Ecuador':
+    case 'ecuador':
+    case 'equador':
       return l.teamEcuador;
-    case 'Netherlands':
+    case 'netherlands':
+    case 'holanda':
+    case 'paesi bassi':
       return l.teamNetherlands;
-    case 'Japan':
+    case 'japan':
+    case 'japão':
+    case 'giappone':
       return l.teamJapan;
-    case 'Sweden':
+    case 'sweden':
+    case 'suécia':
+    case 'svezia':
       return l.teamSweden;
-    case 'Tunisia':
+    case 'tunisia':
+    case 'tunísia':
       return l.teamTunisia;
-    case 'Belgium':
+    case 'belgium':
+    case 'bélgica':
+    case 'belgio':
       return l.teamBelgium;
-    case 'Egypt':
+    case 'egypt':
+    case 'egito':
+    case 'egitto':
       return l.teamEgypt;
-    case 'IR Iran':
+    case 'ir iran':
+    case 'iran':
+    case 'irã':
       return l.teamIRIran;
-    case 'New Zealand':
+    case 'new zealand':
+    case 'nova zelândia':
+    case 'nuova zelanda':
       return l.teamNewZealand;
-    case 'Spain':
+    case 'spain':
+    case 'espanha':
+    case 'spagna':
       return l.teamSpain;
-    case 'Cabo Verde':
+    case 'cabo verde':
+    case 'cape verde':
+    case 'capo verde':
       return l.teamCaboVerde;
-    case 'Saudi Arabia':
+    case 'saudi arabia':
+    case 'arábia saudita':
+    case 'arabia saudita':
       return l.teamSaudiArabia;
-    case 'Uruguay':
+    case 'uruguay':
+    case 'uruguai':
       return l.teamUruguay;
-    case 'France':
+    case 'france':
+    case 'frança':
+    case 'francia':
       return l.teamFrance;
-    case 'Senegal':
+    case 'senegal':
       return l.teamSenegal;
-    case 'Iraq':
+    case 'iraq':
+    case 'iraque':
       return l.teamIraq;
-    case 'Norway':
+    case 'norway':
+    case 'noruega':
+    case 'norvegia':
       return l.teamNorway;
-    case 'Argentina':
+    case 'argentina':
       return l.teamArgentina;
-    case 'Algeria':
+    case 'algeria':
+    case 'argélia':
       return l.teamAlgeria;
-    case 'Austria':
+    case 'austria':
+    case 'áustria':
       return l.teamAustria;
-    case 'Jordan':
+    case 'jordan':
+    case 'jordânia':
+    case 'giordania':
       return l.teamJordan;
-    case 'Portugal':
+    case 'portugal':
+    case 'portogallo':
       return l.teamPortugal;
-    case 'DR Congo':
+    case 'dr congo':
+    case 'rd congo':
+    case 'rd del congo':
       return l.teamDRCongo;
-    case 'Uzbekistan':
+    case 'uzbekistan':
+    case 'uzbequistão':
       return l.teamUzbekistan;
-    case 'Colombia':
+    case 'colombia':
+    case 'colômbia':
       return l.teamColombia;
-    case 'England':
+    case 'england':
+    case 'inglaterra':
+    case 'inghilterra':
       return l.teamEngland;
-    case 'Croatia':
+    case 'croatia':
+    case 'croácia':
+    case 'croazia':
       return l.teamCroatia;
-    case 'Ghana':
+    case 'ghana':
       return l.teamGhana;
-    case 'Panama':
+    case 'panama':
+    case 'panamá':
       return l.teamPanama;
     default:
       return dbTeamName; // Fallback to DB name if not found

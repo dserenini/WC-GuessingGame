@@ -347,4 +347,168 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deleteAllBets => 'Deletar todas apostas';
+
+  @override
+  String rankingBetsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count apostas',
+      one: '1 aposta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statusScheduled => 'Agendado';
+
+  @override
+  String get statusLive => 'Ao Vivo 🔴';
+
+  @override
+  String get statusFinished => 'Encerrado';
+
+  @override
+  String get teamMexico => 'México';
+
+  @override
+  String get teamSouthAfrica => 'África do Sul';
+
+  @override
+  String get teamSouthKorea => 'Coreia do Sul';
+
+  @override
+  String get teamCzechia => 'Chéquia';
+
+  @override
+  String get teamCanada => 'Canadá';
+
+  @override
+  String get teamSwitzerland => 'Suíça';
+
+  @override
+  String get teamQatar => 'Catar';
+
+  @override
+  String get teamBosniaAndHerzegovina => 'Bósnia e Herzegovina';
+
+  @override
+  String get teamBrazil => 'Brasil';
+
+  @override
+  String get teamMorocco => 'Marrocos';
+
+  @override
+  String get teamHaiti => 'Haiti';
+
+  @override
+  String get teamScotland => 'Escócia';
+
+  @override
+  String get teamUnitedStates => 'Estados Unidos';
+
+  @override
+  String get teamParaguay => 'Paraguai';
+
+  @override
+  String get teamAustralia => 'Austrália';
+
+  @override
+  String get teamTurkiye => 'Turquia';
+
+  @override
+  String get teamGermany => 'Alemanha';
+
+  @override
+  String get teamCuracao => 'Curaçao';
+
+  @override
+  String get teamIvoryCoast => 'Costa do Marfim';
+
+  @override
+  String get teamEcuador => 'Equador';
+
+  @override
+  String get teamNetherlands => 'Holanda';
+
+  @override
+  String get teamJapan => 'Japão';
+
+  @override
+  String get teamSweden => 'Suécia';
+
+  @override
+  String get teamTunisia => 'Tunísia';
+
+  @override
+  String get teamBelgium => 'Bélgica';
+
+  @override
+  String get teamEgypt => 'Egito';
+
+  @override
+  String get teamIRIran => 'Irã';
+
+  @override
+  String get teamNewZealand => 'Nova Zelândia';
+
+  @override
+  String get teamSpain => 'Espanha';
+
+  @override
+  String get teamCaboVerde => 'Cabo Verde';
+
+  @override
+  String get teamSaudiArabia => 'Arábia Saudita';
+
+  @override
+  String get teamUruguay => 'Uruguai';
+
+  @override
+  String get teamFrance => 'França';
+
+  @override
+  String get teamSenegal => 'Senegal';
+
+  @override
+  String get teamIraq => 'Iraque';
+
+  @override
+  String get teamNorway => 'Noruega';
+
+  @override
+  String get teamArgentina => 'Argentina';
+
+  @override
+  String get teamAlgeria => 'Argélia';
+
+  @override
+  String get teamAustria => 'Áustria';
+
+  @override
+  String get teamJordan => 'Jordânia';
+
+  @override
+  String get teamPortugal => 'Portugal';
+
+  @override
+  String get teamDRCongo => 'RD Congo';
+
+  @override
+  String get teamUzbekistan => 'Uzbequistão';
+
+  @override
+  String get teamColombia => 'Colômbia';
+
+  @override
+  String get teamEngland => 'Inglaterra';
+
+  @override
+  String get teamCroatia => 'Croácia';
+
+  @override
+  String get teamGhana => 'Gana';
+
+  @override
+  String get teamPanama => 'Panamá';
 }

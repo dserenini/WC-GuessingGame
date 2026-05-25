@@ -133,7 +133,7 @@ class _LeagueRankingList extends ConsumerWidget {
       error: (e, _) => Text(e.toString()),
       data: (entries) => Column(
         children: entries
-            .map<Widget>((e) => RankingTile(entry: e, isMe: false))
+            .map<Widget>((entry) => RankingTile(entry: entry, isMe: false, l: AppLocalizations.of(context)!))
             .toList(),
       ),
     );

@@ -741,6 +741,318 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Deletar todas apostas'**
   String get deleteAllBets;
+
+  /// No description provided for @rankingBetsCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 aposta} other{{count} apostas}}'**
+  String rankingBetsCount(int count);
+
+  /// No description provided for @statusScheduled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agendado'**
+  String get statusScheduled;
+
+  /// No description provided for @statusLive.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao Vivo 🔴'**
+  String get statusLive;
+
+  /// No description provided for @statusFinished.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrado'**
+  String get statusFinished;
+
+  /// No description provided for @teamMexico.
+  ///
+  /// In pt, this message translates to:
+  /// **'México'**
+  String get teamMexico;
+
+  /// No description provided for @teamSouthAfrica.
+  ///
+  /// In pt, this message translates to:
+  /// **'África do Sul'**
+  String get teamSouthAfrica;
+
+  /// No description provided for @teamSouthKorea.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coreia do Sul'**
+  String get teamSouthKorea;
+
+  /// No description provided for @teamCzechia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chéquia'**
+  String get teamCzechia;
+
+  /// No description provided for @teamCanada.
+  ///
+  /// In pt, this message translates to:
+  /// **'Canadá'**
+  String get teamCanada;
+
+  /// No description provided for @teamSwitzerland.
+  ///
+  /// In pt, this message translates to:
+  /// **'Suíça'**
+  String get teamSwitzerland;
+
+  /// No description provided for @teamQatar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Catar'**
+  String get teamQatar;
+
+  /// No description provided for @teamBosniaAndHerzegovina.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bósnia e Herzegovina'**
+  String get teamBosniaAndHerzegovina;
+
+  /// No description provided for @teamBrazil.
+  ///
+  /// In pt, this message translates to:
+  /// **'Brasil'**
+  String get teamBrazil;
+
+  /// No description provided for @teamMorocco.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marrocos'**
+  String get teamMorocco;
+
+  /// No description provided for @teamHaiti.
+  ///
+  /// In pt, this message translates to:
+  /// **'Haiti'**
+  String get teamHaiti;
+
+  /// No description provided for @teamScotland.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escócia'**
+  String get teamScotland;
+
+  /// No description provided for @teamUnitedStates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estados Unidos'**
+  String get teamUnitedStates;
+
+  /// No description provided for @teamParaguay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Paraguai'**
+  String get teamParaguay;
+
+  /// No description provided for @teamAustralia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Austrália'**
+  String get teamAustralia;
+
+  /// No description provided for @teamTurkiye.
+  ///
+  /// In pt, this message translates to:
+  /// **'Turquia'**
+  String get teamTurkiye;
+
+  /// No description provided for @teamGermany.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alemanha'**
+  String get teamGermany;
+
+  /// No description provided for @teamCuracao.
+  ///
+  /// In pt, this message translates to:
+  /// **'Curaçao'**
+  String get teamCuracao;
+
+  /// No description provided for @teamIvoryCoast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Costa do Marfim'**
+  String get teamIvoryCoast;
+
+  /// No description provided for @teamEcuador.
+  ///
+  /// In pt, this message translates to:
+  /// **'Equador'**
+  String get teamEcuador;
+
+  /// No description provided for @teamNetherlands.
+  ///
+  /// In pt, this message translates to:
+  /// **'Holanda'**
+  String get teamNetherlands;
+
+  /// No description provided for @teamJapan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Japão'**
+  String get teamJapan;
+
+  /// No description provided for @teamSweden.
+  ///
+  /// In pt, this message translates to:
+  /// **'Suécia'**
+  String get teamSweden;
+
+  /// No description provided for @teamTunisia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tunísia'**
+  String get teamTunisia;
+
+  /// No description provided for @teamBelgium.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bélgica'**
+  String get teamBelgium;
+
+  /// No description provided for @teamEgypt.
+  ///
+  /// In pt, this message translates to:
+  /// **'Egito'**
+  String get teamEgypt;
+
+  /// No description provided for @teamIRIran.
+  ///
+  /// In pt, this message translates to:
+  /// **'Irã'**
+  String get teamIRIran;
+
+  /// No description provided for @teamNewZealand.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova Zelândia'**
+  String get teamNewZealand;
+
+  /// No description provided for @teamSpain.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espanha'**
+  String get teamSpain;
+
+  /// No description provided for @teamCaboVerde.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabo Verde'**
+  String get teamCaboVerde;
+
+  /// No description provided for @teamSaudiArabia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arábia Saudita'**
+  String get teamSaudiArabia;
+
+  /// No description provided for @teamUruguay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Uruguai'**
+  String get teamUruguay;
+
+  /// No description provided for @teamFrance.
+  ///
+  /// In pt, this message translates to:
+  /// **'França'**
+  String get teamFrance;
+
+  /// No description provided for @teamSenegal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Senegal'**
+  String get teamSenegal;
+
+  /// No description provided for @teamIraq.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iraque'**
+  String get teamIraq;
+
+  /// No description provided for @teamNorway.
+  ///
+  /// In pt, this message translates to:
+  /// **'Noruega'**
+  String get teamNorway;
+
+  /// No description provided for @teamArgentina.
+  ///
+  /// In pt, this message translates to:
+  /// **'Argentina'**
+  String get teamArgentina;
+
+  /// No description provided for @teamAlgeria.
+  ///
+  /// In pt, this message translates to:
+  /// **'Argélia'**
+  String get teamAlgeria;
+
+  /// No description provided for @teamAustria.
+  ///
+  /// In pt, this message translates to:
+  /// **'Áustria'**
+  String get teamAustria;
+
+  /// No description provided for @teamJordan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jordânia'**
+  String get teamJordan;
+
+  /// No description provided for @teamPortugal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Portugal'**
+  String get teamPortugal;
+
+  /// No description provided for @teamDRCongo.
+  ///
+  /// In pt, this message translates to:
+  /// **'RD Congo'**
+  String get teamDRCongo;
+
+  /// No description provided for @teamUzbekistan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Uzbequistão'**
+  String get teamUzbekistan;
+
+  /// No description provided for @teamColombia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Colômbia'**
+  String get teamColombia;
+
+  /// No description provided for @teamEngland.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inglaterra'**
+  String get teamEngland;
+
+  /// No description provided for @teamCroatia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Croácia'**
+  String get teamCroatia;
+
+  /// No description provided for @teamGhana.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gana'**
+  String get teamGhana;
+
+  /// No description provided for @teamPanama.
+  ///
+  /// In pt, this message translates to:
+  /// **'Panamá'**
+  String get teamPanama;
 }
 
 class _AppLocalizationsDelegate

@@ -96,9 +96,6 @@ class MatchCard extends ConsumerWidget {
                         FlagAvatar(
                           flagUrl: match.homeTeam.flagUrl,
                           radius: 28,
-                          onChaosTap: (hasSuperPalpites || !locked)
-                              ? () => _applyChaosForTeam(ref, context, true)
-                              : null,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -171,9 +168,6 @@ class MatchCard extends ConsumerWidget {
                         FlagAvatar(
                           flagUrl: match.awayTeam.flagUrl,
                           radius: 28,
-                          onChaosTap: (hasSuperPalpites || !locked)
-                              ? () => _applyChaosForTeam(ref, context, false)
-                              : null,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -243,12 +237,9 @@ class MatchCard extends ConsumerWidget {
     final result = await showModalBottomSheet<(int, int)>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => ScoreBottomSheet(
-        matchId: match.id,
+      builder: (ctx) => ScoreBottomSheet(
         homeTeam: translateTeam(context, match.homeTeam.name),
         awayTeam: translateTeam(context, match.awayTeam.name),
-        homeFlag: match.homeTeam.flagUrl,
-        awayFlag: match.awayTeam.flagUrl,
         initialHome: currentHome,
         initialAway: currentAway,
         focusHome: isHome,

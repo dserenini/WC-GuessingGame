@@ -217,22 +217,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get helpDeadlines => 'Scadenze Scommesse';
 
   @override
-  String get helpDeadlinesDesc =>
-      'Le scommesse chiudono prima dell\'inizio di ogni partita. Fai attenzione all\'orologio!';
+  String helpDeadlinesDesc(String date, String gmt) {
+    return 'Tutte le scommesse devono essere effettuate entro il $date nel fuso orario $gmt. Dopo questa data, sarà possibile modificare una scommessa solo utilizzando una Super Scommessa.';
+  }
 
   @override
   String get helpSuperPalpites => 'Super Scommesse';
 
   @override
   String get helpSuperPalpitesDesc =>
-      'Dopo il blocco globale, hai un numero limitato di modifiche di emergenza chiamate Super Scommesse. Usale con saggezza!';
+      'Dopo il blocco globale, hai un numero limitato di modifiche di emergenza chiamate Super Scommesse. Per una determinata partita, una Super Scommessa deve essere utilizzata fino a 1 ora prima dell\'inizio della partita, dopodiché non potrà più essere modificata.';
 
   @override
   String get helpAgentOfChaosTitle => 'Agente del Caos 🎲';
 
   @override
   String get helpAgentOfChaosDesc =>
-      'Ti senti pigro? Usa il pulsante del dado per riempire tutto casualmente! Puoi anche toccare la bandiera di una squadra (o la \'X\') per forzare una vittoria o un pareggio casuale.';
+      'L\'Agente del Caos ha 2 modalità: riempire tutte le scommesse in modo casuale, oppure riempirle in base alla classifica finale da te indicata. Il limite massimo di gol è configurato nella sezione Impostazioni.';
+
+  @override
+  String get helpEasyBetTitle => 'Scommessa Facile ⚡';
+
+  @override
+  String get helpEasyBetDesc =>
+      'Mentre il pulsante Scommessa Facile è attivo, puoi scommettere semplicemente cliccando sulle bandiere (o sulla \'X\' centrale) e l\'Agente del Caos imposterà automaticamente il punteggio. Il limite massimo di gol è configurato nella sezione Impostazioni.';
+
+  @override
+  String get easyBet => 'Scommessa Facile';
 
   @override
   String get helpLeaguesTitle => 'Leghe Private';
@@ -285,6 +296,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get exportMyBetsSub => 'Genera un\'immagine da salvare o condividere!';
+
+  @override
+  String exportBetsOf(String userName) {
+    return 'Scommesse di $userName';
+  }
+
+  @override
+  String exportGroupTitle(String group) {
+    return 'GRUPPO $group';
+  }
+
+  @override
+  String get newPassword => 'Nuova Password';
+
+  @override
+  String get confirmPassword => 'Conferma Password';
 
   @override
   String get waitDataLoad => 'Attendi il caricamento dei dati...';

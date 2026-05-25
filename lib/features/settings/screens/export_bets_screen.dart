@@ -5,6 +5,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/utils/downloader.dart' as downloader;
+import 'package:copa2026/l10n/team_translator.dart';
 
 class ExportBetsScreen extends StatefulWidget {
   final List<MatchModel> matches;
@@ -25,36 +26,6 @@ class ExportBetsScreen extends StatefulWidget {
 class _ExportBetsScreenState extends State<ExportBetsScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isCapturing = false;
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  static String _getTeamAbbr(String name) {
-    final map = {
-      'Países Baixos': 'NED', 'Nova Zelândia': 'NZL', 'Costa Rica': 'CRC',
-      'Arábia Saudita': 'KSA', 'Coreia do Sul': 'KOR', 'RD Congo': 'COD',
-      'Cabo Verde': 'CPV', 'Estados Unidos': 'USA', 'Costa do Marfim': 'CIV',
-      'Irã': 'IRN',
-    };
-    if (map.containsKey(name)) return map[name]!;
-
-    String clean = name
-        .replaceAll('í', 'i')
-        .replaceAll('á', 'a')
-        .replaceAll('é', 'e')
-        .replaceAll('ã', 'a')
-        .replaceAll('ç', 'c')
-        .toUpperCase();
-    if (clean.contains(' ')) {
-      final parts = clean.split(' ').where((s) => s.isNotEmpty).toList();
-      if (parts.length >= 2) {
-        final res = '${parts[0][0]}${parts[1]}';
-        if (res.length >= 3) return res.substring(0, 3);
-        return res.padRight(3, 'A');
-      }
-    }
-    if (clean.length >= 3) return clean.substring(0, 3);
-    return clean.padRight(3, 'A');
-  }
 
   // ── Captura ─────────────────────────────────────────────────────────────────
 
@@ -151,7 +122,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Apostas de ${widget.userName}',
+            AppLocalizations.of(context)!.exportBetsOf(widget.userName),
             style: const TextStyle(fontSize: 22, color: Colors.white70),
           ),
           const SizedBox(height: 32),
@@ -244,7 +215,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'GRUPO $g',
+                  AppLocalizations.of(context)!.exportGroupTitle(g),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.amber,
@@ -254,8 +225,8 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
                 const Divider(color: Colors.white24),
                 ...gMatches.map((m) {
                   final bet = bets[m.id];
-                  final homeAbbr = _getTeamAbbr(m.homeTeam.name);
-                  final awayAbbr = _getTeamAbbr(m.awayTeam.name);
+                  final homeAbbr = getTeamAbbreviation(context, m.homeTeam.name);
+                  final awayAbbr = getTeamAbbreviation(context, m.awayTeam.name);
                   final homeScore = bet?.homeScoreBet.toString() ?? '-';
                   final awayScore = bet?.awayScoreBet.toString() ?? '-';
 

@@ -46,11 +46,14 @@ class GroupScreen extends ConsumerWidget {
             Consumer(
               builder: (context, ref, child) {
                 final chaosActive = ref.watch(chaosModeProvider);
-                return Switch(
-                  value: chaosActive,
-                  onChanged: (val) =>
-                      ref.read(chaosModeProvider.notifier).state = val,
-                  activeThumbColor: Theme.of(context).colorScheme.primary,
+                return Tooltip(
+                  message: l.easyBet,
+                  child: Switch(
+                    value: chaosActive,
+                    onChanged: (val) =>
+                        ref.read(chaosModeProvider.notifier).state = val,
+                    activeThumbColor: Theme.of(context).colorScheme.primary,
+                  ),
                 );
               },
             ),

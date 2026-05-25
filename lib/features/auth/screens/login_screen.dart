@@ -5,6 +5,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/shared/providers/locale_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -59,6 +60,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.language),
+            onSelected: (code) =>
+                ref.read(localeProvider.notifier).setLocale(code),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'pt', child: Text('🇧🇷 Português')),
+              const PopupMenuItem(value: 'en', child: Text('🇺🇸 English')),
+              const PopupMenuItem(value: 'it', child: Text('🇮🇹 Italiano')),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -94,12 +112,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.primary,
-                    ),
-              ),
-              Text(
-                l.loginSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: cs.onSurface.withOpacity(0.6),
                     ),
               ),
               const SizedBox(height: 40),

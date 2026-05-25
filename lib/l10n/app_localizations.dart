@@ -499,8 +499,8 @@ abstract class AppLocalizations {
   /// No description provided for @helpDeadlinesDesc.
   ///
   /// In pt, this message translates to:
-  /// **'As apostas fecham antes de cada partida. Fique atento aos horários de encerramento!'**
-  String get helpDeadlinesDesc;
+  /// **'Todas as apostas devem ser feitas até {date} no horário {gmt}. Após esta data, apenas será possível alterar uma aposta utilizando um Super Palpite.'**
+  String helpDeadlinesDesc(String date, String gmt);
 
   /// No description provided for @helpSuperPalpites.
   ///
@@ -511,20 +511,38 @@ abstract class AppLocalizations {
   /// No description provided for @helpSuperPalpitesDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Após o bloqueio global, você tem direito a algumas alterações de emergência chamadas Super Palpites. Use-os com sabedoria!'**
+  /// **'Após o bloqueio global, você tem direito a algumas alterações de emergência chamadas Super Palpites. Para um determinado jogo, o Super Palpite deve ser utilizado até 1 hora antes do horário da partida, depois disso não será mais possível alterar.'**
   String get helpSuperPalpitesDesc;
 
   /// No description provided for @helpAgentOfChaosTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Agent of Chaos 🎲'**
+  /// **'Agente do Caos 🎲'**
   String get helpAgentOfChaosTitle;
 
   /// No description provided for @helpAgentOfChaosDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Se estiver com preguiça, use o botão de dado para preencher tudo aleatoriamente! Você também pode tocar na bandeira (ou no \'X\') no cartão do jogo para forçar uma vitória/empate aleatório.'**
+  /// **'O Agente do Caos tem 2 modos: preencher todas as apostas para você aleatoriamente, ou preencher as apostas com base na classificação final que você indicar. O limite máximo de gols é preenchido na seção de configuração.'**
   String get helpAgentOfChaosDesc;
+
+  /// No description provided for @helpEasyBetTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aposta Fácil ⚡'**
+  String get helpEasyBetTitle;
+
+  /// No description provided for @helpEasyBetDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enquanto o botão de Aposta Fácil estiver ativo, você pode apostar apenas clicando nas bandeiras (ou no \'X\' central) e o Agente do Caos definirá o placar automaticamente. O limite máximo de gols é preenchido na seção de configuração.'**
+  String get helpEasyBetDesc;
+
+  /// No description provided for @easyBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aposta Fácil'**
+  String get easyBet;
 
   /// No description provided for @helpLeaguesTitle.
   ///
@@ -621,6 +639,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Gere uma imagem para salvar ou compartilhar!'**
   String get exportMyBetsSub;
+
+  /// No description provided for @exportBetsOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apostas de {userName}'**
+  String exportBetsOf(String userName);
+
+  /// No description provided for @exportGroupTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'GRUPO {group}'**
+  String exportGroupTitle(String group);
+
+  /// No description provided for @newPassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova Senha'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar Senha'**
+  String get confirmPassword;
 
   /// No description provided for @waitDataLoad.
   ///

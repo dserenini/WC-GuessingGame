@@ -89,6 +89,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final String localeCode = _pendingLocale ?? ref.watch(localeProvider).languageCode;
     final int timezoneOffset = _pendingTimezone ?? ref.watch(timezoneProvider).inHours;
     final int maxGoals = _pendingMaxGoals ?? ref.watch(maxGoalsProvider);
+    final dt = DateTime.utc(2026, 6, 11, 2, 59).add(Duration(hours: timezoneOffset));
+    final deadlineStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} GMT${timezoneOffset >= 0 ? '+' : ''}$timezoneOffset';
 
     return Scaffold(
       appBar: AppBar(
@@ -262,7 +264,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 color: isBettingLocked ? cs.error : cs.primary,
               ),
               title: Text(
-                '10/06/2026 23:59 GMT-3',
+                deadlineStr,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
@@ -449,7 +451,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             controller: _passCtrl,
             obscureText: _obscure,
             decoration: InputDecoration(
-              labelText: 'Nova Senha',
+              labelText: l.newPassword,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
@@ -461,9 +463,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           TextField(
             controller: _confirmCtrl,
             obscureText: _obscure,
-            decoration: const InputDecoration(
-              labelText: 'Confirmar Senha',
-              prefixIcon: Icon(Icons.lock_outline),
+            decoration: InputDecoration(
+              labelText: l.confirmPassword,
+              prefixIcon: const Icon(Icons.lock_outline),
             ),
           ),
         ],

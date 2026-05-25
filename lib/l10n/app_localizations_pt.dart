@@ -216,22 +216,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get helpDeadlines => 'Prazo das Apostas';
 
   @override
-  String get helpDeadlinesDesc =>
-      'As apostas fecham antes de cada partida. Fique atento aos horários de encerramento!';
+  String helpDeadlinesDesc(String date, String gmt) {
+    return 'Todas as apostas devem ser feitas até $date no horário $gmt. Após esta data, apenas será possível alterar uma aposta utilizando um Super Palpite.';
+  }
 
   @override
   String get helpSuperPalpites => 'Super Palpites';
 
   @override
   String get helpSuperPalpitesDesc =>
-      'Após o bloqueio global, você tem direito a algumas alterações de emergência chamadas Super Palpites. Use-os com sabedoria!';
+      'Após o bloqueio global, você tem direito a algumas alterações de emergência chamadas Super Palpites. Para um determinado jogo, o Super Palpite deve ser utilizado até 1 hora antes do horário da partida, depois disso não será mais possível alterar.';
 
   @override
-  String get helpAgentOfChaosTitle => 'Agent of Chaos 🎲';
+  String get helpAgentOfChaosTitle => 'Agente do Caos 🎲';
 
   @override
   String get helpAgentOfChaosDesc =>
-      'Se estiver com preguiça, use o botão de dado para preencher tudo aleatoriamente! Você também pode tocar na bandeira (ou no \'X\') no cartão do jogo para forçar uma vitória/empate aleatório.';
+      'O Agente do Caos tem 2 modos: preencher todas as apostas para você aleatoriamente, ou preencher as apostas com base na classificação final que você indicar. O limite máximo de gols é preenchido na seção de configuração.';
+
+  @override
+  String get helpEasyBetTitle => 'Aposta Fácil ⚡';
+
+  @override
+  String get helpEasyBetDesc =>
+      'Enquanto o botão de Aposta Fácil estiver ativo, você pode apostar apenas clicando nas bandeiras (ou no \'X\' central) e o Agente do Caos definirá o placar automaticamente. O limite máximo de gols é preenchido na seção de configuração.';
+
+  @override
+  String get easyBet => 'Aposta Fácil';
 
   @override
   String get helpLeaguesTitle => 'Ligas Privadas';
@@ -284,6 +295,22 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get exportMyBetsSub => 'Gere uma imagem para salvar ou compartilhar!';
+
+  @override
+  String exportBetsOf(String userName) {
+    return 'Apostas de $userName';
+  }
+
+  @override
+  String exportGroupTitle(String group) {
+    return 'GRUPO $group';
+  }
+
+  @override
+  String get newPassword => 'Nova Senha';
+
+  @override
+  String get confirmPassword => 'Confirmar Senha';
 
   @override
   String get waitDataLoad => 'Aguarde os dados carregarem primeiro...';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 class HelpScreen extends ConsumerWidget {
   const HelpScreen({super.key});
 
@@ -9,6 +10,10 @@ class HelpScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final offset = ref.watch(timezoneProvider);
+    final dt = DateTime.utc(2026, 6, 11, 2, 59).add(offset);
+    final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final gmtStr = 'GMT${offset.inHours >= 0 ? '+' : ''}${offset.inHours}';
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -31,7 +36,7 @@ class HelpScreen extends ConsumerWidget {
             context,
             icon: Icons.timer,
             title: l10n.helpDeadlines,
-            description: l10n.helpDeadlinesDesc,
+            description: l10n.helpDeadlinesDesc(dateStr, gmtStr),
             color: Colors.redAccent,
           ),
           _buildRuleCard(
@@ -47,6 +52,13 @@ class HelpScreen extends ConsumerWidget {
             title: l10n.helpAgentOfChaosTitle,
             description: l10n.helpAgentOfChaosDesc,
             color: Colors.purpleAccent,
+          ),
+          _buildRuleCard(
+            context,
+            icon: Icons.bolt,
+            title: l10n.helpEasyBetTitle,
+            description: l10n.helpEasyBetDesc,
+            color: Colors.deepOrangeAccent,
           ),
           _buildRuleCard(
             context,

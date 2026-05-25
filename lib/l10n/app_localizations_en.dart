@@ -217,22 +217,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get helpDeadlines => 'Bet Deadlines';
 
   @override
-  String get helpDeadlinesDesc =>
-      'Bets close right before each match starts. Keep an eye on the clock!';
+  String helpDeadlinesDesc(String date, String gmt) {
+    return 'All bets must be made by $date at $gmt. After this date, bets can only be changed using a Super Bet.';
+  }
 
   @override
   String get helpSuperPalpites => 'Super Bets';
 
   @override
   String get helpSuperPalpitesDesc =>
-      'After the global lock, you have a limited amount of emergency edits called Super Bets. Use them wisely!';
+      'After the global lock, you have a limited amount of emergency edits called Super Bets. For a given match, a Super Bet must be used up to 1 hour before the match starts, after which it cannot be changed.';
 
   @override
   String get helpAgentOfChaosTitle => 'Agent of Chaos 🎲';
 
   @override
   String get helpAgentOfChaosDesc =>
-      'Feeling lazy? Use the dice button to fill everything randomly! You can also tap a team\'s flag (or the \'X\') on a match card to force a random win or draw.';
+      'The Agent of Chaos has 2 modes: fill all bets for you randomly, or fill the bets based on the final standings you indicate. The maximum goal limit is configured in the settings section.';
+
+  @override
+  String get helpEasyBetTitle => 'Easy Bet ⚡';
+
+  @override
+  String get helpEasyBetDesc =>
+      'While the Easy Bet toggle is active, you can bet just by clicking the flags (or the center \'X\') and the Agent of Chaos will automatically set the score. The maximum goal limit is configured in the settings section.';
+
+  @override
+  String get easyBet => 'Easy Bet';
 
   @override
   String get helpLeaguesTitle => 'Private Leagues';
@@ -284,6 +295,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportMyBetsSub => 'Generate an image to save or share!';
+
+  @override
+  String exportBetsOf(String userName) {
+    return '$userName\'s bets';
+  }
+
+  @override
+  String exportGroupTitle(String group) {
+    return 'GROUP $group';
+  }
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
 
   @override
   String get waitDataLoad => 'Please wait for data to load...';

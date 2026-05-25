@@ -186,6 +186,14 @@ class AppDrawer extends ConsumerWidget {
 
             // ── Bottom items ─────────────────
             _DrawerItem(
+              icon: '❓',
+              label: l.helpAndRules,
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/help');
+              },
+            ),
+            _DrawerItem(
               icon: '⚙️',
               label: l.settings,
               onTap: () {

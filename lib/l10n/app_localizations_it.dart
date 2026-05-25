@@ -204,5 +204,148 @@ class AppLocalizationsIt extends AppLocalizations {
   String get delete => 'Elimina';
 
   @override
+  String get helpAndRules => 'Aiuto / Regole';
+
+  @override
+  String get helpScoring => 'Punteggio';
+
+  @override
+  String get helpScoringDesc =>
+      'Ottieni 3 punti per il risultato esatto. Se sbagli il punteggio ma indovini il vincitore (o il pareggio), ottieni 1 punto.';
+
+  @override
+  String get helpDeadlines => 'Scadenze Scommesse';
+
+  @override
+  String get helpDeadlinesDesc =>
+      'Le scommesse chiudono prima dell\'inizio di ogni partita. Fai attenzione all\'orologio!';
+
+  @override
+  String get helpSuperPalpites => 'Super Scommesse';
+
+  @override
+  String get helpSuperPalpitesDesc =>
+      'Dopo il blocco globale, hai un numero limitato di modifiche di emergenza chiamate Super Scommesse. Usale con saggezza!';
+
+  @override
+  String get helpAgentOfChaosTitle => 'Agente del Caos 🎲';
+
+  @override
+  String get helpAgentOfChaosDesc =>
+      'Ti senti pigro? Usa il pulsante del dado per riempire tutto casualmente! Puoi anche toccare la bandiera di una squadra (o la \'X\') per forzare una vittoria o un pareggio casuale.';
+
+  @override
+  String get helpLeaguesTitle => 'Leghe Private';
+
+  @override
+  String get helpLeaguesDesc =>
+      'Crea o unisciti a leghe private utilizzando un codice di invito per competere contro i tuoi amici.';
+
+  @override
   String get appTitle => 'Make Bolão Great Again';
+
+  @override
+  String exportError(String error) {
+    return 'Errore durante l\'acquisizione dell\'immagine: $error';
+  }
+
+  @override
+  String get exportStarted =>
+      'Download avviato! Controlla la cartella dei download.';
+
+  @override
+  String get exportBets => 'Esporta Scommesse';
+
+  @override
+  String get downloadImage => 'Scarica Immagine';
+
+  @override
+  String get shareWhatsApp => 'Condividi su WhatsApp';
+
+  @override
+  String get settingsSaved => 'Impostazioni salvate con successo!';
+
+  @override
+  String get discardChangesTitle => 'Scartare le modifiche?';
+
+  @override
+  String get discardChangesDesc => 'Le modifiche non salvate andranno perse.';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get yesDiscard => 'Sì, scarta';
+
+  @override
+  String get currentTimeZone => 'Fuso Orario Attuale';
+
+  @override
+  String get exportMyBets => 'Esporta le mie scommesse';
+
+  @override
+  String get exportMyBetsSub => 'Genera un\'immagine da salvare o condividere!';
+
+  @override
+  String get waitDataLoad => 'Attendi il caricamento dei dati...';
+
+  @override
+  String get changePassword => 'Cambia Password';
+
+  @override
+  String get passwordMinLength => 'La password deve avere almeno 6 caratteri.';
+
+  @override
+  String get passwordsMismatch => 'Le password non corrispondono.';
+
+  @override
+  String get passwordUpdated => 'Password aggiornata con successo!';
+
+  @override
+  String get portuguese => 'Português';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get italian => 'Italiano';
+
+  @override
+  String get notifications => 'Notifiche';
+
+  @override
+  String get noNotifications => 'Nessuna notifica.';
+
+  @override
+  String get markAsRead => 'Segna come già lette';
+
+  @override
+  String get close => 'Chiudi';
+
+  @override
+  String get followStandings => 'Segui la Classifica';
+
+  @override
+  String get followStandingsSub =>
+      'Scegli l\'ordine finale e generiamo i risultati per te';
+
+  @override
+  String get desiredStandings => 'Classifica Desiderata';
+
+  @override
+  String get dragTeams =>
+      'Trascina le squadre nell\'ordine esatto in cui desideri vederle finire nella tabella.';
+
+  @override
+  String get generateChaos => 'Genera Caos';
+
+  @override
+  String get deleteGroup => 'Elimina Gruppo';
+
+  @override
+  String get deleteGroupConfirm =>
+      'Sei sicuro di voler eliminare tutte le scommesse di questo gruppo?';
+
+  @override
+  String get deleteAllBets => 'Elimina tutte le scommesse';
 }

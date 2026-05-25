@@ -65,6 +65,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     try {
+      // Verifica se o e-mail já existe via RPC
+      final emailExists = await _client.rpc(
+        'check_email_exists',
+        params: {'p_email': email},
+      );
+
+      if (emailExists == true) {
+        state = AsyncError('Este e-mail já está cadastrado no sistema.', StackTrace.current);
+        return;
+      }
+
       final res = await _client.auth.signUp(
         email: email,
         password: password,

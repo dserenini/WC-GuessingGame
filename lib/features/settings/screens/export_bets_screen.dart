@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
@@ -67,7 +68,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao capturar imagem: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.exportError(e.toString()))),
         );
       }
       return null;
@@ -85,8 +86,8 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
 
     downloader.downloadImage(image, 'apostas_${widget.userName}.png');
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Download iniciado! Verifique sua pasta de downloads.'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.exportStarted),
       ),
     );
   }
@@ -171,7 +172,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exportar Apostas'),
+        title: Text(AppLocalizations.of(context)!.exportBets),
         actions: [
           if (_isCapturing)
             const Center(
@@ -189,7 +190,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
             IconButton(
               icon: const Icon(Icons.download),
               onPressed: _captureAndDownload,
-              tooltip: 'Baixar Imagem',
+              tooltip: AppLocalizations.of(context)!.downloadImage,
             ),
             // Botão WhatsApp — apenas na web (mobile e desktop),
             // pois é onde a Web Share API funciona
@@ -197,7 +198,7 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
               IconButton(
                 icon: const Icon(Icons.ios_share, color: Color(0xFF25D366)),
                 onPressed: _captureAndShareWhatsApp,
-                tooltip: 'Compartilhar no WhatsApp',
+                tooltip: AppLocalizations.of(context)!.shareWhatsApp,
               ),
           ],
         ],

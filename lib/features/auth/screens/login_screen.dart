@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       if (next is AsyncError) {
         String msg = next.error.toString();
         if (msg.contains('Invalid login credentials') || msg.contains('Usuário não encontrado')) {
-          msg = 'Login/Senha incorretos.';
+          msg = l.invalidLogin;
         } else {
           msg = msg.replaceAll('Exception: ', '');
         }
@@ -222,7 +222,7 @@ class _LoginForm extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () => _showForgotPasswordDialog(context),
-            child: const Text('Esqueci minha senha'),
+            child: Text(l.forgotPassword),
           ),
         ),
         const SizedBox(height: 12),
@@ -237,22 +237,23 @@ class _LoginForm extends StatelessWidget {
   }
 
   void _showForgotPasswordDialog(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final emailCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Recuperar Senha'),
+        title: Text(l.recoverPassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Digite o seu e-mail para receber um link de recuperação.'),
+            Text(l.recoverPasswordHint),
             const SizedBox(height: 16),
             TextField(
               controller: emailCtrl,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'E-mail',
-                prefixIcon: Icon(Icons.email_outlined),
+              decoration: InputDecoration(
+                labelText: l.email,
+                prefixIcon: const Icon(Icons.email_outlined),
               ),
             ),
           ],
@@ -260,7 +261,7 @@ class _LoginForm extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
+            child: Text(l.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -272,18 +273,18 @@ class _LoginForm extends StatelessWidget {
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Link de recuperação enviado! Verifique seu e-mail.')),
+                    SnackBar(content: Text(l.recoveryLinkSent)),
                   );
                 }
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erro: ${e.toString()}'), backgroundColor: Colors.red),
+                    SnackBar(content: Text(l.errorGeneric(e.toString())), backgroundColor: Colors.red),
                   );
                 }
               }
             },
-            child: const Text('Enviar'),
+            child: Text(l.send),
           ),
         ],
       ),

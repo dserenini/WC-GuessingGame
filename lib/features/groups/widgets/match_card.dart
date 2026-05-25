@@ -344,15 +344,15 @@ class MatchCard extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Deletar Aposta'),
-        content: const Text('Deseja apagar sua aposta para este jogo?'),
+        title: Text(l.deleteBet),
+        content: Text(l.deleteBetConfirm),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(l.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Deletar', style: TextStyle(color: Colors.red))),
+              child: Text(l.delete, style: const TextStyle(color: Colors.red))),
         ],
       ),
     );

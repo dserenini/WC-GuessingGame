@@ -59,7 +59,7 @@ class GroupScreen extends ConsumerWidget {
               icon: const Text('🎲', style: TextStyle(fontSize: 22)),
             ),
             IconButton(
-              tooltip: 'Deletar todas apostas',
+              tooltip: l.deleteAllBets,
               onPressed: () => _confirmDeleteAll(context, ref),
               icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
             ),
@@ -185,8 +185,8 @@ class GroupScreen extends ConsumerWidget {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.format_list_numbered),
-              title: const Text('Seguir uma Classificação'),
-              subtitle: const Text('Escolha a ordem final e geramos os placares para você'),
+              title: Text(l.followStandings),
+              subtitle: Text(l.followStandingsSub),
               onTap: () {
                 Navigator.pop(context);
                 final matches = ref.read(groupMatchesProvider(groupLetter)).valueOrNull ?? [];
@@ -201,6 +201,7 @@ class GroupScreen extends ConsumerWidget {
 
   void _showRankingDialog(BuildContext context, WidgetRef ref, List<MatchModel> matches) {
     if (matches.isEmpty) return;
+    final l = AppLocalizations.of(context)!;
 
     final Set<String> teamNamesSet = {};
     for (final m in matches) {
@@ -215,13 +216,13 @@ class GroupScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Classificação Desejada'),
+              title: Text(l.desiredStandings),
               content: SizedBox(
                 width: double.maxFinite,
                 height: 320,
                 child: Column(
                   children: [
-                    const Text('Arraste os times para a ordem exata que você deseja vê-los terminarem na tabela.', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    Text(l.dragTeams, style: const TextStyle(fontSize: 13, color: Colors.grey)),
                     const SizedBox(height: 16),
                     Expanded(
                       child: ReorderableListView(
@@ -253,7 +254,7 @@ class GroupScreen extends ConsumerWidget {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Theme.of(context).colorScheme.onPrimary),
                   onPressed: () async {
@@ -271,7 +272,7 @@ class GroupScreen extends ConsumerWidget {
                       }
                     }
                   },
-                  child: const Text('Gerar Caos'),
+                  child: Text(l.generateChaos),
                 ),
               ],
             );
@@ -306,15 +307,15 @@ class GroupScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Deletar Grupo'),
-        content: const Text('Tem certeza que deseja deletar todas as apostas deste grupo?'),
+        title: Text(l.deleteGroup),
+        content: Text(l.deleteGroupConfirm),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(l.cancel)),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Deletar', style: TextStyle(color: Colors.red))),
+              child: Text(l.delete, style: const TextStyle(color: Colors.red))),
         ],
       ),
     );

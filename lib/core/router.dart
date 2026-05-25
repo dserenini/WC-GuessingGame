@@ -12,6 +12,7 @@ import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
 import 'package:copa2026/features/auth/screens/onboarding_screen.dart';
+import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -86,6 +87,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           return null;
         },
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        builder: (_, __) => const HelpScreen(),
       ),
     ],
   );

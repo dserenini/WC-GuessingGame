@@ -83,11 +83,14 @@ class OnboardingScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // This flag is already saved inside setLocale, but we do it anyway to be safe,
-                    // then we just route to profile.
-                    // The router will now know hasSelectedLanguage is true.
-                    context.go('/profile');
+                  onPressed: () async {
+                    // Salva o idioma atual, garantindo que a flag 'has_selected_lang' fique TRUE
+                    final currentLang = ref.read(localeProvider).languageCode;
+                    await ref.read(localeProvider.notifier).setLocale(currentLang);
+                    
+                    if (context.mounted) {
+                      context.go('/profile');
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

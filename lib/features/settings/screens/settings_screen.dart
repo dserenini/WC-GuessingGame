@@ -46,7 +46,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _pendingMaxGoals = null;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configurações salvas com sucesso!')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.settingsSaved)),
     );
   }
 
@@ -54,17 +54,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Descartar alterações?'),
-        content: const Text('As alterações não salvas serão perdidas.'),
+        title: Text(AppLocalizations.of(context)!.discardChangesTitle),
+        content: Text(AppLocalizations.of(context)!.discardChangesDesc),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Não'),
+            child: Text(AppLocalizations.of(context)!.no),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Sim, descartar', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.yesDiscard, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -120,14 +120,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
                         ),
-                        child: const Text('Cancelar'),
+                        child: Text(l.cancel),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _saveChanges,
-                        child: const Text('Salvar'),
+                        child: Text(l.save),
                       ),
                     ),
                   ],
@@ -187,7 +187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 _LocaleTile(
                   flag: '🇧🇷',
-                  label: 'Português',
+                  label: l.portuguese,
                   code: 'pt',
                   current: localeCode,
                   onTap: () => setState(() => _pendingLocale = 'pt'),
@@ -195,7 +195,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(height: 1),
                 _LocaleTile(
                   flag: '🇺🇸',
-                  label: 'English',
+                  label: l.english,
                   code: 'en',
                   current: localeCode,
                   onTap: () => setState(() => _pendingLocale = 'en'),
@@ -203,7 +203,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(height: 1),
                 _LocaleTile(
                   flag: '🇮🇹',
-                  label: 'Italiano',
+                  label: l.italian,
                   code: 'it',
                   current: localeCode,
                   onTap: () => setState(() => _pendingLocale = 'it'),
@@ -214,11 +214,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 16),
 
           // ── Fuso Horário ───────────────────────
-          _SectionHeader(title: 'Fuso Horário'),
+          _SectionHeader(title: l.currentTimeZone),
           Card(
             child: ListTile(
               leading: const Icon(Icons.access_time),
-              title: const Text('Fuso Horário Atual'),
+              title: Text(l.currentTimeZone),
               subtitle: Text(
                 'GMT${timezoneOffset >= 0 ? '+' : ''}$timezoneOffset',
               ),
@@ -273,19 +273,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 16),
 
           // ── Export ───────────────────────
-          _SectionHeader(title: 'Exportar'),
+          _SectionHeader(title: l.exportBets),
           Card(
             child: ListTile(
               leading: const Icon(Icons.ios_share),
-              title: const Text('Exportar minhas apostas'),
-              subtitle: const Text('Gere uma imagem para salvar ou compartilhar!'),
+              title: Text(l.exportMyBets),
+              subtitle: Text(l.exportMyBetsSub),
               onTap: () async {
                 final allMatches = ref.read(allMatchesProvider).valueOrNull;
                 final allBets = ref.read(allBetsProvider).valueOrNull;
 
                 if (allMatches == null || allBets == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Aguarde os dados carregarem primeiro...')),
+                    SnackBar(content: Text(l.waitDataLoad)),
                   );
                   return;
                 }
@@ -341,7 +341,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.password),
-                  title: const Text('Trocar Senha'),
+                  title: Text(l.changePassword),
                   onTap: () => showDialog(
                     context: context,
                     builder: (ctx) => const _ChangePasswordDialog(),
@@ -396,18 +396,19 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   }
 
   Future<void> _updatePassword() async {
+    final l = AppLocalizations.of(context)!;
     final pass = _passCtrl.text;
     final confirm = _confirmCtrl.text;
 
     if (pass.isEmpty || pass.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A senha deve ter pelo menos 6 caracteres.'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l.passwordMinLength), backgroundColor: Colors.red),
       );
       return;
     }
     if (pass != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('As senhas não coincidem.'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l.passwordsMismatch), backgroundColor: Colors.red),
       );
       return;
     }
@@ -420,13 +421,13 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senha atualizada com sucesso!')),
+          SnackBar(content: Text(l.passwordUpdated)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l.errorGeneric(e.toString())), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -438,8 +439,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Trocar Senha'),
+      title: Text(l.changePassword),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -469,7 +471,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: Text(l.cancel),
         ),
         _isLoading
             ? const Padding(
@@ -482,7 +484,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               )
             : ElevatedButton(
                 onPressed: _updatePassword,
-                child: const Text('Salvar'),
+                child: Text(l.save),
               ),
       ],
     );

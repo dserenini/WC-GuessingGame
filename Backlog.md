@@ -1,6 +1,7 @@
 # Backlog de implementações (Bugs/Fix/Ajustes Necessários)
-* **Página de Configuração**: Adicionar uma informação de "versão" do sistema no final, pra saber se uma melhoria realmente subiu e pra ver se ta funcionando conforme esperado.
-* **Página de Configuração**: Testar os internacionais e fazer funcionar
+* **Página de Configuração**: Corrigir alguns itens que não foi traduzido automaticamente com a Internacionalização (Exportar, Trocar Senha, etc).
+* **Ajuda**: Ajustar a tradução do Ajuda (Não ficou perfeito).
+* **Ajuda**: Gravar video mostrando como usa o app rapidamente e exibir pro usuário no primeiro login ou na página de ajuda mesmo
 
 # Implementado:
 

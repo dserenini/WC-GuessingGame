@@ -472,11 +472,275 @@ abstract class AppLocalizations {
   /// **'Deletar'**
   String get delete;
 
+  /// No description provided for @helpAndRules.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajuda / Regras'**
+  String get helpAndRules;
+
+  /// No description provided for @helpScoring.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontuação'**
+  String get helpScoring;
+
+  /// No description provided for @helpScoringDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ganha 3 pontos se acertar o placar exato. Se errar o placar, mas acertar o vencedor (ou o empate), você ganha 1 ponto.'**
+  String get helpScoringDesc;
+
+  /// No description provided for @helpDeadlines.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prazo das Apostas'**
+  String get helpDeadlines;
+
+  /// No description provided for @helpDeadlinesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'As apostas fecham antes de cada partida. Fique atento aos horários de encerramento!'**
+  String get helpDeadlinesDesc;
+
+  /// No description provided for @helpSuperPalpites.
+  ///
+  /// In pt, this message translates to:
+  /// **'Super Palpites'**
+  String get helpSuperPalpites;
+
+  /// No description provided for @helpSuperPalpitesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Após o bloqueio global, você tem direito a algumas alterações de emergência chamadas Super Palpites. Use-os com sabedoria!'**
+  String get helpSuperPalpitesDesc;
+
+  /// No description provided for @helpAgentOfChaosTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agent of Chaos 🎲'**
+  String get helpAgentOfChaosTitle;
+
+  /// No description provided for @helpAgentOfChaosDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Se estiver com preguiça, use o botão de dado para preencher tudo aleatoriamente! Você também pode tocar na bandeira (ou no \'X\') no cartão do jogo para forçar uma vitória/empate aleatório.'**
+  String get helpAgentOfChaosDesc;
+
+  /// No description provided for @helpLeaguesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ligas Privadas'**
+  String get helpLeaguesTitle;
+
+  /// No description provided for @helpLeaguesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crie ou participe de ligas privadas usando um código de convite para competir com seus amigos.'**
+  String get helpLeaguesDesc;
+
   /// No description provided for @appTitle.
   ///
   /// In pt, this message translates to:
   /// **'Make Bolão Great Again'**
   String get appTitle;
+
+  /// No description provided for @exportError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao capturar imagem: {error}'**
+  String exportError(String error);
+
+  /// No description provided for @exportStarted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Download iniciado! Verifique sua pasta de downloads.'**
+  String get exportStarted;
+
+  /// No description provided for @exportBets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar Apostas'**
+  String get exportBets;
+
+  /// No description provided for @downloadImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixar Imagem'**
+  String get downloadImage;
+
+  /// No description provided for @shareWhatsApp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar no WhatsApp'**
+  String get shareWhatsApp;
+
+  /// No description provided for @settingsSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configurações salvas com sucesso!'**
+  String get settingsSaved;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar alterações?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'As alterações não salvas serão perdidas.'**
+  String get discardChangesDesc;
+
+  /// No description provided for @no.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não'**
+  String get no;
+
+  /// No description provided for @yesDiscard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sim, descartar'**
+  String get yesDiscard;
+
+  /// No description provided for @currentTimeZone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fuso Horário Atual'**
+  String get currentTimeZone;
+
+  /// No description provided for @exportMyBets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar minhas apostas'**
+  String get exportMyBets;
+
+  /// No description provided for @exportMyBetsSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gere uma imagem para salvar ou compartilhar!'**
+  String get exportMyBetsSub;
+
+  /// No description provided for @waitDataLoad.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aguarde os dados carregarem primeiro...'**
+  String get waitDataLoad;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar Senha'**
+  String get changePassword;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In pt, this message translates to:
+  /// **'A senha deve ter pelo menos 6 caracteres.'**
+  String get passwordMinLength;
+
+  /// No description provided for @passwordsMismatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'As senhas não coincidem.'**
+  String get passwordsMismatch;
+
+  /// No description provided for @passwordUpdated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Senha atualizada com sucesso!'**
+  String get passwordUpdated;
+
+  /// No description provided for @portuguese.
+  ///
+  /// In pt, this message translates to:
+  /// **'Português'**
+  String get portuguese;
+
+  /// No description provided for @english.
+  ///
+  /// In pt, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @italian.
+  ///
+  /// In pt, this message translates to:
+  /// **'Italiano'**
+  String get italian;
+
+  /// No description provided for @notifications.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notificações'**
+  String get notifications;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma notificação.'**
+  String get noNotifications;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcar como lida'**
+  String get markAsRead;
+
+  /// No description provided for @close.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar'**
+  String get close;
+
+  /// No description provided for @followStandings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguir uma Classificação'**
+  String get followStandings;
+
+  /// No description provided for @followStandingsSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha a ordem final e geramos os placares para você'**
+  String get followStandingsSub;
+
+  /// No description provided for @desiredStandings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Classificação Desejada'**
+  String get desiredStandings;
+
+  /// No description provided for @dragTeams.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arraste os times para a ordem exata que você deseja vê-los terminarem na tabela.'**
+  String get dragTeams;
+
+  /// No description provided for @generateChaos.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gerar Caos'**
+  String get generateChaos;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deletar Grupo'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tem certeza que deseja deletar todas as apostas deste grupo?'**
+  String get deleteGroupConfirm;
+
+  /// No description provided for @deleteAllBets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deletar todas apostas'**
+  String get deleteAllBets;
 }
 
 class _AppLocalizationsDelegate

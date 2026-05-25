@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   locale      TEXT NOT NULL DEFAULT 'pt',
   max_goals   INT  NOT NULL DEFAULT 5,
   super_palpites_used INT NOT NULL DEFAULT 0,
+  participate_in_ranking BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -256,6 +257,7 @@ SELECT
   RANK() OVER (ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank
 FROM profiles p
 LEFT JOIN bets b ON b.user_id = p.id
+WHERE p.participate_in_ranking = true
 GROUP BY p.id, p.username, p.avatar_url;
 
 -- ─────────────────────────────────────────────
@@ -474,3 +476,14 @@ CREATE TRIGGER enforce_bet_rules
 BEFORE INSERT OR UPDATE ON bets
 FOR EACH ROW EXECUTE PROCEDURE check_bet_deadline();
 
+-- ─────────────────────────────────────────────
+-- CHECK EMAIL EXISTS RPC
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.check_email_exists(p_email TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM auth.users WHERE email = p_email
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

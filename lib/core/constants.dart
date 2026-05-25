@@ -12,7 +12,7 @@ bool get isBettingLocked => DateTime.now().toUtc().isAfter(kBetDeadline);
 // ─────────────────────────────────────────────
 // APP VERSION
 // ─────────────────────────────────────────────
-const String kAppVersion = '0.0';
+const String kAppVersion = '0.1';
 
 // ─────────────────────────────────────────────
 // SUPER PALPITES

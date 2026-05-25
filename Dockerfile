@@ -14,6 +14,9 @@ RUN flutter pub get
 # Copy the rest of the project
 COPY . .
 
+# Fix for git-ignored assets required by pubspec.yaml
+RUN mkdir -p assets/images && touch .env
+
 # Ingest Supabase Env Vars safely during build
 ARG SUPABASE_URL
 ARG SUPABASE_ANON_KEY

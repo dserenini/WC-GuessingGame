@@ -12,6 +12,7 @@ import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
+import 'package:copa2026/l10n/team_translator.dart';
 
 class MatchCard extends ConsumerWidget {
   final MatchModel match;
@@ -60,7 +61,7 @@ class MatchCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                _StatusChip(status: match.status),
+                _StatusChip(status: match.status, l10n: l),
                 const Spacer(),
                 if (match.matchDate != null)
                   Text(
@@ -81,7 +82,7 @@ class MatchCard extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // â”€â”€ Score row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Score row ──────────────────────
             Row(
               children: [
                 // Home team
@@ -95,10 +96,13 @@ class MatchCard extends ConsumerWidget {
                         FlagAvatar(
                           flagUrl: match.homeTeam.flagUrl,
                           radius: 28,
+                          onChaosTap: (hasSuperPalpites || !locked)
+                              ? () => _applyChaosForTeam(ref, context, true)
+                              : null,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          match.homeTeam.name,
+                          translateTeam(context, match.homeTeam.name),
                           textAlign: TextAlign.center,
                           style: tt.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -167,10 +171,13 @@ class MatchCard extends ConsumerWidget {
                         FlagAvatar(
                           flagUrl: match.awayTeam.flagUrl,
                           radius: 28,
+                          onChaosTap: (hasSuperPalpites || !locked)
+                              ? () => _applyChaosForTeam(ref, context, false)
+                              : null,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          match.awayTeam.name,
+                          translateTeam(context, match.awayTeam.name),
                           textAlign: TextAlign.center,
                           style: tt.labelMedium?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -185,7 +192,7 @@ class MatchCard extends ConsumerWidget {
               ],
             ),
 
-            // â”€â”€ Real score (finished matches) â”€â”€
+            // ── Real score (finished matches)
             if (match.status == MatchStatus.finished &&
                 match.homeScore != null &&
                 match.awayScore != null)
@@ -210,7 +217,7 @@ class MatchCard extends ConsumerWidget {
                 ),
               ),
 
-            // â”€â”€ Points badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Points badge ──────────────────
             if (bet != null && bet!.points > 0)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -237,8 +244,11 @@ class MatchCard extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       builder: (_) => ScoreBottomSheet(
-        homeTeam: match.homeTeam.name,
-        awayTeam: match.awayTeam.name,
+        matchId: match.id,
+        homeTeam: translateTeam(context, match.homeTeam.name),
+        awayTeam: translateTeam(context, match.awayTeam.name),
+        homeFlag: match.homeTeam.flagUrl,
+        awayFlag: match.awayTeam.flagUrl,
         initialHome: currentHome,
         initialAway: currentAway,
         focusHome: isHome,
@@ -433,15 +443,16 @@ class _ScoreBox extends StatelessWidget {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _StatusChip extends StatelessWidget {
   final MatchStatus status;
-  const _StatusChip({required this.status});
+  final AppLocalizations l10n;
+  const _StatusChip({required this.status, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final (label, color) = switch (status) {
-      MatchStatus.scheduled => ('Agendado', cs.outline),
-      MatchStatus.live      => ('Ao Vivo 🔴', Colors.red),
-      MatchStatus.finished  => ('Encerrado', cs.primary),
+      MatchStatus.scheduled => (l10n.statusScheduled, cs.outline),
+      MatchStatus.live      => (l10n.statusLive, Colors.red),
+      MatchStatus.finished  => (l10n.statusFinished, cs.primary),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

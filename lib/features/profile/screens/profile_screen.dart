@@ -405,7 +405,7 @@ class _ComingSoonCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Estatísticas Avançadas',
+                  l.advancedStats,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface.withOpacity(0.6),
@@ -413,7 +413,7 @@ class _ComingSoonCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Por grupo, rodada, seleção — em breve!',
+                  l.advancedStatsSub,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurface.withOpacity(0.4),
                       ),
@@ -464,7 +464,7 @@ class _SuperPalpiteCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Super Palpites',
+                  l.superPalpites,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -491,7 +491,7 @@ class _SuperPalpiteCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Você tem $remaining alterações após o prazo limite.',
+              l.superPalpitesRemaining(remaining),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: cs.onSurface.withOpacity(0.5),
                     fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/l10n/team_translator.dart';
 
 class StandingsTable extends StatelessWidget {
   final List<StandingEntry> standings;
@@ -115,7 +116,7 @@ class StandingsTable extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            s.teamName,
+                            translateTeam(context, s.teamName),
                             overflow: TextOverflow.ellipsis,
                             style: tt.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,

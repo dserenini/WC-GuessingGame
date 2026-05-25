@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
-
+import 'package:copa2026/shared/widgets/app_drawer.dart';
 class HelpScreen extends ConsumerWidget {
   const HelpScreen({super.key});
 
@@ -11,6 +11,7 @@ class HelpScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(l10n.helpAndRules),
         centerTitle: true,

@@ -45,7 +45,7 @@ class RankingScreen extends ConsumerWidget {
           itemBuilder: (_, i) {
             final entry = entries[i];
             final isMe = entry.userId == currentUid;
-            return RankingTile(entry: entry, isMe: isMe);
+            return RankingTile(entry: entry, isMe: isMe, l: l);
           },
         ),
       ),
@@ -56,8 +56,9 @@ class RankingScreen extends ConsumerWidget {
 class RankingTile extends StatelessWidget {
   final RankingEntry entry;
   final bool isMe;
+  final AppLocalizations l;
 
-  const RankingTile({super.key, required this.entry, required this.isMe});
+  const RankingTile({super.key, required this.entry, required this.isMe, required this.l});
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +141,7 @@ class RankingTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${entry.totalBets} apostas',
+                    l.rankingBetsCount(entry.totalBets),
                     style: tt.labelSmall?.copyWith(
                       color: cs.onSurface.withOpacity(0.5),
                     ),

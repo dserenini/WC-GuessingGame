@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
+import 'package:copa2026/l10n/team_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:copa2026/services/master_data_service.dart';
@@ -188,7 +189,7 @@ class _AdminMatchTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(
-          '${match.homeTeam.name} X ${match.awayTeam.name}',
+          '${translateTeam(context, match.homeTeam.name)} X ${translateTeam(context, match.awayTeam.name)}',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: _buildScoreSubtitle(context),
@@ -225,7 +226,7 @@ class _AdminMatchTile extends StatelessWidget {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: Text('${match.homeTeam.name} X ${match.awayTeam.name}'),
+          title: Text('${translateTeam(context, match.homeTeam.name)} X ${translateTeam(context, match.awayTeam.name)}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -236,7 +237,7 @@ class _AdminMatchTile extends StatelessWidget {
                       controller: homeCtrl,
                       keyboardType: TextInputType.number,
                       decoration:
-                          InputDecoration(labelText: match.homeTeam.name),
+                          InputDecoration(labelText: translateTeam(context, match.homeTeam.name)),
                     ),
                   ),
                   const Padding(
@@ -248,7 +249,7 @@ class _AdminMatchTile extends StatelessWidget {
                       controller: awayCtrl,
                       keyboardType: TextInputType.number,
                       decoration:
-                          InputDecoration(labelText: match.awayTeam.name),
+                          InputDecoration(labelText: translateTeam(context, match.awayTeam.name)),
                     ),
                   ),
                 ],

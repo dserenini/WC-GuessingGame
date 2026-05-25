@@ -7,6 +7,7 @@ import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/groups/widgets/standings_table.dart';
 import 'package:copa2026/features/groups/widgets/match_card.dart';
+import 'package:copa2026/l10n/team_translator.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -83,7 +84,7 @@ class GroupScreen extends ConsumerWidget {
               },
               child: CustomScrollView(
                 slivers: [
-                  // â”€â”€ Deadline Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ── Deadline Banner ──────────────────
                   if (isBettingLocked)
                     SliverToBoxAdapter(
                       child: Container(
@@ -244,7 +245,7 @@ class GroupScreen extends ConsumerWidget {
                                 backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                                 child: Text('${i + 1}º', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                               ),
-                              title: Text(teamNames[i], style: const TextStyle(fontWeight: FontWeight.w600)),
+                              title: Text(translateTeam(context, teamNames[i]), style: const TextStyle(fontWeight: FontWeight.w600)),
                               trailing: const Icon(Icons.drag_handle, color: Colors.grey),
                             ),
                         ],

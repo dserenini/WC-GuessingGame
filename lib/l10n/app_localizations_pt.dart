@@ -538,4 +538,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamPanama => 'Panamá';
+
+  @override
+  String get paymentPixTitle => 'Para usuários brasileiros, pagamento via pix.';
+
+  @override
+  String get paymentPixKey => 'chave: pix@example.com';
+
+  @override
+  String get paymentPixScan => 'Ou escaneie o QR-Code abaixo';
+
+  @override
+  String get paymentIbanTitle =>
+      'Para usuários europeus, pagamento via transferência';
+
+  @override
+  String get paymentIbanKey => 'IBAN: IT93W0364601600526228392905';
+
+  @override
+  String get copiedToClipboard => 'Copiado para a área de transferência!';
+
+  @override
+  String get paymentPixAmount => 'Valor: R\$ 20,00';
+
+  @override
+  String get paymentIbanAmount => 'Valor: € 5,00';
 }

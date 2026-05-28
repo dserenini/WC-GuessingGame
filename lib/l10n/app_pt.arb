@@ -205,5 +205,13 @@
   "teamEngland": "Inglaterra",
   "teamCroatia": "Croácia",
   "teamGhana": "Gana",
-  "teamPanama": "Panamá"
+  "teamPanama": "Panamá",
+  "paymentPixTitle": "Para usuários brasileiros, pagamento via pix.",
+  "paymentPixKey": "chave: pix@example.com",
+  "paymentPixScan": "Ou escaneie o QR-Code abaixo",
+  "paymentIbanTitle": "Para usuários europeus, pagamento via transferência",
+  "paymentIbanKey": "IBAN: IT93W0364601600526228392905",
+  "copiedToClipboard": "Copiado para a área de transferência!",
+  "paymentPixAmount": "Valor: R$ 20,00",
+  "paymentIbanAmount": "Valor: € 5,00"
 }

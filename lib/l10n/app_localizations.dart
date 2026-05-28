@@ -1095,6 +1095,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Panamá'**
   String get teamPanama;
+
+  /// No description provided for @paymentPixTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Para usuários brasileiros, pagamento via pix.'**
+  String get paymentPixTitle;
+
+  /// No description provided for @paymentPixKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'chave: pix@example.com'**
+  String get paymentPixKey;
+
+  /// No description provided for @paymentPixScan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ou escaneie o QR-Code abaixo'**
+  String get paymentPixScan;
+
+  /// No description provided for @paymentIbanTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Para usuários europeus, pagamento via transferência'**
+  String get paymentIbanTitle;
+
+  /// No description provided for @paymentIbanKey.
+  ///
+  /// In pt, this message translates to:
+  /// **'IBAN: IT93W0364601600526228392905'**
+  String get paymentIbanKey;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiado para a área de transferência!'**
+  String get copiedToClipboard;
+
+  /// No description provided for @paymentPixAmount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Valor: R\$ 20,00'**
+  String get paymentPixAmount;
+
+  /// No description provided for @paymentIbanAmount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Valor: € 5,00'**
+  String get paymentIbanAmount;
 }
 
 class _AppLocalizationsDelegate

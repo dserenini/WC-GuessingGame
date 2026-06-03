@@ -43,6 +43,20 @@ begin
     select u.id, p_title, p_message 
     from auth.users u
     where (select count(*) from public.bets b where b.user_id = u.id) < v_total_matches;
+    
+  elsif p_filter = 'paid' then
+    insert into public.notifications (user_id, title, message)
+    select u.id, p_title, p_message 
+    from auth.users u
+    join public.profiles p on p.id = u.id
+    where p.paid = true;
+    
+  elsif p_filter = 'unpaid' then
+    insert into public.notifications (user_id, title, message)
+    select u.id, p_title, p_message 
+    from auth.users u
+    join public.profiles p on p.id = u.id
+    where p.paid = false;
   end if;
 end;
 $$ language plpgsql security definer;

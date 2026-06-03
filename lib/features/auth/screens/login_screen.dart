@@ -83,16 +83,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: Column(
             children: [
               const SizedBox(height: 40),
-              // â”€â”€ Logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+              // ── Logo ──────────────────────────
               Container(
-                width: 88,
-                height: 88,
+                width: 160,
+                height: 160,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [kPrimaryGreen, kPrimaryGreenLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -101,9 +96,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       offset: const Offset(0, 8),
                     ),
                   ],
-                ),
-                child: const Center(
-                  child: Text('⚽', style: TextStyle(fontSize: 40)),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/capa.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

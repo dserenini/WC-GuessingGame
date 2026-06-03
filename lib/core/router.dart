@@ -13,6 +13,7 @@ import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
 import 'package:copa2026/features/auth/screens/onboarding_screen.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
+import 'package:copa2026/features/auth/screens/update_password_screen.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -22,17 +23,25 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/profile',
     redirect: (context, state) {
-      final session = authState.valueOrNull;
+      final authStateValue = authState.valueOrNull;
+      final session = authStateValue?.session;
+      final authEvent = authStateValue?.event;
       final isLoggedIn = session != null;
+      
       final isLoginPage = state.matchedLocation == '/login';
       final isOnboarding = state.matchedLocation == '/onboarding';
+      final isUpdatePassword = state.matchedLocation == '/update-password';
       final hasSelectedLanguage = localeNotifier.hasSelectedLanguage;
 
-      if (!isLoggedIn && !isLoginPage) return '/login';
+      if (authEvent == AuthChangeEvent.passwordRecovery && !isUpdatePassword) {
+        return '/update-password';
+      }
+
+      if (!isLoggedIn && !isLoginPage && !isUpdatePassword) return '/login';
       
-      if (isLoggedIn) {
-        if (!hasSelectedLanguage && !isOnboarding) return '/onboarding';
-        if (hasSelectedLanguage && (isLoginPage || isOnboarding)) return '/profile';
+      if (isLoggedIn && authEvent != AuthChangeEvent.passwordRecovery) {
+        if (!hasSelectedLanguage && !isOnboarding && !isUpdatePassword) return '/onboarding';
+        if (hasSelectedLanguage && (isLoginPage || isOnboarding || isUpdatePassword)) return '/profile';
       }
       
       return null;
@@ -52,6 +61,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/update-password',
+        name: 'update-password',
+        builder: (_, __) => const UpdatePasswordScreen(),
       ),
       GoRoute(
         path: '/groups/:group',

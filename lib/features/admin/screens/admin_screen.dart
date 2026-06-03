@@ -29,6 +29,14 @@ final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
       .toList();
 });
 
+final allProfilesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final response = await Supabase.instance.client
+      .from('profiles')
+      .select('id, username, paid')
+      .order('username');
+  return List<Map<String, dynamic>>.from(response);
+});
+
 
 
 class AdminScreen extends ConsumerStatefulWidget {
@@ -70,7 +78,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final matchesAsync = ref.watch(allMatchesProvider);
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(' 👑'),
@@ -90,49 +98,54 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             tabs: [
               Tab(icon: Icon(Icons.sports_soccer), text: 'Partidas'),
               Tab(icon: Icon(Icons.notifications_active), text: 'Notificar'),
+              Tab(icon: Icon(Icons.attach_money), text: 'Pagamentos'),
             ],
           ),
 
       ),
       drawer: const AppDrawer(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isSyncing ? null : _syncMasterData,
-        icon: _isSyncing
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
-            : const Icon(Icons.sync),
-        label: const Text('Atualizar'),
-      ),
       body: TabBarView(
         children: [
           matchesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text(e.toString())),
             data: (matches) {
-          // Group by letter
-          final grouped = <String, List<MatchModel>>{};
-          for (final m in matches) {
-            grouped.putIfAbsent(m.groupLetter, () => []).add(m);
-          }
+              // Group by letter
+              final grouped = <String, List<MatchModel>>{};
+              for (final m in matches) {
+                grouped.putIfAbsent(m.groupLetter, () => []).add(m);
+              }
 
-          final keys = grouped.keys.toList()..sort();
+              final keys = grouped.keys.toList()..sort();
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-            children: keys.map((key) {
-              return _AdminGroupSection(
-                groupLetter: key,
-                matches: grouped[key]!,
-                ref: ref,
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                floatingActionButton: FloatingActionButton.extended(
+                  onPressed: _isSyncing ? null : _syncMasterData,
+                  icon: _isSyncing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.sync),
+                  label: const Text('Atualizar'),
+                ),
+                body: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                  children: keys.map((key) {
+                    return _AdminGroupSection(
+                      groupLetter: key,
+                      matches: grouped[key]!,
+                      ref: ref,
+                    );
+                  }).toList(),
+                ),
               );
-            }).toList(),
-          );
             },
           ),
           const _AdminNotificationsTab(),
+          const _AdminPaymentsTab(),
         ],
       ),
     ));
@@ -402,6 +415,20 @@ class _AdminNotificationsTabState extends State<_AdminNotificationsTab> {
           onChanged: (v) => setState(() => _filter = v!),
           contentPadding: EdgeInsets.zero,
         ),
+        RadioListTile<String>(
+          title: const Text('Apenas quem JÁ PAGOU'),
+          value: 'paid',
+          groupValue: _filter,
+          onChanged: (v) => setState(() => _filter = v!),
+          contentPadding: EdgeInsets.zero,
+        ),
+        RadioListTile<String>(
+          title: const Text('Apenas quem NÃO PAGOU'),
+          value: 'unpaid',
+          groupValue: _filter,
+          onChanged: (v) => setState(() => _filter = v!),
+          contentPadding: EdgeInsets.zero,
+        ),
         const SizedBox(height: 24),
         SizedBox(
           height: 50,
@@ -418,6 +445,114 @@ class _AdminNotificationsTabState extends State<_AdminNotificationsTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AdminPaymentsTab extends ConsumerStatefulWidget {
+  const _AdminPaymentsTab();
+
+  @override
+  ConsumerState<_AdminPaymentsTab> createState() => _AdminPaymentsTabState();
+}
+
+class _AdminPaymentsTabState extends ConsumerState<_AdminPaymentsTab> {
+  String _searchQuery = '';
+  String _filter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
+    final profilesAsync = ref.watch(allProfilesProvider);
+
+    return profilesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Erro: $e')),
+      data: (profiles) {
+        var filtered = profiles.where((p) {
+          final isPaid = p['paid'] == true;
+          if (_filter == 'paid' && !isPaid) return false;
+          if (_filter == 'unpaid' && isPaid) return false;
+          
+          final name = (p['username'] ?? '').toString().toLowerCase();
+          if (_searchQuery.isNotEmpty && !name.contains(_searchQuery.toLowerCase())) {
+            return false;
+          }
+          return true;
+        }).toList();
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Buscar por nome',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onChanged: (v) => setState(() => _searchQuery = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  DropdownButton<String>(
+                    value: _filter,
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('Todos')),
+                      DropdownMenuItem(value: 'paid', child: Text('Pagos')),
+                      DropdownMenuItem(value: 'unpaid', child: Text('Pendentes')),
+                    ],
+                    onChanged: (v) => setState(() => _filter = v!),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: filtered.isEmpty
+                  ? const Center(child: Text('Nenhum usuário encontrado.'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final profile = filtered[index];
+                        final bool isPaid = profile['paid'] == true;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: SwitchListTile(
+                            title: Text(
+                              profile['username'] ?? 'Sem nome',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(isPaid ? 'Pago' : 'Pendente'),
+                            value: isPaid,
+                            activeColor: Theme.of(context).colorScheme.primary,
+                            onChanged: (val) async {
+                              try {
+                                await Supabase.instance.client
+                                    .from('profiles')
+                                    .update({'paid': val})
+                                    .eq('id', profile['id']);
+                                ref.invalidate(allProfilesProvider);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

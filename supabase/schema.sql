@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   max_goals   INT  NOT NULL DEFAULT 5,
   super_palpites_used INT NOT NULL DEFAULT 0,
   participate_in_ranking BOOLEAN NOT NULL DEFAULT true,
+  paid        BOOLEAN NOT NULL DEFAULT false,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -29,6 +30,9 @@ CREATE POLICY "Users can read all profiles"
 
 CREATE POLICY "Users can update their own profile"
   ON profiles FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Admins can update profiles"
+  ON profiles FOR UPDATE USING (is_admin());
 
 CREATE POLICY "Users can insert their own profile"
   ON profiles FOR INSERT WITH CHECK (auth.uid() = id);

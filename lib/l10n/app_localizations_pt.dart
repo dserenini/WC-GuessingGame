@@ -563,4 +563,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get paymentIbanAmount => 'Valor: € 5,00';
+
+  @override
+  String get firstName => 'Nome';
+
+  @override
+  String get lastName => 'Sobrenome';
+
+  @override
+  String get displayAs => 'Aparecer no ranking como:';
+
+  @override
+  String get displayAsUsername => 'Nome de Usuário';
+
+  @override
+  String get displayAsFullName => 'Nome Completo';
+
+  @override
+  String get completeProfileTitle => 'Complete seu Perfil';
+
+  @override
+  String get completeProfileDesc =>
+      'Precisamos do seu nome para facilitar a identificação nos pagamentos e no ranking.';
+
+  @override
+  String get nameRequired => 'Preencha seu nome e sobrenome';
 }

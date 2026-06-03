@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
@@ -118,8 +118,8 @@ class RankingTile extends StatelessWidget {
                   : null,
               child: entry.avatarUrl == null
                   ? Text(
-                      entry.username.isNotEmpty
-                          ? entry.username[0].toUpperCase()
+                      entry.displayName.isNotEmpty
+                          ? entry.displayName[0].toUpperCase()
                           : '?',
                       style: TextStyle(
                         color: cs.primary,
@@ -135,7 +135,7 @@ class RankingTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    entry.username,
+                    entry.displayName,
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                     ),

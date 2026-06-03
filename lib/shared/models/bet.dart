@@ -37,6 +37,8 @@ class BetModel {
 class RankingEntry {
   final String userId;
   final String username;
+  final String? fullName;
+  final String displayPreference;
   final String? avatarUrl;
   final int totalPoints;
   final int totalBets;
@@ -45,20 +47,31 @@ class RankingEntry {
   const RankingEntry({
     required this.userId,
     required this.username,
+    this.fullName,
+    required this.displayPreference,
     this.avatarUrl,
     required this.totalPoints,
     required this.totalBets,
     required this.rank,
   });
 
-      factory RankingEntry.fromJson(Map<String, dynamic> json) => RankingEntry(
+  factory RankingEntry.fromJson(Map<String, dynamic> json) => RankingEntry(
         userId: json['user_id'] as String,
         username: json['username'] as String,
+        fullName: json['full_name'] as String?,
+        displayPreference: json['display_preference'] as String? ?? 'username',
         avatarUrl: json['avatar_url'] as String?,
         totalPoints: (json['total_points'] as num?)?.toInt() ?? 0,
         totalBets: (json['total_bets'] as num?)?.toInt() ?? 0,
         rank: (json['rank'] as num?)?.toInt() ?? 0,
       );
+  
+  String get displayName {
+    if (displayPreference == 'full_name' && fullName != null && fullName!.isNotEmpty) {
+      return fullName!;
+    }
+    return username;
+  }
 }
 
 class LeagueModel {

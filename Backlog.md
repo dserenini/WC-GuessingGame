@@ -1,7 +1,5 @@
 # Backlog de implementações (Bugs/Fix/Ajustes Necessários)
-* **Página de Configuração**: Corrigir alguns itens que não foi traduzido automaticamente com a Internacionalização (Exportar, Trocar Senha, etc).
-* **Ajuda**: Ajustar a tradução do Ajuda (Não ficou perfeito).
-* **Ajuda**: Gravar video mostrando como usa o app rapidamente e exibir pro usuário no primeiro login ou na página de ajuda mesmo
+* **Página de Reset de Senha**: Melhorar a página e internacionalizar a página
 
 # Implementado:
 

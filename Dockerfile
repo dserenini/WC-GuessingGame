@@ -20,11 +20,13 @@ RUN mkdir -p assets/images && touch .env
 # Ingest Supabase Env Vars safely during build
 ARG SUPABASE_URL
 ARG SUPABASE_ANON_KEY
+ARG MASTER_DATA_CSV_URL
 
 # Build Web Minified
 RUN flutter build web --release \
     --dart-define=SUPABASE_URL=$SUPABASE_URL \
-    --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+    --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+    --dart-define=MASTER_DATA_CSV_URL=$MASTER_DATA_CSV_URL
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2: Serve with Nginx

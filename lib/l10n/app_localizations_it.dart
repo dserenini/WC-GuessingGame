@@ -565,4 +565,29 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get paymentIbanAmount => 'Importo: € 5,00';
+
+  @override
+  String get firstName => 'Nome';
+
+  @override
+  String get lastName => 'Cognome';
+
+  @override
+  String get displayAs => 'Apparire in classifica come:';
+
+  @override
+  String get displayAsUsername => 'Nome utente';
+
+  @override
+  String get displayAsFullName => 'Nome e Cognome';
+
+  @override
+  String get completeProfileTitle => 'Completa il tuo profilo';
+
+  @override
+  String get completeProfileDesc =>
+      'Abbiamo bisogno del tuo nome per facilitare l\'identificazione nei pagamenti e in classifica.';
+
+  @override
+  String get nameRequired => 'Inserisci il tuo nome e cognome';
 }

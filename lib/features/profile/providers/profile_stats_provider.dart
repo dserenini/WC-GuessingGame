@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileStats {
   final String username;
+  final String? fullName;
+  final String displayPreference;
   final String? avatarUrl;
   final String email;
   final int totalBets;
@@ -14,6 +16,8 @@ class ProfileStats {
 
   const ProfileStats({
     required this.username,
+    this.fullName,
+    required this.displayPreference,
     this.avatarUrl,
     required this.email,
     required this.totalBets,
@@ -36,7 +40,7 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
   // Fetch profile
   final profileData = await client
       .from('profiles')
-      .select('username, avatar_url, super_palpites_used')
+      .select('username, full_name, display_preference, avatar_url, super_palpites_used')
       .eq('id', user.id)
       .single();
 
@@ -68,6 +72,8 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
 
   return ProfileStats(
     username: profileData['username'] as String? ?? '',
+    fullName: profileData['full_name'] as String?,
+    displayPreference: profileData['display_preference'] as String? ?? 'username',
     avatarUrl: profileData['avatar_url'] as String?,
     email: user.email ?? '',
     totalBets: totalBets,

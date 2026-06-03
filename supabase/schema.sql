@@ -13,7 +13,9 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
   id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username    TEXT NOT NULL DEFAULT '',
+  username    TEXT NOT NULL UNIQUE DEFAULT '',
+  full_name   TEXT,
+  display_preference TEXT DEFAULT 'username' CHECK (display_preference IN ('username', 'full_name')),
   avatar_url  TEXT,
   locale      TEXT NOT NULL DEFAULT 'pt',
   max_goals   INT  NOT NULL DEFAULT 5,
@@ -255,6 +257,8 @@ WITH (security_invoker = on) AS
 SELECT
   p.id        AS user_id,
   p.username,
+  p.full_name,
+  p.display_preference,
   p.avatar_url,
   COALESCE(SUM(b.points), 0) AS total_points,
   COUNT(b.id) AS total_bets,
@@ -262,7 +266,7 @@ SELECT
 FROM profiles p
 LEFT JOIN bets b ON b.user_id = p.id
 WHERE p.participate_in_ranking = true
-GROUP BY p.id, p.username, p.avatar_url;
+GROUP BY p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
 
 -- ─────────────────────────────────────────────
 -- LEAGUE RANKING VIEW
@@ -274,6 +278,8 @@ SELECT
   l.name        AS league_name,
   p.id          AS user_id,
   p.username,
+  p.full_name,
+  p.display_preference,
   p.avatar_url,
   COALESCE(SUM(b.points), 0) AS total_points,
   RANK() OVER (PARTITION BY lm.league_id ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank
@@ -281,7 +287,7 @@ FROM league_members lm
 JOIN leagues l ON l.id = lm.league_id
 JOIN profiles p ON p.id = lm.user_id
 LEFT JOIN bets b ON b.user_id = lm.user_id
-GROUP BY lm.league_id, l.name, p.id, p.username, p.avatar_url;
+GROUP BY lm.league_id, l.name, p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
 
 -- ─────────────────────────────────────────────
 -- ENABLE REALTIME

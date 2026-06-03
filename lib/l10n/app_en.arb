@@ -213,5 +213,13 @@
   "paymentIbanKey": "IBAN: IT93W0364601600526228392905",
   "copiedToClipboard": "Copied to clipboard!",
   "paymentPixAmount": "Amount: R$ 20.00",
-  "paymentIbanAmount": "Amount: € 5.00"
+  "paymentIbanAmount": "Amount: € 5.00",
+  "firstName": "Name",
+  "lastName": "Last Name",
+  "displayAs": "Display in ranking as:",
+  "displayAsUsername": "Username",
+  "displayAsFullName": "Full Name",
+  "completeProfileTitle": "Complete your Profile",
+  "completeProfileDesc": "We need your name to make it easier to identify you in payments and rankings.",
+  "nameRequired": "Please fill in your name and last name"
 }

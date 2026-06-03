@@ -44,6 +44,7 @@ jobs:
           build-args: |
             SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+            MASTER_DATA_CSV_URL=${{ secrets.MASTER_DATA_CSV_URL }}
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3

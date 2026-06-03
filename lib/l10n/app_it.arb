@@ -213,5 +213,13 @@
   "paymentIbanKey": "IBAN: IT93W0364601600526228392905",
   "copiedToClipboard": "Copiato negli appunti!",
   "paymentPixAmount": "Importo: R$ 20,00",
-  "paymentIbanAmount": "Importo: € 5,00"
+  "paymentIbanAmount": "Importo: € 5,00",
+  "firstName": "Nome",
+  "lastName": "Cognome",
+  "displayAs": "Apparire in classifica come:",
+  "displayAsUsername": "Nome utente",
+  "displayAsFullName": "Nome e Cognome",
+  "completeProfileTitle": "Completa il tuo profilo",
+  "completeProfileDesc": "Abbiamo bisogno del tuo nome per facilitare l'identificazione nei pagamenti e in classifica.",
+  "nameRequired": "Inserisci il tuo nome e cognome"
 }

@@ -6,10 +6,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class MasterDataService {
   static Future<(int, int)> syncMatchesFromSheet() async {
-    final url = dotenv.env['MASTER_DATA_CSV_URL'];
+    const envUrl = String.fromEnvironment('MASTER_DATA_CSV_URL');
+    String? url = envUrl.isNotEmpty ? envUrl : dotenv.env['MASTER_DATA_CSV_URL'];
+
     if (url == null || url.isEmpty || url.contains('YOUR_PUBLISHED_CSV_ID_HERE')) {
-      debugPrint('⚽ MasterDataService: URL do CSV não configurada no .env');
-      throw Exception('URL do CSV não configurada.');
+      // Fallback para a URL do Google Sheets caso o .env não seja carregado em produção
+      url = 'https://docs.google.com/spreadsheets/d/16tsP_ai8qXPBhlyT5osjuewqEOsZ93qMo1uUVdRxE8A/export?format=csv';
     }
 
     try {

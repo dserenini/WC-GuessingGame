@@ -7,6 +7,7 @@ import 'package:copa2026/features/profile/providers/profile_stats_provider.dart'
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
+import 'package:copa2026/features/profile/screens/profile_completion_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -17,26 +18,10 @@ class ProfileScreen extends ConsumerWidget {
     final statsAsync = ref.watch(profileStatsProvider);
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('👤 ${l.myProfile}'),
-        leadingWidth: 100,
-        leading: Row(
-          children: [
-            Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-            ),
-            const NotificationBell(),
-          ],
-        ),
-      ),
-      drawer: const AppDrawer(),
-      body: statsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
+    return statsAsync.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(
+        body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
@@ -46,33 +31,57 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
-        data: (stats) => RefreshIndicator(
-          onRefresh: () async => ref.invalidate(profileStatsProvider),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // ── Avatar & Username Header ──────────────
-              _ProfileHeader(stats: stats),
-              const SizedBox(height: 24),
-
-              // ── Progress Card ─────────────────────────
-              _BetProgressCard(stats: stats, l: l),
-              const SizedBox(height: 16),
-
-              // ── Points Card ───────────────────────────
-              _PointsCard(stats: stats, l: l),
-              const SizedBox(height: 24),
-
-              // ── Super Palpite Card ─────────────────────────
-              _SuperPalpiteCard(stats: stats, l: l),
-              const SizedBox(height: 24),
-
-              // ── Future stats placeholder ──────────────
-              _ComingSoonCard(l: l),
-            ],
-          ),
-        ),
       ),
+      data: (stats) {
+        if (stats.fullName == null || stats.fullName!.trim().isEmpty) {
+          return const ProfileCompletionScreen();
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('👤 ${l.myProfile}'),
+            leadingWidth: 100,
+            leading: Row(
+              children: [
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                ),
+                const NotificationBell(),
+              ],
+            ),
+          ),
+          drawer: const AppDrawer(),
+          body: RefreshIndicator(
+            onRefresh: () async => ref.invalidate(profileStatsProvider),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // ── Avatar & Username Header ──────────────
+                _ProfileHeader(stats: stats),
+                const SizedBox(height: 24),
+
+                // ── Progress Card ─────────────────────────
+                _BetProgressCard(stats: stats, l: l),
+                const SizedBox(height: 16),
+
+                // ── Points Card ───────────────────────────
+                _PointsCard(stats: stats, l: l),
+                const SizedBox(height: 24),
+
+                // ── Super Palpite Card ─────────────────────────
+                _SuperPalpiteCard(stats: stats, l: l),
+                const SizedBox(height: 24),
+
+                // ── Future stats placeholder ──────────────
+                _ComingSoonCard(l: l),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -111,8 +120,8 @@ class _ProfileHeader extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              stats.username.isNotEmpty
-                  ? stats.username[0].toUpperCase()
+              (stats.fullName?.isNotEmpty == true ? stats.fullName! : stats.username).isNotEmpty
+                  ? (stats.fullName?.isNotEmpty == true ? stats.fullName! : stats.username)[0].toUpperCase()
                   : '⚽',
               style: const TextStyle(
                 fontSize: 32,
@@ -124,7 +133,7 @@ class _ProfileHeader extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          stats.username,
+          stats.fullName?.isNotEmpty == true ? stats.fullName! : stats.username,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),

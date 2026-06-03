@@ -1143,6 +1143,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Valor: € 5,00'**
   String get paymentIbanAmount;
+
+  /// No description provided for @firstName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get firstName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sobrenome'**
+  String get lastName;
+
+  /// No description provided for @displayAs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aparecer no ranking como:'**
+  String get displayAs;
+
+  /// No description provided for @displayAsUsername.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome de Usuário'**
+  String get displayAsUsername;
+
+  /// No description provided for @displayAsFullName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome Completo'**
+  String get displayAsFullName;
+
+  /// No description provided for @completeProfileTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Complete seu Perfil'**
+  String get completeProfileTitle;
+
+  /// No description provided for @completeProfileDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Precisamos do seu nome para facilitar a identificação nos pagamentos e no ranking.'**
+  String get completeProfileDesc;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preencha seu nome e sobrenome'**
+  String get nameRequired;
 }
 
 class _AppLocalizationsDelegate

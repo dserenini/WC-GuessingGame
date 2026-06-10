@@ -469,7 +469,7 @@ abstract class AppLocalizations {
   /// No description provided for @delete.
   ///
   /// In pt, this message translates to:
-  /// **'Deletar'**
+  /// **'Excluir'**
   String get delete;
 
   /// No description provided for @helpAndRules.
@@ -721,7 +721,7 @@ abstract class AppLocalizations {
   /// No description provided for @noNotifications.
   ///
   /// In pt, this message translates to:
-  /// **'Nenhuma notificação.'**
+  /// **'Nenhuma notificação'**
   String get noNotifications;
 
   /// No description provided for @markAsRead.
@@ -1191,6 +1191,78 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Preencha seu nome e sobrenome'**
   String get nameRequired;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Telefone / WhatsApp'**
+  String get phoneLabel;
+
+  /// No description provided for @phoneRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por favor, insira seu telefone'**
+  String get phoneRequired;
+
+  /// No description provided for @phoneInvalidBr.
+  ///
+  /// In pt, this message translates to:
+  /// **'Telefone inválido. Use DDD + número (11 dígitos).'**
+  String get phoneInvalidBr;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizar Dados Pessoais'**
+  String get editProfile;
+
+  /// No description provided for @leaveLeague.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair da liga'**
+  String get leaveLeague;
+
+  /// No description provided for @leaveLeagueConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tem certeza que deseja sair desta liga?'**
+  String get leaveLeagueConfirm;
+
+  /// No description provided for @paymentPending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pagamento Pendente'**
+  String get paymentPending;
+
+  /// No description provided for @paymentRealized.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pagamento Realizado'**
+  String get paymentRealized;
+
+  /// No description provided for @adminTabMatches.
+  ///
+  /// In pt, this message translates to:
+  /// **'Partidas'**
+  String get adminTabMatches;
+
+  /// No description provided for @adminTabUsers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usuários'**
+  String get adminTabUsers;
+
+  /// No description provided for @exportData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar CSV'**
+  String get exportData;
+
+  /// No description provided for @searchUsers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar por usuário, e-mail ou nome...'**
+  String get searchUsers;
 }
 
 class _AppLocalizationsDelegate

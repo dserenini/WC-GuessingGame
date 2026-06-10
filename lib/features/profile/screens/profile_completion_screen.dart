@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 
@@ -17,6 +19,7 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
   final _lastNameController = TextEditingController();
   
   String _displayPreference = 'username';
+  String _phoneNumber = '';
   bool _isLoading = false;
 
   @override
@@ -40,6 +43,7 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
       await Supabase.instance.client.from('profiles').update({
         'full_name': fullName,
         'display_preference': _displayPreference,
+        'phone': _phoneNumber,
       }).eq('id', user.id);
 
       // Invalidate the provider so the ProfileScreen re-fetches the stats
@@ -116,6 +120,37 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
                     if (value == null || value.trim().isEmpty) {
                       return l.nameRequired;
                     }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                
+                IntlPhoneField(
+                  decoration: InputDecoration(
+                    labelText: l.phoneLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  initialCountryCode: 'BR',
+                  // Bloqueia letras/símbolos: apenas dígitos em qualquer país.
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  // Assumimos a validação completa (o pacote sobrescreveria o
+                  // retorno do validator com o length-check padrão se false).
+                  disableLengthCheck: true,
+                  onChanged: (phone) {
+                    _phoneNumber = phone.completeNumber;
+                  },
+                  validator: (phone) {
+                    final digits =
+                        (phone?.number ?? '').replaceAll(RegExp(r'\D'), '');
+                    if (digits.isEmpty) {
+                      return l.phoneRequired;
+                    }
+                    // REGEX apenas para o Brasil: celular = DDD + 9 + 8 dígitos.
+                    if (phone?.countryCode == '+55' &&
+                        !RegExp(r'^[1-9][0-9]9[0-9]{8}$').hasMatch(digits)) {
+                      return l.phoneInvalidBr;
+                    }
+                    // Demais países: sem restrição de tamanho/REGEX.
                     return null;
                   },
                 ),

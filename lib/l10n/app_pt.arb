@@ -221,5 +221,30 @@
   "displayAsFullName": "Nome Completo",
   "completeProfileTitle": "Complete seu Perfil",
   "completeProfileDesc": "Precisamos do seu nome para facilitar a identificação nos pagamentos e no ranking.",
-  "nameRequired": "Preencha seu nome e sobrenome"
+  "nameRequired": "Preencha seu nome e sobrenome",
+  "phoneLabel": "Telefone / WhatsApp",
+  "phoneRequired": "Por favor, insira seu telefone",
+  "phoneInvalidBr": "Telefone inválido. Use DDD + número (11 dígitos).",
+  "editProfile": "Atualizar Dados Pessoais",
+  "leaveLeague": "Sair da liga",
+  "leaveLeagueConfirm": "Tem certeza que deseja sair desta liga?",
+  "paymentPending": "Pagamento Pendente",
+  "paymentRealized": "Pagamento Realizado",
+  "adminTabMatches": "Partidas",
+  "adminTabUsers": "Usuários",
+  "exportData": "Exportar CSV",
+  "searchUsers": "Buscar por usuário, e-mail ou nome...",
+  "notifications": "Notificações",
+  "errorGeneric": "Erro: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "Nenhuma notificação",
+  "markAsRead": "Marcar como lida",
+  "delete": "Excluir",
+  "close": "Fechar"
 }

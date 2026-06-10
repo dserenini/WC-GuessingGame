@@ -12,7 +12,7 @@ class HelpScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final offset = ref.watch(timezoneProvider);
-    final dt = DateTime.utc(2026, 6, 11, 2, 59).add(offset);
+    final dt = DateTime.utc(2026, 6, 11, 17, 30).add(offset);
     final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     final gmtStr = 'GMT${offset.inHours >= 0 ? '+' : ''}${offset.inHours}';
 

@@ -33,7 +33,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       data: (stats) {
-        if (stats.fullName == null || stats.fullName!.trim().isEmpty) {
+        if (stats.fullName == null || stats.fullName!.trim().isEmpty || stats.phone == null || stats.phone!.trim().isEmpty) {
           return const ProfileCompletionScreen();
         }
 
@@ -132,11 +132,28 @@ class _ProfileHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          stats.fullName?.isNotEmpty == true ? stats.fullName! : stats.username,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              stats.fullName?.isNotEmpty == true ? stats.fullName! : stats.username,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: stats.paid ? AppLocalizations.of(context)!.paymentRealized : AppLocalizations.of(context)!.paymentPending,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: stats.paid ? Colors.green : Colors.grey,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.attach_money, color: Colors.white, size: 16),
               ),
+            ),
+          ],
         ),
       ],
     );

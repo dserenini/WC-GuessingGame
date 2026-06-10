@@ -27,10 +27,9 @@ class MasterDataService {
       
       // Parse do CSV. Considera que a primeira linha tem os cabecalhos:
       // match_id, home_score, away_score, status
-      final List<List<dynamic>> rows = CsvToListConverter(
-        shouldParseNumbers: true,
-        eol: '\n',
-      ).convert(csvString);
+      final List<List<dynamic>> rows = Csv(
+        dynamicTyping: true,
+      ).decode(csvString);
 
       if (rows.isEmpty || rows.length == 1) {
         return (0, 0); // Planilha vazia

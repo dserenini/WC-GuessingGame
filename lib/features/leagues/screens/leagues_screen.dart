@@ -111,6 +111,36 @@ class _LeagueCard extends ConsumerWidget {
         ),
         children: [
           _LeagueRankingList(leagueId: league.id),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextButton.icon(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l.leaveLeague),
+                    content: Text(l.leaveLeagueConfirm),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(l.no),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(leagueNotifierProvider.notifier).leaveLeague(league.id);
+                          Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        child: Text(l.yes, style: const TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.exit_to_app, color: Colors.red),
+              label: Text(l.leaveLeague, style: const TextStyle(color: Colors.red)),
+            ),
+          ),
         ],
       ),
     );

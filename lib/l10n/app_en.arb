@@ -221,5 +221,30 @@
   "displayAsFullName": "Full Name",
   "completeProfileTitle": "Complete your Profile",
   "completeProfileDesc": "We need your name to make it easier to identify you in payments and rankings.",
-  "nameRequired": "Please fill in your name and last name"
+  "nameRequired": "Please fill in your name and last name",
+  "phoneLabel": "Phone / WhatsApp",
+  "phoneRequired": "Please enter your phone number",
+  "phoneInvalidBr": "Invalid phone. Use area code + number (11 digits).",
+  "editProfile": "Update Personal Data",
+  "leaveLeague": "Leave league",
+  "leaveLeagueConfirm": "Are you sure you want to leave this league?",
+  "paymentPending": "Payment Pending",
+  "paymentRealized": "Payment Completed",
+  "adminTabMatches": "Matches",
+  "adminTabUsers": "Users",
+  "exportData": "Export CSV",
+  "searchUsers": "Search by username, email or name...",
+  "notifications": "Notifications",
+  "errorGeneric": "Error: {error}",
+  "@errorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "No notifications",
+  "markAsRead": "Mark as read",
+  "delete": "Delete",
+  "close": "Close"
 }

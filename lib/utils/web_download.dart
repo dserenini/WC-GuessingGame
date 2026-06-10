@@ -26,9 +26,14 @@ external JSFunction? get _jsCanShare;
 // ── Download ─────────────────────────────────────────────────────────────────
 
 void downloadImage(Uint8List bytes, String filename) {
+  downloadBytes(bytes, filename, 'image/png');
+}
+
+/// Faz o download de [bytes] como um arquivo [filename] com o [mimeType] dado.
+void downloadBytes(Uint8List bytes, String filename, String mimeType) {
   final blob = web.Blob(
     [bytes.toJS].toJS,
-    web.BlobPropertyBag(type: 'image/png'),
+    web.BlobPropertyBag(type: mimeType),
   );
   final url = web.URL.createObjectURL(blob);
   final anchor = web.document.createElement('a') as web.HTMLAnchorElement

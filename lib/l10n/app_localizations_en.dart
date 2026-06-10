@@ -340,7 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
-  String get noNotifications => 'No notifications.';
+  String get noNotifications => 'No notifications';
 
   @override
   String get markAsRead => 'Mark as read';
@@ -588,4 +588,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nameRequired => 'Please fill in your name and last name';
+
+  @override
+  String get phoneLabel => 'Phone / WhatsApp';
+
+  @override
+  String get phoneRequired => 'Please enter your phone number';
+
+  @override
+  String get phoneInvalidBr =>
+      'Invalid phone. Use area code + number (11 digits).';
+
+  @override
+  String get editProfile => 'Update Personal Data';
+
+  @override
+  String get leaveLeague => 'Leave league';
+
+  @override
+  String get leaveLeagueConfirm =>
+      'Are you sure you want to leave this league?';
+
+  @override
+  String get paymentPending => 'Payment Pending';
+
+  @override
+  String get paymentRealized => 'Payment Completed';
+
+  @override
+  String get adminTabMatches => 'Matches';
+
+  @override
+  String get adminTabUsers => 'Users';
+
+  @override
+  String get exportData => 'Export CSV';
+
+  @override
+  String get searchUsers => 'Search by username, email or name...';
 }

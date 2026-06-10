@@ -76,4 +76,21 @@ class LeagueNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncError(e, st);
     }
   }
+
+  Future<void> leaveLeague(String leagueId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    state = const AsyncLoading();
+    try {
+      await _client
+          .from('league_members')
+          .delete()
+          .match({'league_id': leagueId, 'user_id': userId});
+
+      ref.invalidate(myLeaguesProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
 }

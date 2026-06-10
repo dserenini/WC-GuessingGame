@@ -341,10 +341,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifications => 'Notifiche';
 
   @override
-  String get noNotifications => 'Nessuna notifica.';
+  String get noNotifications => 'Nessuna notifica';
 
   @override
-  String get markAsRead => 'Segna come già lette';
+  String get markAsRead => 'Segna come già letto';
 
   @override
   String get close => 'Chiudi';
@@ -590,4 +590,42 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nameRequired => 'Inserisci il tuo nome e cognome';
+
+  @override
+  String get phoneLabel => 'Telefono / WhatsApp';
+
+  @override
+  String get phoneRequired => 'Inserisci il tuo numero di telefono';
+
+  @override
+  String get phoneInvalidBr =>
+      'Telefono non valido. Usa prefisso + numero (11 cifre).';
+
+  @override
+  String get editProfile => 'Aggiorna Dati Personali';
+
+  @override
+  String get leaveLeague => 'Abbandona lega';
+
+  @override
+  String get leaveLeagueConfirm =>
+      'Sei sicuro di voler abbandonare questa lega?';
+
+  @override
+  String get paymentPending => 'Pagamento in sospeso';
+
+  @override
+  String get paymentRealized => 'Pagamento completato';
+
+  @override
+  String get adminTabMatches => 'Partite';
+
+  @override
+  String get adminTabUsers => 'Utenti';
+
+  @override
+  String get exportData => 'Esporta CSV';
+
+  @override
+  String get searchUsers => 'Cerca per username, email o nome...';
 }

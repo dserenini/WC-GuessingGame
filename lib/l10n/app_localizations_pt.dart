@@ -200,7 +200,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deleteBetConfirm => 'Deseja apagar sua aposta para este jogo?';
 
   @override
-  String get delete => 'Deletar';
+  String get delete => 'Excluir';
 
   @override
   String get helpAndRules => 'Ajuda / Regras';
@@ -340,7 +340,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifications => 'Notificações';
 
   @override
-  String get noNotifications => 'Nenhuma notificação.';
+  String get noNotifications => 'Nenhuma notificação';
 
   @override
   String get markAsRead => 'Marcar como lida';
@@ -588,4 +588,41 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nameRequired => 'Preencha seu nome e sobrenome';
+
+  @override
+  String get phoneLabel => 'Telefone / WhatsApp';
+
+  @override
+  String get phoneRequired => 'Por favor, insira seu telefone';
+
+  @override
+  String get phoneInvalidBr =>
+      'Telefone inválido. Use DDD + número (11 dígitos).';
+
+  @override
+  String get editProfile => 'Atualizar Dados Pessoais';
+
+  @override
+  String get leaveLeague => 'Sair da liga';
+
+  @override
+  String get leaveLeagueConfirm => 'Tem certeza que deseja sair desta liga?';
+
+  @override
+  String get paymentPending => 'Pagamento Pendente';
+
+  @override
+  String get paymentRealized => 'Pagamento Realizado';
+
+  @override
+  String get adminTabMatches => 'Partidas';
+
+  @override
+  String get adminTabUsers => 'Usuários';
+
+  @override
+  String get exportData => 'Exportar CSV';
+
+  @override
+  String get searchUsers => 'Buscar por usuário, e-mail ou nome...';
 }

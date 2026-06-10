@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────
-// GLOBAL BET DEADLINE — 2026-06-10 23:59 GMT-3
+// GLOBAL BET DEADLINE — 2026-06-11 14:30 GMT-3 (17:30 UTC)
 // ─────────────────────────────────────────────
-final kBetDeadline = DateTime(2026, 6, 10, 23, 59, 0).toUtc().add(
-  const Duration(hours: 3), // GMT-3 → UTC
-);
+final kBetDeadline = DateTime.utc(2026, 6, 11, 17, 30);
 
 bool get isBettingLocked => DateTime.now().toUtc().isAfter(kBetDeadline);
 
 // ─────────────────────────────────────────────
 // APP VERSION
 // ─────────────────────────────────────────────
-const String kAppVersion = '0.1';
+const String kAppVersion = '1.0';
 
 // ─────────────────────────────────────────────
 // SUPER PALPITES

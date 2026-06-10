@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
+import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/providers/theme_provider.dart';
@@ -89,7 +92,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final String localeCode = _pendingLocale ?? ref.watch(localeProvider).languageCode;
     final int timezoneOffset = _pendingTimezone ?? ref.watch(timezoneProvider).inHours;
     final int maxGoals = _pendingMaxGoals ?? ref.watch(maxGoalsProvider);
-    final dt = DateTime.utc(2026, 6, 11, 2, 59).add(Duration(hours: timezoneOffset));
+    final dt = DateTime.utc(2026, 6, 11, 17, 30).add(Duration(hours: timezoneOffset));
     final deadlineStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} GMT${timezoneOffset >= 0 ? '+' : ''}$timezoneOffset';
 
     return Scaffold(
@@ -342,6 +345,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
+                  leading: const Icon(Icons.badge_outlined),
+                  title: Text(l.editProfile),
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (ctx) => const _EditProfileDialog(),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.password),
                   title: Text(l.changePassword),
                   onTap: () => showDialog(
@@ -486,6 +498,181 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               )
             : ElevatedButton(
                 onPressed: _updatePassword,
+                child: Text(l.save),
+              ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// EDIT PROFILE (Nome Completo + Telefone)
+// ─────────────────────────────────────────────
+class _EditProfileDialog extends ConsumerStatefulWidget {
+  const _EditProfileDialog();
+
+  @override
+  ConsumerState<_EditProfileDialog> createState() => _EditProfileDialogState();
+}
+
+class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _firstCtrl = TextEditingController();
+  final _lastCtrl = TextEditingController();
+  String _phoneNumber = '';
+  String _initialPhone = '';
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final data = await Supabase.instance.client
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', user.id)
+            .single();
+        final fullName = (data['full_name'] as String?)?.trim() ?? '';
+        final parts = fullName.isEmpty ? <String>[] : fullName.split(' ');
+        _firstCtrl.text = parts.isNotEmpty ? parts.first : '';
+        _lastCtrl.text = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        _initialPhone = (data['phone'] as String?) ?? '';
+        _phoneNumber = _initialPhone;
+      }
+    } catch (_) {
+      // Em caso de erro, os campos ficam vazios para preenchimento.
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _firstCtrl.dispose();
+    _lastCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final l = AppLocalizations.of(context)!;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) throw Exception('User not logged in');
+      final fullName =
+          '${_firstCtrl.text.trim()} ${_lastCtrl.text.trim()}'.trim();
+      await Supabase.instance.client.from('profiles').update({
+        'full_name': fullName,
+        'phone': _phoneNumber,
+      }).eq('id', user.id);
+      ref.invalidate(profileStatsProvider);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.settingsSaved)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(l.errorGeneric(e.toString())),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final hasInitialPhone = _initialPhone.startsWith('+');
+    return AlertDialog(
+      title: Text(l.editProfile),
+      content: _loading
+          ? const SizedBox(
+              height: 80, child: Center(child: CircularProgressIndicator()))
+          : Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _firstCtrl,
+                      decoration: InputDecoration(
+                        labelText: l.firstName,
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l.nameRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _lastCtrl,
+                      decoration: InputDecoration(
+                        labelText: l.lastName,
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? l.nameRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    IntlPhoneField(
+                      decoration: InputDecoration(
+                        labelText: l.phoneLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      initialValue: hasInitialPhone ? _initialPhone : null,
+                      initialCountryCode: hasInitialPhone ? null : 'BR',
+                      disableLengthCheck: true,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
+                      onChanged: (phone) => _phoneNumber = phone.completeNumber,
+                      validator: (phone) {
+                        final digits = (phone?.number ?? '')
+                            .replaceAll(RegExp(r'\D'), '');
+                        if (digits.isEmpty) return l.phoneRequired;
+                        if (phone?.countryCode == '+55' &&
+                            !RegExp(r'^[1-9][0-9]9[0-9]{8}$').hasMatch(digits)) {
+                          return l.phoneInvalidBr;
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.cancel),
+        ),
+        _saving
+            ? const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : ElevatedButton(
+                onPressed: _save,
                 child: Text(l.save),
               ),
       ],

@@ -1,10 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:csv/csv.dart';
+import 'package:flutter/services.dart';
 
 import 'package:copa2026/services/master_data_service.dart';
+import 'package:copa2026/utils/downloader.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -29,11 +34,8 @@ final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
       .toList();
 });
 
-final allProfilesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  final response = await Supabase.instance.client
-      .from('profiles')
-      .select('id, username, paid')
-      .order('username');
+final adminUsersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final response = await Supabase.instance.client.rpc('get_admin_users');
   return List<Map<String, dynamic>>.from(response);
 });
 
@@ -94,11 +96,11 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               const NotificationBell(),
             ],
           ),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.sports_soccer), text: 'Partidas'),
-              Tab(icon: Icon(Icons.notifications_active), text: 'Notificar'),
-              Tab(icon: Icon(Icons.attach_money), text: 'Pagamentos'),
+          bottom: TabBar(
+              tabs: [
+              Tab(icon: const Icon(Icons.sports_soccer), text: l.adminTabMatches),
+              Tab(icon: const Icon(Icons.notifications_active), text: 'Notificar'),
+              Tab(icon: const Icon(Icons.people), text: l.adminTabUsers),
             ],
           ),
 
@@ -145,7 +147,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             },
           ),
           const _AdminNotificationsTab(),
-          const _AdminPaymentsTab(),
+          const _AdminUsersTab(),
         ],
       ),
     ));
@@ -449,33 +451,101 @@ class _AdminNotificationsTabState extends State<_AdminNotificationsTab> {
   }
 }
 
-class _AdminPaymentsTab extends ConsumerStatefulWidget {
-  const _AdminPaymentsTab();
+class _AdminUsersTab extends ConsumerStatefulWidget {
+  const _AdminUsersTab();
 
   @override
-  ConsumerState<_AdminPaymentsTab> createState() => _AdminPaymentsTabState();
+  ConsumerState<_AdminUsersTab> createState() => _AdminUsersTabState();
 }
 
-class _AdminPaymentsTabState extends ConsumerState<_AdminPaymentsTab> {
+class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
   String _searchQuery = '';
   String _filter = 'all';
 
+  List<List<dynamic>> _csvRows(List<Map<String, dynamic>> users) {
+    final rows = <List<dynamic>>[
+      ['Username', 'Nome Completo', 'Email', 'Telefone', 'Status Pagamento']
+    ];
+    for (var u in users) {
+      rows.add([
+        u['username'] ?? '',
+        u['full_name'] ?? '',
+        u['email'] ?? '',
+        u['phone'] ?? '',
+        (u['paid'] == true) ? 'Pago' : 'Pendente',
+      ]);
+    }
+    return rows;
+  }
+
+  Future<void> _copyCsv(List<Map<String, dynamic>> users) async {
+    final csv = Csv().encode(_csvRows(users));
+    await Clipboard.setData(ClipboardData(text: csv));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('CSV copiado para a área de transferência!')),
+      );
+    }
+  }
+
+  void _downloadCsv(List<Map<String, dynamic>> users) {
+    final csv = Csv().encode(_csvRows(users));
+    // BOM UTF-8 para que o Excel reconheça a acentuação corretamente.
+    final bytes = Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode(csv)]);
+    try {
+      downloadBytes(bytes, 'usuarios_bolao.csv', 'text/csv;charset=utf-8');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Download iniciado! Verifique sua pasta de downloads.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao baixar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _togglePaid(Map<String, dynamic> u) async {
+    final newVal = !(u['paid'] == true);
+    try {
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'paid': newVal})
+          .eq('id', u['id']);
+      ref.invalidate(adminUsersProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final profilesAsync = ref.watch(allProfilesProvider);
+    final l = AppLocalizations.of(context)!;
+    final usersAsync = ref.watch(adminUsersProvider);
 
-    return profilesAsync.when(
+    return usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Erro: $e')),
-      data: (profiles) {
-        var filtered = profiles.where((p) {
-          final isPaid = p['paid'] == true;
+      data: (users) {
+        var filtered = users.where((u) {
+          final isPaid = u['paid'] == true;
           if (_filter == 'paid' && !isPaid) return false;
           if (_filter == 'unpaid' && isPaid) return false;
-          
-          final name = (p['username'] ?? '').toString().toLowerCase();
-          if (_searchQuery.isNotEmpty && !name.contains(_searchQuery.toLowerCase())) {
-            return false;
+          if (_searchQuery.isNotEmpty) {
+            final q = _searchQuery.toLowerCase();
+            final name = (u['full_name'] ?? '').toString().toLowerCase();
+            final user = (u['username'] ?? '').toString().toLowerCase();
+            final email = (u['email'] ?? '').toString().toLowerCase();
+            if (!(name.contains(q) || user.contains(q) || email.contains(q))) {
+              return false;
+            }
           }
           return true;
         }).toList();
@@ -484,28 +554,55 @@ class _AdminPaymentsTabState extends ConsumerState<_AdminPaymentsTab> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Buscar por nome',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            labelText: l.searchUsers,
+                            prefixIcon: const Icon(Icons.search),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          onChanged: (v) => setState(() => _searchQuery = v),
+                        ),
                       ),
-                      onChanged: (v) => setState(() => _searchQuery = v),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  DropdownButton<String>(
-                    value: _filter,
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('Todos')),
-                      DropdownMenuItem(value: 'paid', child: Text('Pagos')),
-                      DropdownMenuItem(value: 'unpaid', child: Text('Pendentes')),
+                      const SizedBox(width: 12),
+                      DropdownButton<String>(
+                        value: _filter,
+                        items: const [
+                          DropdownMenuItem(value: 'all', child: Text('Todos')),
+                          DropdownMenuItem(value: 'paid', child: Text('Pagos')),
+                          DropdownMenuItem(value: 'unpaid', child: Text('Pendentes')),
+                        ],
+                        onChanged: (v) => setState(() => _filter = v!),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _filter = v!),
+                  ),
+                  const SizedBox(height: 12),
+                  // Expanded garante largura limitada aos botões (o tema usa
+                  // minimumSize com largura infinita), evitando o erro de
+                  // "BoxConstraints forces an infinite width".
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _copyCsv(filtered),
+                          icon: const Icon(Icons.copy),
+                          label: const Text('Copiar CSV'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _downloadCsv(filtered),
+                          icon: const Icon(Icons.download),
+                          label: const Text('Baixar CSV'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -517,34 +614,76 @@ class _AdminPaymentsTabState extends ConsumerState<_AdminPaymentsTab> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
-                        final profile = filtered[index];
-                        final bool isPaid = profile['paid'] == true;
-
+                        final u = filtered[index];
+                        final bool isPaid = u['paid'] == true;
+                        final cs = Theme.of(context).colorScheme;
+                        final Color statusColor =
+                            isPaid ? Colors.green : Colors.grey;
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
-                          child: SwitchListTile(
-                            title: Text(
-                              profile['username'] ?? 'Sem nome',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        u['username'] ?? '',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      if ((u['full_name'] ?? '').toString().isNotEmpty)
+                                        Text(u['full_name'] ?? ''),
+                                      Text(
+                                        u['email'] ?? '',
+                                        style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+                                      ),
+                                      if ((u['phone'] ?? '').toString().isNotEmpty)
+                                        Text(u['phone'] ?? ''),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Badge clicável: alterna o status de pagamento.
+                                Tooltip(
+                                  message: isPaid
+                                      ? 'Clique para marcar como Pendente'
+                                      : 'Clique para marcar como Pago',
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: () => _togglePaid(u),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: statusColor),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isPaid ? Icons.check_circle : Icons.attach_money,
+                                            size: 16,
+                                            color: statusColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isPaid ? l.paymentRealized : l.paymentPending,
+                                            style: TextStyle(
+                                              color: statusColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            subtitle: Text(isPaid ? 'Pago' : 'Pendente'),
-                            value: isPaid,
-                            activeColor: Theme.of(context).colorScheme.primary,
-                            onChanged: (val) async {
-                              try {
-                                await Supabase.instance.client
-                                    .from('profiles')
-                                    .update({'paid': val})
-                                    .eq('id', profile['id']);
-                                ref.invalidate(allProfilesProvider);
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
-                                  );
-                                }
-                              }
-                            },
                           ),
                         );
                       },

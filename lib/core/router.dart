@@ -11,6 +11,8 @@ import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
+import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
+import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/auth/screens/onboarding_screen.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/features/auth/screens/update_password_screen.dart';
@@ -79,6 +81,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ranking',
         name: 'ranking',
         builder: (_, __) => const RankingScreen(),
+      ),
+      GoRoute(
+        path: '/user/:userId',
+        name: 'visitor-profile',
+        builder: (_, state) {
+          final userId = state.pathParameters['userId'] ?? '';
+          final entry = state.extra is RankingEntry ? state.extra as RankingEntry : null;
+          return VisitorProfileScreen(userId: userId, entry: entry);
+        },
       ),
       GoRoute(
         path: '/leagues',

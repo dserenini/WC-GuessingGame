@@ -626,4 +626,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchUsers => 'Search by username, email or name...';
+
+  @override
+  String get visitorMode => 'visitor';
+
+  @override
+  String get yourBet => 'You';
+
+  @override
+  String get partial => 'partial';
+
+  @override
+  String get liveNow => 'LIVE';
+
+  @override
+  String get finalLabel => 'FINAL';
+
+  @override
+  String get versusShort => 'vs';
+
+  @override
+  String get hiddenUntilKickoff => 'Hidden until kickoff';
+
+  @override
+  String get completeBetsToView => 'Complete your bets to see others\'';
+
+  @override
+  String get completeBetsToViewSub =>
+      'You must fill in all of your bets before you can view the other participants\' predictions.';
+
+  @override
+  String rankPositionShort(int rank) {
+    return '${rank}th place';
+  }
 }

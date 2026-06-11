@@ -96,6 +96,31 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ─────────────────────────────────────────────
+-- APP CONFIG
+-- Server-driven key/value settings read by the app. Readable by everyone,
+-- writable only by admins. See supabase/app_config.sql for usage notes.
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS app_config (
+  key        TEXT PRIMARY KEY,
+  value      JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read app_config"
+  ON app_config FOR SELECT USING (true);
+
+CREATE POLICY "Only admins can modify app_config"
+  ON app_config FOR ALL USING (is_admin()) WITH CHECK (is_admin());
+
+-- Reveal config for the Visitor Profile feature:
+--   mode = 'global' | 'per_game_tail', protected_tail_count = trailing matches protected
+INSERT INTO app_config (key, value)
+VALUES ('reveal', '{"mode": "global", "protected_tail_count": 10}'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+
+-- ─────────────────────────────────────────────
 -- TEAMS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS teams (
@@ -282,7 +307,8 @@ SELECT
   p.display_preference,
   p.avatar_url,
   COALESCE(SUM(b.points), 0) AS total_points,
-  RANK() OVER (PARTITION BY lm.league_id ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank
+  RANK() OVER (PARTITION BY lm.league_id ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank,
+  COUNT(b.id) AS total_bets
 FROM league_members lm
 JOIN leagues l ON l.id = lm.league_id
 JOIN profiles p ON p.id = lm.user_id
@@ -442,13 +468,23 @@ DECLARE
   v_match_date TIMESTAMPTZ;
   v_match_status TEXT;
   v_used INT;
-  -- Data Limite Global: 10 de Junho 2026, 23:59 GMT-3 = 11 de Junho 2026, 02:59 UTC
-  GLOBAL_DEADLINE TIMESTAMPTZ := '2026-06-11 02:59:00+00'; 
+  -- Data Limite Global: 11 de Junho 2026, 14:30 GMT-3 = 11 de Junho 2026, 17:30 UTC
+  -- (alinhado com kBetDeadline em lib/core/constants.dart)
+  GLOBAL_DEADLINE TIMESTAMPTZ := '2026-06-11 17:30:00+00';
 BEGIN
+  -- 0. Bypass: updates que não mudam o placar do palpite são internos do
+  --    sistema (recálculo de pontos ao encerrar, rollback). Não podem ser
+  --    bloqueados pelas regras abaixo — senão encerrar um jogo falha.
+  IF TG_OP = 'UPDATE'
+     AND OLD.home_score_bet = NEW.home_score_bet
+     AND OLD.away_score_bet = NEW.away_score_bet THEN
+    RETURN NEW;
+  END IF;
+
   -- 1. Obter informações da partida
   SELECT match_date, status::TEXT INTO v_match_date, v_match_status
   FROM matches WHERE id = NEW.match_id;
-  
+
   -- 2. Regra básica: Partidas em andamento ou finalizadas não podem ser alteradas
   IF v_match_status != 'scheduled' THEN
      RAISE EXCEPTION 'Não é possível alterar apostas de partidas em andamento ou finalizadas.';
@@ -461,11 +497,6 @@ BEGIN
 
   -- 4. Regra da Data Limite Global (Super Palpite)
   IF NOW() > GLOBAL_DEADLINE THEN
-     -- Se for update e o placar não mudou, ignorar (ex: sync repetido)
-     IF TG_OP = 'UPDATE' AND OLD.home_score_bet = NEW.home_score_bet AND OLD.away_score_bet = NEW.away_score_bet THEN
-       RETURN NEW;
-     END IF;
-
      -- Verificar saldo do usuário
      SELECT super_palpites_used INTO v_used FROM profiles WHERE id = NEW.user_id;
      

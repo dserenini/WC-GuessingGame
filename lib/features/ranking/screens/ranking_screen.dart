@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
 
@@ -39,14 +40,18 @@ class RankingScreen extends ConsumerWidget {
       body: rankingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
-        data: (entries) => ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          itemCount: entries.length,
-          itemBuilder: (_, i) {
-            final entry = entries[i];
-            final isMe = entry.userId == currentUid;
-            return RankingTile(entry: entry, isMe: isMe, l: l);
-          },
+        data: (entries) => RefreshIndicator(
+          onRefresh: () async => ref.invalidate(rankingProvider),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            itemCount: entries.length,
+            itemBuilder: (_, i) {
+              final entry = entries[i];
+              final isMe = entry.userId == currentUid;
+              return RankingTile(entry: entry, isMe: isMe, l: l);
+            },
+          ),
         ),
       ),
     );
@@ -79,7 +84,11 @@ class RankingTile extends StatelessWidget {
       _ => '${entry.rank}',
     };
 
-    return AnimatedContainer(
+    // Tapping a name opens that user's bets — only once betting is locked
+    // (so nobody can peek before the deadline) and never for your own row.
+    final tappable = isBettingLocked && !isMe;
+
+    final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -168,9 +177,20 @@ class RankingTile extends StatelessWidget {
                 ),
               ],
             ),
+            if (tappable) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: cs.onSurface.withOpacity(0.3)),
+            ],
           ],
         ),
       ),
+    );
+
+    if (!tappable) return tile;
+    return InkWell(
+      onTap: () => context.push('/user/${entry.userId}', extra: entry),
+      borderRadius: BorderRadius.circular(14),
+      child: tile,
     );
   }
 }

@@ -293,18 +293,30 @@ class _AdminMatchTile extends StatelessWidget {
               onPressed: () async {
                 final home = int.tryParse(homeCtrl.text);
                 final away = int.tryParse(awayCtrl.text);
-                await Supabase.instance.client
-                    .from('matches')
-                    .update({
-                      if (home != null) 'home_score': home,
-                      if (away != null) 'away_score': away,
-                      'status': selectedStatus.name,
-                    })
-                    .eq('id', match.id);
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await Supabase.instance.client
+                      .from('matches')
+                      .update({
+                        if (home != null) 'home_score': home,
+                        if (away != null) 'away_score': away,
+                        'status': selectedStatus.name,
+                      })
+                      .eq('id', match.id);
 
-                // ignore: use_build_context_synchronously
-                if (ctx.mounted) Navigator.pop(ctx);
-                ref.invalidate(allMatchesProvider);
+                  ref.invalidate(allMatchesProvider);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Partida atualizada.')),
+                  );
+                } catch (e) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Erro ao salvar: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               child: const Text('Salvar'),
             ),

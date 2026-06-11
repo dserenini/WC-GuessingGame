@@ -35,10 +35,7 @@ class MatchCard extends ConsumerWidget {
     final superPalpitesUsed = profileStats?.superPalpitesUsed ?? 0;
     final hasSuperPalpites = superPalpitesUsed < kMaxSuperPalpites;
 
-    final isTooCloseToMatch = match.matchDate != null &&
-        match.matchDate!.isBefore(DateTime.now().toUtc().add(const Duration(hours: 1)));
-
-    final locked = match.isLocked || isTooCloseToMatch || (isBettingLocked && !hasSuperPalpites);
+    final locked = match.hasStarted || (isBettingLocked && !hasSuperPalpites);
     final chaosModeActive = ref.watch(chaosModeProvider);
 
     final homeScore = bet?.homeScoreBet;

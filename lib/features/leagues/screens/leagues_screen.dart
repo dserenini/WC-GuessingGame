@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
@@ -154,6 +155,7 @@ class _LeagueRankingList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rankAsync = ref.watch(myLeaguesRankingProvider(leagueId));
+    final currentUid = ref.watch(currentUserProvider)?.id;
 
     return rankAsync.when(
       loading: () => const Padding(
@@ -163,7 +165,11 @@ class _LeagueRankingList extends ConsumerWidget {
       error: (e, _) => Text(e.toString()),
       data: (entries) => Column(
         children: entries
-            .map<Widget>((entry) => RankingTile(entry: entry, isMe: false, l: AppLocalizations.of(context)!))
+            .map<Widget>((entry) => RankingTile(
+                  entry: entry,
+                  isMe: entry.userId == currentUid,
+                  l: AppLocalizations.of(context)!,
+                ))
             .toList(),
       ),
     );

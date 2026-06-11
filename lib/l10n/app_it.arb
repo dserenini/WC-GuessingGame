@@ -246,5 +246,21 @@
   "noNotifications": "Nessuna notifica",
   "markAsRead": "Segna come già letto",
   "delete": "Elimina",
-  "close": "Chiudi"
+  "close": "Chiudi",
+
+  "visitorMode": "ospite",
+  "yourBet": "Tu",
+  "partial": "parziale",
+  "liveNow": "IN DIRETTA",
+  "finalLabel": "FINALE",
+  "versusShort": "vs",
+  "hiddenUntilKickoff": "Nascosto fino al fischio d'inizio",
+  "completeBetsToView": "Completa le tue scommesse per vedere quelle degli altri",
+  "completeBetsToViewSub": "Devi compilare tutte le tue scommesse prima di poter vedere i pronostici degli altri partecipanti.",
+  "rankPositionShort": "{rank}º posto",
+  "@rankPositionShort": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  }
 }

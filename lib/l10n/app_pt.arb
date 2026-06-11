@@ -246,5 +246,21 @@
   "noNotifications": "Nenhuma notificação",
   "markAsRead": "Marcar como lida",
   "delete": "Excluir",
-  "close": "Fechar"
+  "close": "Fechar",
+
+  "visitorMode": "visitante",
+  "yourBet": "Você",
+  "partial": "parcial",
+  "liveNow": "AO VIVO",
+  "finalLabel": "FINAL",
+  "versusShort": "vs",
+  "hiddenUntilKickoff": "Oculto até o jogo começar",
+  "completeBetsToView": "Complete suas apostas para ver as dos outros",
+  "completeBetsToViewSub": "Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.",
+  "rankPositionShort": "{rank}º lugar",
+  "@rankPositionShort": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  }
 }

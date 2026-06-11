@@ -28,6 +28,15 @@ class MatchModel {
   bool get isLocked =>
       status == MatchStatus.live || status == MatchStatus.finished;
 
+  /// Whether betting on this match is closed because it has already started
+  /// (live/finished) or is within 1 hour of kickoff. Single source of truth
+  /// reused by the match card lock logic and the visitor-profile reveal logic.
+  bool get hasStarted =>
+      isLocked ||
+      (matchDate != null &&
+          matchDate!.isBefore(
+              DateTime.now().toUtc().add(const Duration(hours: 1))));
+
   factory MatchModel.fromJson(Map<String, dynamic> json) {
     return MatchModel(
       id: json['id'] as String,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────
@@ -5,7 +6,17 @@ import 'package:flutter/material.dart';
 // ─────────────────────────────────────────────
 final kBetDeadline = DateTime.utc(2026, 6, 11, 17, 30);
 
-bool get isBettingLocked => DateTime.now().toUtc().isAfter(kBetDeadline);
+// ─────────────────────────────────────────────
+// DEBUG ONLY — force the "reveal other users' bets" feature open locally,
+// so the Visitor Profile can be tested before the real deadline.
+// Has effect ONLY in debug builds (kDebugMode); ignored in release/production.
+// Leave false for production builds.
+// ─────────────────────────────────────────────
+const bool kDebugForceReveal = false;
+
+bool get isBettingLocked =>
+    (kDebugMode && kDebugForceReveal) ||
+    DateTime.now().toUtc().isAfter(kBetDeadline);
 
 // ─────────────────────────────────────────────
 // APP VERSION

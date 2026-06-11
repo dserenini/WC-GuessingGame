@@ -2,7 +2,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/shared/models/bet.dart';
 
-final rankingProvider = StreamProvider<List<RankingEntry>>((ref) {
+// autoDispose: re-subscribes and re-queries each time the Ranking screen is
+// opened, so per-user totals (points and bet counts) reflect the current state
+// instead of a stale snapshot from when the app first loaded.
+final rankingProvider = StreamProvider.autoDispose<List<RankingEntry>>((ref) {
   final client = Supabase.instance.client;
 
   // Subscribe to bet changes â†’ triggers refresh

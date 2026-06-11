@@ -625,4 +625,38 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get searchUsers => 'Buscar por usuário, e-mail ou nome...';
+
+  @override
+  String get visitorMode => 'visitante';
+
+  @override
+  String get yourBet => 'Você';
+
+  @override
+  String get partial => 'parcial';
+
+  @override
+  String get liveNow => 'AO VIVO';
+
+  @override
+  String get finalLabel => 'FINAL';
+
+  @override
+  String get versusShort => 'vs';
+
+  @override
+  String get hiddenUntilKickoff => 'Oculto até o jogo começar';
+
+  @override
+  String get completeBetsToView =>
+      'Complete suas apostas para ver as dos outros';
+
+  @override
+  String get completeBetsToViewSub =>
+      'Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.';
+
+  @override
+  String rankPositionShort(int rank) {
+    return '$rankº lugar';
+  }
 }

@@ -7,6 +7,7 @@ import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/core/constants.dart';
 
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 
 // ─────────────────────────────────────────────
 // GLOBAL MATCHES & BETS
@@ -37,6 +38,22 @@ final allBetsProvider = FutureProvider<Map<String, BetModel>>((ref) async {
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return {};
 
+  final bets = await Supabase.instance.client
+      .from('bets')
+      .select()
+      .eq('user_id', userId);
+
+  return {
+    for (final b in (bets as List))
+      (b as Map<String, dynamic>)['match_id'] as String: BetModel.fromJson(b),
+  };
+});
+
+/// All bets of an arbitrary user, keyed by match id. Used by the visitor
+/// profile to display another user's bets. RLS already allows reading all bets
+/// (`bets` SELECT USING (true)), so no auth context is needed here.
+final userBetsProvider =
+    FutureProvider.family<Map<String, BetModel>, String>((ref, userId) async {
   final bets = await Supabase.instance.client
       .from('bets')
       .select()
@@ -135,6 +152,7 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
 
       // Invalidate to refresh
       ref.invalidate(allBetsProvider);
+      ref.invalidate(profileStatsProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -161,6 +179,7 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
           .eq('match_id', matchId);
 
       ref.invalidate(allBetsProvider);
+      ref.invalidate(profileStatsProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -185,6 +204,7 @@ class BetNotifier extends StateNotifier<AsyncValue<void>> {
           .inFilter('match_id', matchIds);
 
       ref.invalidate(allBetsProvider);
+      ref.invalidate(profileStatsProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

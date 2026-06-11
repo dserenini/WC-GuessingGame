@@ -1263,6 +1263,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Buscar por usuário, e-mail ou nome...'**
   String get searchUsers;
+
+  /// No description provided for @visitorMode.
+  ///
+  /// In pt, this message translates to:
+  /// **'visitante'**
+  String get visitorMode;
+
+  /// No description provided for @yourBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
+  String get yourBet;
+
+  /// No description provided for @partial.
+  ///
+  /// In pt, this message translates to:
+  /// **'parcial'**
+  String get partial;
+
+  /// No description provided for @liveNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'AO VIVO'**
+  String get liveNow;
+
+  /// No description provided for @finalLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'FINAL'**
+  String get finalLabel;
+
+  /// No description provided for @versusShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'vs'**
+  String get versusShort;
+
+  /// No description provided for @hiddenUntilKickoff.
+  ///
+  /// In pt, this message translates to:
+  /// **'Oculto até o jogo começar'**
+  String get hiddenUntilKickoff;
+
+  /// No description provided for @completeBetsToView.
+  ///
+  /// In pt, this message translates to:
+  /// **'Complete suas apostas para ver as dos outros'**
+  String get completeBetsToView;
+
+  /// No description provided for @completeBetsToViewSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.'**
+  String get completeBetsToViewSub;
+
+  /// No description provided for @rankPositionShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'{rank}º lugar'**
+  String rankPositionShort(int rank);
 }
 
 class _AppLocalizationsDelegate

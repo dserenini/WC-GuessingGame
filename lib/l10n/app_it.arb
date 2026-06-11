@@ -262,5 +262,13 @@
     "placeholders": {
       "rank": { "type": "int" }
     }
-  }
+  },
+
+  "errGeneric": "Qualcosa è andato storto. Riprova.",
+  "errConnection": "Nessuna connessione. Controlla la rete e riprova.",
+  "errAuth": "Autenticazione fallita. Controlla i tuoi dati e riprova.",
+  "errBetMatchStarted": "La partita è già iniziata o terminata — non puoi modificare il pronostico.",
+  "errBetDeadlinePassed": "Il termine per modificare questo pronostico è scaduto (meno di 1 ora al fischio d'inizio).",
+  "errSuperPalpiteLimit": "Hai già usato tutti i 10 Super Pronostici.",
+  "errSyncFailed": "Impossibile sincronizzare il foglio. Controlla la connessione e riprova."
 }

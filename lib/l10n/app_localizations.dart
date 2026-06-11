@@ -1323,6 +1323,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{rank}º lugar'**
   String rankPositionShort(int rank);
+
+  /// No description provided for @errGeneric.
+  ///
+  /// In pt, this message translates to:
+  /// **'Algo deu errado. Tente novamente.'**
+  String get errGeneric;
+
+  /// No description provided for @errConnection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem conexão. Verifique sua internet e tente novamente.'**
+  String get errConnection;
+
+  /// No description provided for @errAuth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Falha na autenticação. Verifique seus dados e tente novamente.'**
+  String get errAuth;
+
+  /// No description provided for @errBetMatchStarted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este jogo já começou ou foi encerrado — não é possível alterar o palpite.'**
+  String get errBetMatchStarted;
+
+  /// No description provided for @errBetDeadlinePassed.
+  ///
+  /// In pt, this message translates to:
+  /// **'O prazo para alterar este palpite expirou (menos de 1 hora para o início).'**
+  String get errBetDeadlinePassed;
+
+  /// No description provided for @errSuperPalpiteLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já usou seus 10 Super Palpites.'**
+  String get errSuperPalpiteLimit;
+
+  /// No description provided for @errSyncFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível sincronizar a planilha. Verifique a conexão e tente novamente.'**
+  String get errSyncFailed;
 }
 
 class _AppLocalizationsDelegate

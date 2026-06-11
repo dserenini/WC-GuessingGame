@@ -659,4 +659,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String rankPositionShort(int rank) {
     return '${rank}th place';
   }
+
+  @override
+  String get errGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get errConnection =>
+      'No connection. Check your internet and try again.';
+
+  @override
+  String get errAuth =>
+      'Authentication failed. Check your credentials and try again.';
+
+  @override
+  String get errBetMatchStarted =>
+      'This match already started or ended — you can\'t change the bet.';
+
+  @override
+  String get errBetDeadlinePassed =>
+      'The deadline to change this bet has passed (less than 1 hour to kickoff).';
+
+  @override
+  String get errSuperPalpiteLimit => 'You\'ve already used all 10 Super Bets.';
+
+  @override
+  String get errSyncFailed =>
+      'Couldn\'t sync the spreadsheet. Check your connection and try again.';
 }

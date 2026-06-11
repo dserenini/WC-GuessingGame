@@ -82,8 +82,10 @@ class GroupScreen extends ConsumerWidget {
 
             return RefreshIndicator(
               onRefresh: () async {
-                ref.invalidate(groupMatchesProvider(groupLetter));
-                ref.invalidate(groupBetsProvider(groupLetter));
+                // Invalida as FONTES (não os providers derivados): re-assina o
+                // stream de partidas e re-busca os palpites do usuário.
+                ref.invalidate(allMatchesProvider);
+                ref.invalidate(allBetsProvider);
               },
               child: CustomScrollView(
                 slivers: [

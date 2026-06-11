@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
+import 'package:copa2026/shared/utils/error_messages.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -287,7 +288,7 @@ class _LoginForm extends StatelessWidget {
               } catch (e) {
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.errorGeneric(e.toString())), backgroundColor: Colors.red),
+                    SnackBar(content: Text(describeError(l, e)), backgroundColor: Colors.red),
                   );
                 }
               }

@@ -659,4 +659,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String rankPositionShort(int rank) {
     return '$rankº lugar';
   }
+
+  @override
+  String get errGeneric => 'Algo deu errado. Tente novamente.';
+
+  @override
+  String get errConnection =>
+      'Sem conexão. Verifique sua internet e tente novamente.';
+
+  @override
+  String get errAuth =>
+      'Falha na autenticação. Verifique seus dados e tente novamente.';
+
+  @override
+  String get errBetMatchStarted =>
+      'Este jogo já começou ou foi encerrado — não é possível alterar o palpite.';
+
+  @override
+  String get errBetDeadlinePassed =>
+      'O prazo para alterar este palpite expirou (menos de 1 hora para o início).';
+
+  @override
+  String get errSuperPalpiteLimit => 'Você já usou seus 10 Super Palpites.';
+
+  @override
+  String get errSyncFailed =>
+      'Não foi possível sincronizar a planilha. Verifique a conexão e tente novamente.';
 }

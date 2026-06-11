@@ -18,7 +18,7 @@ class MasterDataService {
       final response = await http.get(Uri.parse(url));
       
       if (response.statusCode != 200) {
-        throw Exception('Erro ao baixar CSV: \${response.statusCode}');
+        throw Exception('Erro ao baixar CSV: ${response.statusCode}');
       }
 
       // Converte bytes ou string direto

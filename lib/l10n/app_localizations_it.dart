@@ -662,4 +662,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String rankPositionShort(int rank) {
     return '$rankº posto';
   }
+
+  @override
+  String get errGeneric => 'Qualcosa è andato storto. Riprova.';
+
+  @override
+  String get errConnection =>
+      'Nessuna connessione. Controlla la rete e riprova.';
+
+  @override
+  String get errAuth =>
+      'Autenticazione fallita. Controlla i tuoi dati e riprova.';
+
+  @override
+  String get errBetMatchStarted =>
+      'La partita è già iniziata o terminata — non puoi modificare il pronostico.';
+
+  @override
+  String get errBetDeadlinePassed =>
+      'Il termine per modificare questo pronostico è scaduto (meno di 1 ora al fischio d\'inizio).';
+
+  @override
+  String get errSuperPalpiteLimit =>
+      'Hai già usato tutti i 10 Super Pronostici.';
+
+  @override
+  String get errSyncFailed =>
+      'Impossibile sincronizzare il foglio. Controlla la connessione e riprova.';
 }

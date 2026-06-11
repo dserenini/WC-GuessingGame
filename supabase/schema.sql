@@ -120,6 +120,13 @@ INSERT INTO app_config (key, value)
 VALUES ('reveal', '{"mode": "global", "protected_tail_count": 10}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
+-- Modo do sincronizador automático de placares (Edge Function sync-scores):
+--   'shadow' = só registra em api_sync_runs (não escreve em matches)
+--   'live'   = escreve placar/status em matches
+INSERT INTO app_config (key, value)
+VALUES ('sync_mode', '{"mode":"shadow"}'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+
 -- ─────────────────────────────────────────────
 -- TEAMS
 -- ─────────────────────────────────────────────
@@ -153,9 +160,15 @@ CREATE TABLE IF NOT EXISTS matches (
   home_score    INT,
   away_score    INT,
   status        match_status NOT NULL DEFAULT 'scheduled',
-  api_match_id  TEXT,  -- external API identifier for future integration
+  api_match_id  TEXT,    -- sequência interna 1..72 (seed/planilha; ordenação + sync manual)
+  api_fixture_id BIGINT, -- fixture.id da API-Football (sync automático via Edge Function)
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Cada fixture da API mapeia para no máximo uma partida (vários NULL permitidos).
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_matches_api_fixture_id
+  ON matches (api_fixture_id)
+  WHERE api_fixture_id IS NOT NULL;
 
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 
@@ -486,22 +499,26 @@ BEGIN
   FROM matches WHERE id = NEW.match_id;
 
   -- 2. Regra básica: Partidas em andamento ou finalizadas não podem ser alteradas
+  --    (ERRCODE mapeado no app: lib/shared/utils/error_messages.dart)
   IF v_match_status != 'scheduled' THEN
-     RAISE EXCEPTION 'Não é possível alterar apostas de partidas em andamento ou finalizadas.';
+     RAISE EXCEPTION 'Não é possível alterar apostas de partidas em andamento ou finalizadas.'
+       USING ERRCODE = 'P0010';
   END IF;
 
   -- 3. Regra de 1 hora antes do jogo
   IF v_match_date <= NOW() + INTERVAL '1 hour' THEN
-     RAISE EXCEPTION 'O tempo limite para alterar a aposta desta partida expirou (menos de 1 hora para o início).';
+     RAISE EXCEPTION 'O tempo limite para alterar a aposta desta partida expirou (menos de 1 hora para o início).'
+       USING ERRCODE = 'P0011';
   END IF;
 
   -- 4. Regra da Data Limite Global (Super Palpite)
   IF NOW() > GLOBAL_DEADLINE THEN
      -- Verificar saldo do usuário
      SELECT super_palpites_used INTO v_used FROM profiles WHERE id = NEW.user_id;
-     
+
      IF v_used >= 10 THEN
-        RAISE EXCEPTION 'Você já atingiu o limite de 10 Super Palpites.';
+        RAISE EXCEPTION 'Você já atingiu o limite de 10 Super Palpites.'
+          USING ERRCODE = 'P0012';
      END IF;
      
      -- Incrementar o uso do Super Palpite
@@ -528,3 +545,33 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ─────────────────────────────────────────────
+-- API SYNC LOG (Edge Function sync-scores)
+-- Registra o que o sincronizador automático fez (modo 'live') ou faria
+-- (modo 'shadow'). Ver supabase/setup_api_sync.sql.
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS api_sync_runs (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  ran_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  mode             TEXT NOT NULL,
+  source_game_id   TEXT,
+  match_id         UUID REFERENCES matches(id) ON DELETE SET NULL,
+  group_letter     TEXT,
+  home_team        TEXT,
+  away_team        TEXT,
+  src_home_score   INT,
+  src_away_score   INT,
+  src_status       TEXT,
+  src_raw_finished TEXT,
+  src_time_elapsed TEXT,
+  applied          BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_sync_runs_ran_at ON api_sync_runs (ran_at DESC);
+
+ALTER TABLE api_sync_runs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Only admins read api_sync_runs" ON api_sync_runs;
+CREATE POLICY "Only admins read api_sync_runs"
+  ON api_sync_runs FOR SELECT USING (is_admin());

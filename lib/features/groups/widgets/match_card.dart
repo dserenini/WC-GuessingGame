@@ -13,6 +13,7 @@ import 'package:copa2026/features/chaos/chaos_service.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/l10n/team_translator.dart';
+import 'package:copa2026/shared/utils/error_messages.dart';
 
 class MatchCard extends ConsumerWidget {
   final MatchModel match;
@@ -280,7 +281,7 @@ class MatchCard extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+              content: Text(describeError(l, e)),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -305,9 +306,10 @@ class MatchCard extends ConsumerWidget {
           );
     } catch (e) {
       if (context.mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+            content: Text(describeError(l, e)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -327,9 +329,10 @@ class MatchCard extends ConsumerWidget {
           );
     } catch (e) {
       if (context.mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('PostgrestException(message: ', '').replaceAll(')', '')),
+            content: Text(describeError(l, e)),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

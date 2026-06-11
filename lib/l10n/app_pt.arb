@@ -262,5 +262,13 @@
     "placeholders": {
       "rank": { "type": "int" }
     }
-  }
+  },
+
+  "errGeneric": "Algo deu errado. Tente novamente.",
+  "errConnection": "Sem conexão. Verifique sua internet e tente novamente.",
+  "errAuth": "Falha na autenticação. Verifique seus dados e tente novamente.",
+  "errBetMatchStarted": "Este jogo já começou ou foi encerrado — não é possível alterar o palpite.",
+  "errBetDeadlinePassed": "O prazo para alterar este palpite expirou (menos de 1 hora para o início).",
+  "errSuperPalpiteLimit": "Você já usou seus 10 Super Palpites.",
+  "errSyncFailed": "Não foi possível sincronizar a planilha. Verifique a conexão e tente novamente."
 }

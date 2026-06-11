@@ -12,25 +12,40 @@ import 'package:copa2026/features/profile/providers/profile_stats_provider.dart'
 // ─────────────────────────────────────────────
 // GLOBAL MATCHES & BETS
 // ─────────────────────────────────────────────
-final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
-  final response = await Supabase.instance.client
-      .from('matches')
-      .select('''
-        id,
-        group_letter,
-        match_date,
-        home_score,
-        away_score,
-        status,
-        api_match_id,
-        home_team:teams!matches_home_team_id_fkey(id, name, flag_url, group_letter),
-        away_team:teams!matches_away_team_id_fkey(id, name, flag_url, group_letter)
-      ''')
-      .order('match_date', ascending: true);
+// Realtime: subscribes to the `matches` table (realtime já habilitado no schema)
+// e re-busca a query com join das seleções a cada mudança. Assim, quando um
+// placar/status muda (admin ou sync da planilha), a tela de grupos e a
+// classificação se atualizam sozinhas, sem precisar recarregar o app.
+//
+// O `.stream()` não suporta join com `teams`, então ele serve apenas como
+// gatilho; a primeira emissão já traz o snapshot atual (carga inicial ok).
+// Mesmo padrão usado em features/ranking/providers/ranking_provider.dart.
+final allMatchesProvider = StreamProvider<List<MatchModel>>((ref) {
+  final client = Supabase.instance.client;
 
-  return (response as List)
-      .map((m) => MatchModel.fromJson(m as Map<String, dynamic>))
-      .toList();
+  return client
+      .from('matches')
+      .stream(primaryKey: ['id'])
+      .asyncMap((_) async {
+    final response = await client
+        .from('matches')
+        .select('''
+          id,
+          group_letter,
+          match_date,
+          home_score,
+          away_score,
+          status,
+          api_match_id,
+          home_team:teams!matches_home_team_id_fkey(id, name, flag_url, group_letter),
+          away_team:teams!matches_away_team_id_fkey(id, name, flag_url, group_letter)
+        ''')
+        .order('match_date', ascending: true);
+
+    return (response as List)
+        .map((m) => MatchModel.fromJson(m as Map<String, dynamic>))
+        .toList();
+  });
 });
 
 final allBetsProvider = FutureProvider<Map<String, BetModel>>((ref) async {

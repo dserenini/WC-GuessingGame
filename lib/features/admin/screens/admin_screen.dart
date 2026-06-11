@@ -9,6 +9,7 @@ import 'package:csv/csv.dart';
 import 'package:flutter/services.dart';
 
 import 'package:copa2026/services/master_data_service.dart';
+import 'package:copa2026/shared/utils/error_messages.dart';
 import 'package:copa2026/utils/downloader.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
@@ -64,7 +65,10 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.errSyncFailed),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -312,7 +316,7 @@ class _AdminMatchTile extends StatelessWidget {
                 } catch (e) {
                   messenger.showSnackBar(
                     SnackBar(
-                      content: Text('Erro ao salvar: $e'),
+                      content: Text(describeError(AppLocalizations.of(context)!, e)),
                       backgroundColor: Colors.red,
                     ),
                   );

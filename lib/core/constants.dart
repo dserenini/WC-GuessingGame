@@ -41,14 +41,11 @@ const int kDefaultMaxGoals = 5;
 const int kWackyGoalThreshold = 20; // "Are you serious?" threshold
 
 // ─────────────────────────────────────────────
-// FOOTBALL API (API-Football / RapidAPI)
-// Set your key here when ready.
+// SINCRONIZAÇÃO DE PLACARES
+// A sincronização automática roda no servidor (Supabase Edge Function
+// `sync-scores`, fonte worldcup26.ir) — ver supabase/functions/sync-scores.
+// Não há chave/configuração de API no cliente.
 // ─────────────────────────────────────────────
-/// Set to your API-Football key from rapidapi.com/api-sports/api/api-football
-/// Leave empty to use manual input mode.
-const String kFootballApiKey = ''; // TODO: add your key here
-const String kFootballApiBase = 'https://v3.football.api-sports.io';
-const int kWorldCup2026Id = 1; // TODO: verify WC2026 competition ID once available
 
 // ─────────────────────────────────────────────
 // ADMIN UIDs

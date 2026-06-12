@@ -42,7 +42,7 @@ flutter build web --release
 lib/
 ├── core/               # constants, theme, router, supabase config
 ├── l10n/               # PT / EN / IT .arb files
-├── services/           # football_api_service.dart (stub for live scores)
+├── services/           # master_data_service.dart (manual sheet sync)
 ├── shared/
 │   ├── models/         # Team, Match, Bet, League, RankingEntry
 │   ├── providers/      # Theme + Locale providers
@@ -67,7 +67,6 @@ lib/
 | Supabase Anon Key | `lib/core/supabase_config.dart` | ⬜ TODO |
 | Admin UUIDs | `lib/core/constants.dart` → `kAdminUids` | ⬜ TODO |
 | Admin seed | `supabase/seed.sql` (uncomment last block) | ⬜ TODO |
-| Football API Key | `lib/core/constants.dart` → `kFootballApiKey` | 🔄 Optional |
 
 ---
 

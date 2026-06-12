@@ -69,6 +69,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get betDeadline => 'Bet Deadline';
 
   @override
+  String get regularDeadlineClosed => 'Regular deadline closed';
+
+  @override
+  String get betsUseSuperPalpite => 'New bets now spend Super Palpites';
+
+  @override
+  String get superPalpitesExhausted =>
+      'Super Palpites used up — betting locked';
+
+  @override
   String get result => 'Result';
 
   @override
@@ -304,6 +314,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String exportGroupTitle(String group) {
     return 'GROUP $group';
+  }
+
+  @override
+  String get nextMatch => 'Next Match';
+
+  @override
+  String get matchesOfDay => 'Matches of the day';
+
+  @override
+  String get yourPrediction => 'Your prediction';
+
+  @override
+  String get makeYourPrediction => 'Make your prediction';
+
+  @override
+  String get previousGroup => 'Previous group';
+
+  @override
+  String get nextGroup => 'Next group';
+
+  @override
+  String get searchPlayer => 'Search player...';
+
+  @override
+  String get youLabel => 'You';
+
+  @override
+  String get exportRanking => 'Export ranking';
+
+  @override
+  String exportRankingOf(String leagueName) {
+    return '$leagueName ranking';
   }
 
   @override

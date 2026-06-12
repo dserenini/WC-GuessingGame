@@ -8,6 +8,7 @@ import 'package:copa2026/core/constants.dart';
 
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 
 // ─────────────────────────────────────────────
 // GLOBAL MATCHES & BETS
@@ -97,6 +98,47 @@ final groupMatchesProvider = Provider.family<AsyncValue<List<MatchModel>>, Strin
 
 final groupBetsProvider = Provider.family<AsyncValue<Map<String, BetModel>>, String>((ref, groupLetter) {
   return ref.watch(allBetsProvider);
+});
+
+// ─────────────────────────────────────────────
+// NEXT MATCH (Derived)
+// ─────────────────────────────────────────────
+// O primeiro jogo ainda não finalizado. Como `allMatchesProvider` já vem
+// ordenado por match_date asc, isso cobre tanto um jogo AO VIVO em andamento
+// quanto o próximo agendado. Retorna null quando todos os jogos terminaram —
+// o banner de "Próximo Jogo" simplesmente não é renderizado nesse caso.
+final nextMatchProvider = Provider<MatchModel?>((ref) {
+  final matches = ref.watch(allMatchesProvider).valueOrNull;
+  if (matches == null) return null;
+  return matches.firstWhereOrNull((m) => m.status != MatchStatus.finished);
+});
+
+// Todos os jogos do "dia corrente" do torneio, ordenados por horário. O dia é
+// definido pelo próximo jogo não finalizado (no fuso do usuário): se há jogos
+// hoje, mostra os de hoje; se hoje é dia de folga, mostra os do próximo dia com
+// jogos. Inclui jogos já encerrados do mesmo dia (com placar final). Vazio
+// quando o torneio acabou.
+final matchesOfDayProvider = Provider<List<MatchModel>>((ref) {
+  final matches = ref.watch(allMatchesProvider).valueOrNull;
+  if (matches == null || matches.isEmpty) return const [];
+  final offset = ref.watch(timezoneProvider);
+
+  final next = matches.firstWhereOrNull((m) => m.status != MatchStatus.finished);
+  if (next == null || next.matchDate == null) return const [];
+
+  final localNext = next.matchDate!.toUtc().add(offset);
+  bool sameLocalDay(DateTime? d) {
+    if (d == null) return false;
+    final ld = d.toUtc().add(offset);
+    return ld.year == localNext.year &&
+        ld.month == localNext.month &&
+        ld.day == localNext.day;
+  }
+
+  final list = matches.where((m) => sameLocalDay(m.matchDate)).toList()
+    ..sort((a, b) => (a.matchDate ?? DateTime(0))
+        .compareTo(b.matchDate ?? DateTime(0)));
+  return list;
 });
 
 // ─────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/core/constants.dart';
@@ -9,6 +10,7 @@ import 'package:copa2026/features/groups/widgets/standings_table.dart';
 import 'package:copa2026/features/groups/widgets/match_card.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 import 'package:copa2026/features/chaos/chaos_service.dart';
+import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/shared/providers/max_goals_provider.dart';
@@ -23,7 +25,6 @@ class GroupScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(groupMatchesProvider(groupLetter));
     final betsAsync = ref.watch(groupBetsProvider(groupLetter));
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,6 +72,7 @@ class GroupScreen extends ConsumerWidget {
         ],
       ),
       drawer: const AppDrawer(),
+      bottomNavigationBar: _GroupNavBar(groupLetter: groupLetter),
       body: matchesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(message: e.toString()),
@@ -91,29 +93,7 @@ class GroupScreen extends ConsumerWidget {
                 slivers: [
                   // ── Deadline Banner ──────────────────
                   if (isBettingLocked)
-                    SliverToBoxAdapter(
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: cs.error.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: cs.error.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.lock, color: cs.error, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              l.betsLocked,
-                              style: TextStyle(color: cs.error, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    const SliverToBoxAdapter(child: _DeadlineBanner()),
 
                   // ── Standings Table ──────────────────
                   SliverToBoxAdapter(
@@ -335,6 +315,241 @@ class GroupScreen extends ConsumerWidget {
             );
       }
     }
+  }
+}
+
+// ─────────────────────────────────────────────
+// GROUP NAVIGATION BAR (prev / picker / next)
+// ─────────────────────────────────────────────
+class _GroupNavBar extends StatelessWidget {
+  final String groupLetter;
+  const _GroupNavBar({required this.groupLetter});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final idx = kGroups.indexOf(groupLetter);
+    final hasPrev = idx > 0;
+    final hasNext = idx >= 0 && idx < kGroups.length - 1;
+
+    void go(int targetIdx) => context.go('/groups/${kGroups[targetIdx]}');
+
+    return BottomAppBar(
+      height: 58,
+      padding: EdgeInsets.zero,
+      child: Row(
+        children: [
+          // ── Previous ──
+          Expanded(
+            child: hasPrev
+                ? TextButton.icon(
+                    onPressed: () => go(idx - 1),
+                    icon: const Icon(Icons.chevron_left),
+                    label: Text('${l.group} ${kGroups[idx - 1]}'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      alignment: Alignment.centerLeft,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // ── Center: current group (tap to pick) ──
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _showGroupPicker(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${l.group} $groupLetter',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(Icons.arrow_drop_down, color: cs.onSurface.withOpacity(0.6)),
+                ],
+              ),
+            ),
+          ),
+          // ── Next ──
+          Expanded(
+            child: hasNext
+                ? TextButton.icon(
+                    onPressed: () => go(idx + 1),
+                    icon: const Icon(Icons.chevron_right),
+                    label: Text('${l.group} ${kGroups[idx + 1]}'),
+                    iconAlignment: IconAlignment.end,
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      alignment: Alignment.centerRight,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGroupPicker(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: GridView.count(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(16),
+          crossAxisCount: 4,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.6,
+          children: [
+            for (final g in kGroups)
+              _GroupPickerChip(
+                label: '${l.group} $g',
+                selected: g == groupLetter,
+                onTap: () {
+                  Navigator.pop(context);
+                  if (g != groupLetter) context.go('/groups/$g');
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupPickerChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _GroupPickerChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? cs.primary : cs.surfaceContainerHighest.withOpacity(0.5),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: selected ? cs.onPrimary : cs.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// DEADLINE BANNER (pós-prazo)
+// ─────────────────────────────────────────────
+// Enquanto restam Super Palpites: aviso âmbar (ainda dá para apostar, mas
+// consome um Super Palpite) com a contagem restante. Quando esgotam: vermelho,
+// apostas realmente bloqueadas.
+class _DeadlineBanner extends ConsumerWidget {
+  const _DeadlineBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final used =
+        ref.watch(profileStatsProvider).valueOrNull?.superPalpitesUsed ?? 0;
+    final remaining =
+        (kMaxSuperPalpites - used).clamp(0, kMaxSuperPalpites);
+    final exhausted = remaining <= 0;
+
+    final accent =
+        exhausted ? cs.error : (isDark ? Colors.amber.shade300 : Colors.amber.shade800);
+    final bg = (exhausted ? cs.error : Colors.amber).withOpacity(0.12);
+    final border = (exhausted ? cs.error : Colors.amber).withOpacity(isDark ? 0.5 : 0.4);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: border),
+      ),
+      child: exhausted
+          ? Row(
+              children: [
+                Icon(Icons.lock, color: accent, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l.superPalpitesExhausted,
+                    style: tt.bodySmall
+                        ?.copyWith(color: accent, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                const Text('🌟', style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.regularDeadlineClosed,
+                        style: tt.labelLarge?.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        l.betsUseSuperPalpite,
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(isDark ? 0.22 : 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '🌟 $remaining/$kMaxSuperPalpites',
+                    style: tt.labelMedium?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
   }
 }
 

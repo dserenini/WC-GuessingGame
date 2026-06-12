@@ -7,6 +7,7 @@ import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
+import 'package:copa2026/features/leagues/screens/league_ranking_export_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -113,6 +114,31 @@ class _LeagueCard extends ConsumerWidget {
         children: [
           _LeagueRankingList(leagueId: league.id),
           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: TextButton.icon(
+              onPressed: () {
+                final entries =
+                    ref.read(myLeaguesRankingProvider(league.id)).valueOrNull;
+                if (entries == null || entries.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l.waitDataLoad)),
+                  );
+                  return;
+                }
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LeagueRankingExportScreen(
+                      leagueName: league.name,
+                      entries: entries,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.ios_share),
+              label: Text(l.exportRanking),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextButton.icon(
               onPressed: () {
@@ -148,13 +174,29 @@ class _LeagueCard extends ConsumerWidget {
   }
 }
 
-class _LeagueRankingList extends ConsumerWidget {
+class _LeagueRankingList extends ConsumerStatefulWidget {
   final String leagueId;
   const _LeagueRankingList({required this.leagueId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final rankAsync = ref.watch(myLeaguesRankingProvider(leagueId));
+  ConsumerState<_LeagueRankingList> createState() => _LeagueRankingListState();
+}
+
+class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final rankAsync = ref.watch(myLeaguesRankingProvider(widget.leagueId));
     final currentUid = ref.watch(currentUserProvider)?.id;
 
     return rankAsync.when(
@@ -163,15 +205,55 @@ class _LeagueRankingList extends ConsumerWidget {
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Text(e.toString()),
-      data: (entries) => Column(
-        children: entries
-            .map<Widget>((entry) => RankingTile(
+      data: (entries) {
+        final q = _query.trim().toLowerCase();
+        final filtered = q.isEmpty
+            ? entries
+            : entries
+                .where((e) => e.displayName.toLowerCase().contains(q))
+                .toList();
+
+        return Column(
+          children: [
+            // Campo de busca aparece só quando a liga tem membros suficientes
+            // para justificá-lo.
+            if (entries.length > 8)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _query = v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: l.searchPlayer,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: _query.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              setState(() => _query = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: cs.surfaceContainerHighest.withOpacity(0.4),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            ...filtered.map<Widget>((entry) => RankingTile(
                   entry: entry,
                   isMe: entry.userId == currentUid,
-                  l: AppLocalizations.of(context)!,
-                ))
-            .toList(),
-      ),
+                  l: l,
+                )),
+          ],
+        );
+      },
     );
   }
 }

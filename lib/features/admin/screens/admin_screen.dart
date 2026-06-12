@@ -14,6 +14,7 @@ import 'package:copa2026/utils/downloader.dart';
 
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
+import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -38,6 +39,17 @@ final allMatchesProvider = FutureProvider<List<MatchModel>>((ref) async {
 final adminUsersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final response = await Supabase.instance.client.rpc('get_admin_users');
   return List<Map<String, dynamic>>.from(response);
+});
+
+// Todas as ligas (id + nome). RLS de `leagues` é SELECT USING (true), então o
+// admin pode listar todas. Usado na aba de adicionar usuários a ligas.
+final adminAllLeaguesProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final data = await Supabase.instance.client
+      .from('leagues')
+      .select('id, name')
+      .order('name');
+  return List<Map<String, dynamic>>.from(data);
 });
 
 
@@ -84,7 +96,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final matchesAsync = ref.watch(allMatchesProvider);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(' 👑'),
@@ -101,10 +113,12 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             ],
           ),
           bottom: TabBar(
+              isScrollable: true,
               tabs: [
               Tab(icon: const Icon(Icons.sports_soccer), text: l.adminTabMatches),
               Tab(icon: const Icon(Icons.notifications_active), text: 'Notificar'),
               Tab(icon: const Icon(Icons.people), text: l.adminTabUsers),
+              Tab(icon: const Icon(Icons.groups), text: 'Ligas'),
             ],
           ),
 
@@ -152,6 +166,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           ),
           const _AdminNotificationsTab(),
           const _AdminUsersTab(),
+          const _AdminLeaguesTab(),
         ],
       ),
     ));
@@ -708,6 +723,256 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
           ],
         );
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Admin: adicionar usuários a ligas (multi-seleção)
+// ─────────────────────────────────────────────
+class _PickOption {
+  final String id;
+  final String label;
+  final String? sub;
+  const _PickOption(this.id, this.label, [this.sub]);
+}
+
+class _AdminLeaguesTab extends ConsumerStatefulWidget {
+  const _AdminLeaguesTab();
+
+  @override
+  ConsumerState<_AdminLeaguesTab> createState() => _AdminLeaguesTabState();
+}
+
+class _AdminLeaguesTabState extends ConsumerState<_AdminLeaguesTab> {
+  String _leagueQuery = '';
+  String _userQuery = '';
+  final Map<String, String> _selLeagues = {}; // id -> nome
+  final Map<String, String> _selUsers = {}; // id -> label
+  bool _submitting = false;
+
+  Future<void> _submit() async {
+    if (_selLeagues.isEmpty || _selUsers.isEmpty) return;
+    setState(() => _submitting = true);
+    try {
+      final result = await Supabase.instance.client.rpc(
+        'admin_add_users_to_leagues',
+        params: {
+          'p_user_ids': _selUsers.keys.toList(),
+          'p_league_ids': _selLeagues.keys.toList(),
+        },
+      );
+      if (!mounted) return;
+      final inserted = (result as num?)?.toInt() ?? 0;
+      final attempted = _selUsers.length * _selLeagues.length;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '$inserted novo(s) vínculo(s) de $attempted (duplicados ignorados).'),
+        ),
+      );
+      setState(() {
+        _selLeagues.clear();
+        _selUsers.clear();
+        _leagueQuery = '';
+        _userQuery = '';
+      });
+      // Caso o próprio admin tenha sido adicionado a alguma liga.
+      ref.invalidate(myLeaguesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final usersAsync = ref.watch(adminUsersProvider);
+    final leaguesAsync = ref.watch(adminAllLeaguesProvider);
+
+    final canSubmit =
+        _selLeagues.isNotEmpty && _selUsers.isNotEmpty && !_submitting;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        const Text(
+          'Adicionar usuários a ligas',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Selecione uma ou mais ligas e um ou mais usuários. '
+          'Cada usuário será adicionado a cada liga selecionada.',
+          style: TextStyle(color: cs.onSurface.withOpacity(0.6)),
+        ),
+        const SizedBox(height: 20),
+
+        // ── 1. Ligas ──
+        const Text('1. Ligas', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        leaguesAsync.when(
+          loading: () => const Padding(
+              padding: EdgeInsets.all(8), child: LinearProgressIndicator()),
+          error: (e, _) =>
+              Text('Erro ao carregar ligas: $e', style: TextStyle(color: cs.error)),
+          data: (leagues) {
+            final options = leagues
+                .map((lg) =>
+                    _PickOption(lg['id'] as String, (lg['name'] ?? '') as String))
+                .toList();
+            return _selector(
+              hint: 'Buscar liga pelo nome...',
+              query: _leagueQuery,
+              onQuery: (v) => setState(() => _leagueQuery = v),
+              selected: _selLeagues,
+              options: options,
+              onAdd: (o) => setState(() => _selLeagues[o.id] = o.label),
+              onRemove: (id) => setState(() => _selLeagues.remove(id)),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+
+        // ── 2. Usuários ──
+        const Text('2. Usuários', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        usersAsync.when(
+          loading: () => const Padding(
+              padding: EdgeInsets.all(8), child: LinearProgressIndicator()),
+          error: (e, _) => Text('Erro ao carregar usuários: $e',
+              style: TextStyle(color: cs.error)),
+          data: (users) {
+            final options = users.map((u) {
+              final username = (u['username'] ?? '') as String;
+              final fullName = (u['full_name'] ?? '') as String;
+              return _PickOption(
+                u['id'] as String,
+                username.isNotEmpty ? username : fullName,
+                fullName.isNotEmpty ? fullName : null,
+              );
+            }).toList();
+            return _selector(
+              hint: 'Buscar usuário por nome ou username...',
+              query: _userQuery,
+              onQuery: (v) => setState(() => _userQuery = v),
+              selected: _selUsers,
+              options: options,
+              onAdd: (o) => setState(() => _selUsers[o.id] = o.label),
+              onRemove: (id) => setState(() => _selUsers.remove(id)),
+            );
+          },
+        ),
+        const SizedBox(height: 28),
+
+        // ── Confirmar ──
+        SizedBox(
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: canSubmit ? _submit : null,
+            icon: _submitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.group_add),
+            label: Text(
+              _submitting
+                  ? 'Adicionando...'
+                  : 'Adicionar Usuários (${_selUsers.length}×${_selLeagues.length})',
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Campo de busca + chips dos itens selecionados + lista de resultados.
+  /// Combobox multi-seleção: cada toque num resultado adiciona ao conjunto
+  /// (sem substituir); o chip remove. Resultados aparecem só com busca ativa.
+  Widget _selector({
+    required String hint,
+    required String query,
+    required ValueChanged<String> onQuery,
+    required Map<String, String> selected,
+    required List<_PickOption> options,
+    required void Function(_PickOption) onAdd,
+    required void Function(String id) onRemove,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final q = query.trim().toLowerCase();
+
+    final results = q.isEmpty
+        ? const <_PickOption>[]
+        : options.where((o) {
+            if (selected.containsKey(o.id)) return false;
+            return o.label.toLowerCase().contains(q) ||
+                (o.sub?.toLowerCase().contains(q) ?? false);
+          }).take(25).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (selected.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: selected.entries
+                  .map((e) => Chip(
+                        label: Text(e.value),
+                        onDeleted: () => onRemove(e.key),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ))
+                  .toList(),
+            ),
+          ),
+        TextField(
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: const Icon(Icons.search),
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: onQuery,
+        ),
+        if (q.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: cs.outline.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: results.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Text('Nenhum resultado.'))
+                : Column(
+                    children: results
+                        .map((o) => ListTile(
+                              dense: true,
+                              title: Text(o.label),
+                              subtitle: (o.sub != null && o.sub!.isNotEmpty)
+                                  ? Text(o.sub!)
+                                  : null,
+                              trailing: const Icon(Icons.add),
+                              onTap: () => onAdd(o),
+                            ))
+                        .toList(),
+                  ),
+          ),
+      ],
     );
   }
 }

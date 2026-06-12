@@ -521,6 +521,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
   final _lastCtrl = TextEditingController();
   String _phoneNumber = '';
   String _initialPhone = '';
+  String _displayPreference = 'username';
   bool _loading = true;
   bool _saving = false;
 
@@ -536,7 +537,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
       if (user != null) {
         final data = await Supabase.instance.client
             .from('profiles')
-            .select('full_name, phone')
+            .select('full_name, phone, display_preference')
             .eq('id', user.id)
             .single();
         final fullName = (data['full_name'] as String?)?.trim() ?? '';
@@ -545,6 +546,8 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
         _lastCtrl.text = parts.length > 1 ? parts.sublist(1).join(' ') : '';
         _initialPhone = (data['phone'] as String?) ?? '';
         _phoneNumber = _initialPhone;
+        _displayPreference =
+            (data['display_preference'] as String?) ?? 'username';
       }
     } catch (_) {
       // Em caso de erro, os campos ficam vazios para preenchimento.
@@ -572,6 +575,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
       await Supabase.instance.client.from('profiles').update({
         'full_name': fullName,
         'phone': _phoneNumber,
+        'display_preference': _displayPreference,
       }).eq('id', user.id);
       ref.invalidate(profileStatsProvider);
       if (mounted) {
@@ -652,6 +656,55 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    // Preferência de exibição no ranking — sem isto, alterar o
+                    // nome completo não muda como o usuário aparece para os
+                    // demais (o padrão é mostrar o username).
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l.displayAs,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          RadioListTile<String>(
+                            dense: true,
+                            title: Text(l.displayAsUsername),
+                            value: 'username',
+                            groupValue: _displayPreference,
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _displayPreference = value);
+                              }
+                            },
+                          ),
+                          const Divider(height: 1),
+                          RadioListTile<String>(
+                            dense: true,
+                            title: Text(l.displayAsFullName),
+                            value: 'full_name',
+                            groupValue: _displayPreference,
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _displayPreference = value);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

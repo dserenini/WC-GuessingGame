@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
+import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/shared/models/match.dart';
+import 'package:copa2026/shared/models/bet.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
+import 'package:copa2026/shared/utils/bet_points.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/profile/screens/profile_completion_screen.dart';
+import 'package:copa2026/l10n/team_translator.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -63,9 +71,11 @@ class ProfileScreen extends ConsumerWidget {
                 _ProfileHeader(stats: stats),
                 const SizedBox(height: 24),
 
-                // ── Progress Card ─────────────────────────
-                _BetProgressCard(stats: stats, l: l),
-                const SizedBox(height: 16),
+                // ── Matches of the Day ────────────────────
+                // (substitui o card "Apostas Preenchidas" agora que a fase de
+                //  apostas terminou; _BetProgressCard fica preservado abaixo
+                //  para reuso futuro.)
+                const _TodayMatchesSection(),
 
                 // ── Points Card ───────────────────────────
                 _PointsCard(stats: stats, l: l),
@@ -161,8 +171,364 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
+// MATCHES OF THE DAY
+// ─────────────────────────────────────────────
+class _TodayMatchesSection extends ConsumerWidget {
+  const _TodayMatchesSection();
+
+  String _formatDay(DateTime d, Duration offset) {
+    final t = d.toUtc().add(offset);
+    return '${t.day.toString().padLeft(2, '0')}/'
+        '${t.month.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matches = ref.watch(matchesOfDayProvider);
+    if (matches.isEmpty) return const SizedBox.shrink();
+
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final bets = ref.watch(allBetsProvider).valueOrNull ?? {};
+    final offset = ref.watch(timezoneProvider);
+    final dateLabel = matches.first.matchDate != null
+        ? _formatDay(matches.first.matchDate!, offset)
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header alinhado com o conteúdo dos cards (que têm margin 16 do tema).
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: Row(
+            children: [
+              const Text('⚽', style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              Text(
+                l.matchesOfDay,
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              if (dateLabel != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    dateLabel,
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        // Coluna única de cards full-width (mesma largura de Pontos/Super).
+        ...matches.map((m) => _MatchOfDayCard(
+              match: m,
+              bet: bets[m.id],
+              offset: offset,
+            )),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+// Card de jogo no estilo da aba de Grupos (agendado → caixas de placar com o
+// palpite) e do Perfil Visitante (ao vivo/encerrado → placar real + rodapé com
+// o palpite e os pontos). Somente leitura; toque abre o grupo.
+class _MatchOfDayCard extends StatelessWidget {
+  final MatchModel match;
+  final BetModel? bet;
+  final Duration offset;
+
+  const _MatchOfDayCard({
+    required this.match,
+    required this.bet,
+    required this.offset,
+  });
+
+  String _formatTime(DateTime d, Duration offset) {
+    final t = d.toUtc().add(offset);
+    return '${t.hour.toString().padLeft(2, '0')}:'
+        '${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final isScheduled = match.status == MatchStatus.scheduled;
+    final hasRealScore = (match.status == MatchStatus.live ||
+            match.status == MatchStatus.finished) &&
+        match.homeScore != null &&
+        match.awayScore != null;
+    final isPartial = match.status == MatchStatus.live;
+
+    int? points;
+    if (bet != null && hasRealScore) {
+      points = match.status == MatchStatus.finished
+          ? bet!.points
+          : computeBetPoints(
+              homeBet: bet!.homeScoreBet,
+              awayBet: bet!.awayScoreBet,
+              homeReal: match.homeScore!,
+              awayReal: match.awayScore!,
+            );
+    }
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.go('/groups/${match.groupLetter}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Column(
+            children: [
+              // ── Top row: #id + status + kickoff ──
+              Row(
+                children: [
+                  Text(
+                    '#${match.apiMatchId ?? match.id.substring(0, 4)}',
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _MatchStatusChip(status: match.status, l: l),
+                  const Spacer(),
+                  if (isScheduled && match.matchDate != null)
+                    Text(
+                      _formatTime(match.matchDate!, offset),
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurface.withOpacity(0.5),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // ── Teams + score ──
+              Row(
+                children: [
+                  Expanded(
+                    child: _TeamCol(
+                      name: match.homeTeam.name,
+                      flagUrl: match.homeTeam.flagUrl,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: hasRealScore
+                        ? Text(
+                            '${match.homeScore} - ${match.awayScore}',
+                            style: tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ReadOnlyScoreBox(value: bet?.homeScoreBet),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(
+                                  'X',
+                                  style: tt.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.onSurface.withOpacity(0.4),
+                                  ),
+                                ),
+                              ),
+                              _ReadOnlyScoreBox(value: bet?.awayScoreBet),
+                            ],
+                          ),
+                  ),
+                  Expanded(
+                    child: _TeamCol(
+                      name: match.awayTeam.name,
+                      flagUrl: match.awayTeam.flagUrl,
+                    ),
+                  ),
+                ],
+              ),
+              // ── Footer (ao vivo/encerrado): palpite + pontos ──
+              if (hasRealScore) ...[
+                const SizedBox(height: 10),
+                Divider(height: 1, color: cs.outline.withOpacity(0.15)),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      bet != null
+                          ? '${bet!.homeScoreBet} - ${bet!.awayScoreBet}'
+                          : '—',
+                      style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    if (points != null) ...[
+                      const SizedBox(width: 8),
+                      _MatchPointsBadge(
+                          points: points, isPartial: isPartial, l: l),
+                    ],
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TeamCol extends StatelessWidget {
+  final String name;
+  final String? flagUrl;
+  const _TeamCol({required this.name, required this.flagUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        FlagAvatar(flagUrl: flagUrl, radius: 26),
+        const SizedBox(height: 8),
+        Text(
+          translateTeam(context, name),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+// Caixa de placar somente leitura — mesmo visual do _ScoreBox da aba de Grupos
+// no estado preenchido (tom da cor primária).
+class _ReadOnlyScoreBox extends StatelessWidget {
+  final int? value;
+  const _ReadOnlyScoreBox({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final filled = value != null;
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: filled ? cs.primary.withOpacity(0.1) : cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: filled
+              ? cs.primary.withOpacity(0.5)
+              : cs.outline.withOpacity(0.5),
+          width: 1.5,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          value?.toString() ?? '—',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: filled ? cs.primary : cs.onSurface.withOpacity(0.35),
+              ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MatchStatusChip extends StatelessWidget {
+  final MatchStatus status;
+  final AppLocalizations l;
+  const _MatchStatusChip({required this.status, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (label, color) = switch (status) {
+      MatchStatus.scheduled => (l.statusScheduled, cs.outline),
+      MatchStatus.live => (l.statusLive, Colors.red),
+      MatchStatus.finished => (l.statusFinished, cs.primary),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+}
+
+class _MatchPointsBadge extends StatelessWidget {
+  final int points;
+  final bool isPartial;
+  final AppLocalizations l;
+  const _MatchPointsBadge({
+    required this.points,
+    required this.isPartial,
+    required this.l,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (Color bg, Color fg) = switch (points) {
+      3 => (cs.primary.withOpacity(0.15), cs.primary),
+      1 => (Colors.amber.withOpacity(0.18), Colors.amber.shade800),
+      _ => (cs.onSurface.withOpacity(0.08), cs.onSurface.withOpacity(0.55)),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            points > 0 ? '+$points' : '0',
+            style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+          if (isPartial) ...[
+            const SizedBox(width: 4),
+            Text(
+              l.partial,
+              style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w400),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
 // BET PROGRESS CARD
 // ─────────────────────────────────────────────
+// ignore: unused_element — preservado para reuso futuro (ver _NextMatchBanner)
 class _BetProgressCard extends StatelessWidget {
   final ProfileStats stats;
   final AppLocalizations l;

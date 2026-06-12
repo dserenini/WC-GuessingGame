@@ -69,6 +69,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get betDeadline => 'Scadenza Scommesse';
 
   @override
+  String get regularDeadlineClosed => 'Termine regolare chiuso';
+
+  @override
+  String get betsUseSuperPalpite =>
+      'Le nuove scommesse usano i Super Pronostici';
+
+  @override
+  String get superPalpitesExhausted =>
+      'Super Pronostici esauriti — scommesse bloccate';
+
+  @override
   String get result => 'Risultato';
 
   @override
@@ -305,6 +316,38 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String exportGroupTitle(String group) {
     return 'GRUPPO $group';
+  }
+
+  @override
+  String get nextMatch => 'Prossima Partita';
+
+  @override
+  String get matchesOfDay => 'Partite del giorno';
+
+  @override
+  String get yourPrediction => 'Il tuo pronostico';
+
+  @override
+  String get makeYourPrediction => 'Fai il tuo pronostico';
+
+  @override
+  String get previousGroup => 'Gruppo precedente';
+
+  @override
+  String get nextGroup => 'Gruppo successivo';
+
+  @override
+  String get searchPlayer => 'Cerca giocatore...';
+
+  @override
+  String get youLabel => 'Tu';
+
+  @override
+  String get exportRanking => 'Esporta classifica';
+
+  @override
+  String exportRankingOf(String leagueName) {
+    return 'Classifica: $leagueName';
   }
 
   @override

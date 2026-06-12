@@ -65,6 +65,17 @@ class RankingEntry {
         totalBets: (json['total_bets'] as num?)?.toInt() ?? 0,
         rank: (json['rank'] as num?)?.toInt() ?? 0,
       );
+
+  RankingEntry copyWith({int? rank}) => RankingEntry(
+        userId: userId,
+        username: username,
+        fullName: fullName,
+        displayPreference: displayPreference,
+        avatarUrl: avatarUrl,
+        totalPoints: totalPoints,
+        totalBets: totalBets,
+        rank: rank ?? this.rank,
+      );
   
   String get displayName {
     if (displayPreference == 'full_name' && fullName != null && fullName!.isNotEmpty) {

@@ -41,6 +41,7 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^13.1.0
   web: ^1.1.0
+  scrollable_positioned_list: ^0.3.8
 
 dev_dependencies:
   flutter_test:

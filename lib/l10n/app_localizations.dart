@@ -220,6 +220,24 @@ abstract class AppLocalizations {
   /// **'Prazo das Apostas'**
   String get betDeadline;
 
+  /// No description provided for @regularDeadlineClosed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prazo regular encerrado'**
+  String get regularDeadlineClosed;
+
+  /// No description provided for @betsUseSuperPalpite.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novas apostas consomem Super Palpites'**
+  String get betsUseSuperPalpite;
+
+  /// No description provided for @superPalpitesExhausted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Super Palpites esgotados — apostas bloqueadas'**
+  String get superPalpitesExhausted;
+
   /// No description provided for @result.
   ///
   /// In pt, this message translates to:
@@ -651,6 +669,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'GRUPO {group}'**
   String exportGroupTitle(String group);
+
+  /// No description provided for @nextMatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo Jogo'**
+  String get nextMatch;
+
+  /// No description provided for @matchesOfDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogos do dia'**
+  String get matchesOfDay;
+
+  /// No description provided for @yourPrediction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu palpite'**
+  String get yourPrediction;
+
+  /// No description provided for @makeYourPrediction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Faça seu palpite'**
+  String get makeYourPrediction;
+
+  /// No description provided for @previousGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo anterior'**
+  String get previousGroup;
+
+  /// No description provided for @nextGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próximo grupo'**
+  String get nextGroup;
+
+  /// No description provided for @searchPlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar jogador...'**
+  String get searchPlayer;
+
+  /// No description provided for @youLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
+  String get youLabel;
+
+  /// No description provided for @exportRanking.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar classificação'**
+  String get exportRanking;
+
+  /// No description provided for @exportRankingOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Classificação: {leagueName}'**
+  String exportRankingOf(String leagueName);
 
   /// No description provided for @newPassword.
   ///

@@ -469,8 +469,98 @@ abstract class AppLocalizations {
   /// No description provided for @advancedStatsSub.
   ///
   /// In pt, this message translates to:
-  /// **'Por grupo, rodada, seleção — em breve!'**
+  /// **'Veja como você se compara ao bolão'**
   String get advancedStatsSub;
+
+  /// No description provided for @statsTabRankings.
+  String get statsTabRankings;
+
+  /// No description provided for @statsTabPersonal.
+  String get statsTabPersonal;
+
+  /// No description provided for @statsTabAchievements.
+  String get statsTabAchievements;
+
+  /// No description provided for @statsTabPool.
+  String get statsTabPool;
+
+  /// No description provided for @statExactTitle.
+  String get statExactTitle;
+
+  /// No description provided for @statExactSub.
+  String get statExactSub;
+
+  /// No description provided for @statExactUnit.
+  String get statExactUnit;
+
+  /// No description provided for @statBrazilTitle.
+  String get statBrazilTitle;
+
+  /// No description provided for @statBrazilSub.
+  String get statBrazilSub;
+
+  /// No description provided for @statNearMissTitle.
+  String get statNearMissTitle;
+
+  /// No description provided for @statNearMissSub.
+  String get statNearMissSub;
+
+  /// No description provided for @statNearMissUnit.
+  String get statNearMissUnit;
+
+  /// No description provided for @statDailyTitle.
+  String get statDailyTitle;
+
+  /// No description provided for @statDailySub.
+  String get statDailySub;
+
+  /// No description provided for @statRegularTitle.
+  String get statRegularTitle;
+
+  /// No description provided for @statRegularSub.
+  String get statRegularSub;
+
+  /// No description provided for @statRegularUnit.
+  String get statRegularUnit;
+
+  /// No description provided for @statBoldTitle.
+  String get statBoldTitle;
+
+  /// No description provided for @statBoldSub.
+  String get statBoldSub;
+
+  /// No description provided for @statBoldUnit.
+  String get statBoldUnit;
+
+  /// No description provided for @statContrarianTitle.
+  String get statContrarianTitle;
+
+  /// No description provided for @statContrarianSub.
+  String get statContrarianSub;
+
+  /// No description provided for @statContrarianUnit.
+  String get statContrarianUnit;
+
+  /// No description provided for @statsNoGames.
+  String get statsNoGames;
+
+  /// No description provided for @statPointsUnit.
+  String get statPointsUnit;
+
+  /// No description provided for @statsYou.
+  String get statsYou;
+
+  /// No description provided for @statsSeeAll.
+  String get statsSeeAll;
+
+  /// No description provided for @statsComingSoon.
+  String get statsComingSoon;
+
+  /// No description provided for @statsEmpty.
+  String get statsEmpty;
+
+  /// No description provided for @statsError.
+  String get statsError;
 
   /// No description provided for @deleteBet.
   ///

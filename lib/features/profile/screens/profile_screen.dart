@@ -85,8 +85,8 @@ class ProfileScreen extends ConsumerWidget {
                 _SuperPalpiteCard(stats: stats, l: l),
                 const SizedBox(height: 24),
 
-                // ── Future stats placeholder ──────────────
-                _ComingSoonCard(l: l),
+                // ── Advanced stats entry ──────────────────
+                _AdvancedStatsEntryCard(l: l),
               ],
             ),
           ),
@@ -769,53 +769,53 @@ class _StatTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// COMING SOON CARD
+// ADVANCED STATS ENTRY CARD
 // ─────────────────────────────────────────────
-class _ComingSoonCard extends StatelessWidget {
+class _AdvancedStatsEntryCard extends StatelessWidget {
   final AppLocalizations l;
-  const _ComingSoonCard({required this.l});
+  const _AdvancedStatsEntryCard({required this.l});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: cs.outline.withOpacity(0.3),
-          style: BorderStyle.solid,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => context.push('/stats'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: cs.primary.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.primary.withOpacity(0.25)),
         ),
-      ),
-      child: Row(
-        children: [
-          const Text('📊', style: TextStyle(fontSize: 24)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.advancedStats,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface.withOpacity(0.6),
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l.advancedStatsSub,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurface.withOpacity(0.4),
-                      ),
-                ),
-              ],
+        child: Row(
+          children: [
+            const Text('📊', style: TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.advancedStats,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l.advancedStatsSub,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withOpacity(0.55),
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Icon(Icons.upcoming_outlined,
-              color: cs.onSurface.withOpacity(0.3)),
-        ],
+            Icon(Icons.chevron_right, color: cs.primary.withOpacity(0.7)),
+          ],
+        ),
       ),
     );
   }

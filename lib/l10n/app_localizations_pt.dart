@@ -201,7 +201,97 @@ class AppLocalizationsPt extends AppLocalizations {
   String get advancedStats => 'Estatísticas Avançadas';
 
   @override
-  String get advancedStatsSub => 'Por grupo, rodada, seleção — em breve!';
+  String get advancedStatsSub => 'Veja como você se compara ao bolão';
+
+  @override
+  String get statsTabRankings => 'Rankings';
+
+  @override
+  String get statsTabPersonal => 'Pessoal';
+
+  @override
+  String get statsTabAchievements => 'Conquistas';
+
+  @override
+  String get statsTabPool => 'Bolão';
+
+  @override
+  String get statExactTitle => 'Rei do Placar Exato';
+
+  @override
+  String get statExactSub => 'Quem mais cravou o placar';
+
+  @override
+  String get statExactUnit => 'exatos';
+
+  @override
+  String get statBrazilTitle => 'Pé-quente do Brasil';
+
+  @override
+  String get statBrazilSub => 'Quem mais pontuou nos jogos do Brasil';
+
+  @override
+  String get statNearMissTitle => 'Quase lá';
+
+  @override
+  String get statNearMissSub => 'Cravaria o resultado, mas ficou no quase por 1 gol';
+
+  @override
+  String get statNearMissUnit => 'quase';
+
+  @override
+  String get statDailyTitle => 'Tacada do Dia';
+
+  @override
+  String get statDailySub => 'Maior pontuação num único dia';
+
+  @override
+  String get statRegularTitle => 'Mais Regular';
+
+  @override
+  String get statRegularSub => 'Pontuou no maior número de jogos';
+
+  @override
+  String get statRegularUnit => 'jogos';
+
+  @override
+  String get statBoldTitle => 'Os Corajosos';
+
+  @override
+  String get statBoldSub => 'Quem arrisca os placares mais ousados';
+
+  @override
+  String get statBoldUnit => 'ousados';
+
+  @override
+  String get statContrarianTitle => 'Do Contra que Acertou';
+
+  @override
+  String get statContrarianSub => 'Cravou placares que quase ninguém apostou';
+
+  @override
+  String get statContrarianUnit => 'raras';
+
+  @override
+  String get statsNoGames => 'Nenhum jogo nesta estatística ainda';
+
+  @override
+  String get statPointsUnit => 'pts';
+
+  @override
+  String get statsYou => 'Você';
+
+  @override
+  String get statsSeeAll => 'Ver todos';
+
+  @override
+  String get statsComingSoon => 'Em breve, nesta aba!';
+
+  @override
+  String get statsEmpty => 'Ainda não há dados suficientes';
+
+  @override
+  String get statsError => 'Não foi possível carregar';
 
   @override
   String get deleteBet => 'Deletar Aposta';

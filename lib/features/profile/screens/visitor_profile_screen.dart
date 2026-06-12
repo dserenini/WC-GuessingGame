@@ -5,8 +5,10 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/bet.dart';
+import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
+import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart';
 import 'package:copa2026/features/profile/widgets/bet_comparison_card.dart';
 import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 
@@ -18,7 +20,19 @@ class VisitorProfileScreen extends ConsumerWidget {
   final String userId;
   final RankingEntry? entry;
 
-  const VisitorProfileScreen({super.key, required this.userId, this.entry});
+  /// When set, the bet list is filtered to only the matches relevant to that
+  /// statistic (e.g. Brazil games, exact hits, near misses…), instead of
+  /// showing every match. [contextLabel] is the stat name shown in the header.
+  final StatRanking? statFilter;
+  final String? contextLabel;
+
+  const VisitorProfileScreen({
+    super.key,
+    required this.userId,
+    this.entry,
+    this.statFilter,
+    this.contextLabel,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,7 +87,8 @@ class VisitorProfileScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
-                _VisitorHeader(name: name, entry: entry, l: l),
+                _VisitorHeader(
+                    name: name, entry: entry, l: l, contextLabel: contextLabel),
                 if (!gateOpen)
                   _AccessGate(
                     done: myStats.totalBets,
@@ -81,7 +96,7 @@ class VisitorProfileScreen extends ConsumerWidget {
                     l: l,
                   )
                 else
-                  _BetList(userId: userId, bName: name),
+                  _BetList(userId: userId, bName: name, statFilter: statFilter),
               ],
             ),
           );
@@ -98,7 +113,12 @@ class _VisitorHeader extends StatelessWidget {
   final String name;
   final RankingEntry? entry;
   final AppLocalizations l;
-  const _VisitorHeader({required this.name, required this.entry, required this.l});
+  final String? contextLabel;
+  const _VisitorHeader(
+      {required this.name,
+      required this.entry,
+      required this.l,
+      this.contextLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +157,15 @@ class _VisitorHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
                 ),
-                if (entry != null) ...[
+                if (contextLabel != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    contextLabel!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ] else if (entry != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     '${l.rankPositionShort(entry!.rank)} · ${l.rankingBetsCount(entry!.totalBets)}',
@@ -147,7 +175,9 @@ class _VisitorHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (entry != null)
+          // Stat-filtered view: the metric value is already shown on the card
+          // the user came from, so the global "pts" total is omitted here.
+          if (entry != null && contextLabel == null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -168,7 +198,9 @@ class _VisitorHeader extends StatelessWidget {
 class _BetList extends ConsumerWidget {
   final String userId;
   final String bName;
-  const _BetList({required this.userId, required this.bName});
+  final StatRanking? statFilter;
+  const _BetList(
+      {required this.userId, required this.bName, this.statFilter});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -182,16 +214,44 @@ class _BetList extends ConsumerWidget {
     final aBets = aBetsAsync.valueOrNull;
     final cfg = cfgAsync.valueOrNull;
 
-    if (matches == null || bBets == null || aBets == null || cfg == null) {
+    // The "Do Contra" filter needs cross-pool data from a dedicated view.
+    final contrarianIds = statFilter == StatRanking.contrarian
+        ? ref.watch(contrarianMatchesProvider(userId)).valueOrNull
+        : const <String>{};
+
+    if (matches == null ||
+        bBets == null ||
+        aBets == null ||
+        cfg == null ||
+        contrarianIds == null) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 48),
         child: Center(child: CircularProgressIndicator()),
       );
     }
 
+    final visible = statFilter == null
+        ? matches
+        : _applyStatFilter(statFilter!, matches, bBets, contrarianIds);
+
+    if (visible.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+        child: Center(
+          child: Text(
+            AppLocalizations.of(context)!.statsNoGames,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: [
-        for (final m in matches)
+        for (final m in visible)
           BetComparisonCard(
             match: m,
             betB: bBets[m.id],
@@ -202,6 +262,83 @@ class _BetList extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Selects the matches relevant to a given statistic for the tapped player.
+/// Mirrors the criteria of the SQL ranking views so the detail matches the
+/// number shown on the card.
+List<MatchModel> _applyStatFilter(
+  StatRanking stat,
+  List<MatchModel> matches,
+  Map<String, BetModel> bBets,
+  Set<String> contrarianIds,
+) {
+  bool isBrazil(MatchModel m) =>
+      m.homeTeam.name == 'Brasil' || m.awayTeam.name == 'Brasil';
+  bool finished(MatchModel m) =>
+      m.status == MatchStatus.finished &&
+      m.homeScore != null &&
+      m.awayScore != null;
+
+  switch (stat) {
+    case StatRanking.brazilPoints:
+      return matches
+          .where((m) => isBrazil(m) && bBets[m.id] != null)
+          .toList();
+    case StatRanking.exactScore:
+      return matches.where((m) => (bBets[m.id]?.points ?? -1) == 3).toList();
+    case StatRanking.nearMiss:
+      return matches.where((m) {
+        final b = bBets[m.id];
+        if (b == null || !finished(m) || b.points >= 3) return false;
+        final d = (b.homeScoreBet - m.homeScore!).abs() +
+            (b.awayScoreBet - m.awayScore!).abs();
+        return d == 1;
+      }).toList();
+    case StatRanking.regularity:
+      return matches.where((m) {
+        final b = bBets[m.id];
+        return b != null && finished(m) && b.points > 0;
+      }).toList();
+    case StatRanking.boldness:
+      return matches.where((m) {
+        final b = bBets[m.id];
+        if (b == null) return false;
+        return (b.homeScoreBet - b.awayScoreBet).abs() >= 5 ||
+            (b.homeScoreBet + b.awayScoreBet) >= 7;
+      }).toList();
+    case StatRanking.dailyTop:
+      final ids = _bestDayMatchIds(matches, bBets);
+      return matches.where((m) => ids.contains(m.id)).toList();
+    case StatRanking.contrarian:
+      return matches.where((m) => contrarianIds.contains(m.id)).toList();
+  }
+}
+
+/// Match ids of the player's best single day (highest summed points), grouped
+/// in São Paulo time (UTC-3) to match the `daily_top_rankings` view.
+Set<String> _bestDayMatchIds(
+    List<MatchModel> matches, Map<String, BetModel> bBets) {
+  const spOffset = Duration(hours: -3);
+  final Map<String, int> dayPoints = {};
+  final Map<String, List<String>> dayMatchIds = {};
+
+  for (final m in matches) {
+    if (m.status != MatchStatus.finished || m.matchDate == null) continue;
+    final b = bBets[m.id];
+    if (b == null) continue;
+    final sp = m.matchDate!.toUtc().add(spOffset);
+    final key = '${sp.year}-${sp.month}-${sp.day}';
+    dayPoints[key] = (dayPoints[key] ?? 0) + b.points;
+    dayMatchIds.putIfAbsent(key, () => []).add(m.id);
+  }
+
+  if (dayPoints.isEmpty) return const {};
+  var bestKey = dayPoints.keys.first;
+  for (final e in dayPoints.entries) {
+    if (e.value > dayPoints[bestKey]!) bestKey = e.key;
+  }
+  return dayMatchIds[bestKey]!.toSet();
 }
 
 // ─────────────────────────────────────────────

@@ -14,6 +14,11 @@ final kBetDeadline = DateTime.utc(2026, 6, 11, 17, 30);
 // ─────────────────────────────────────────────
 const bool kDebugForceReveal = false;
 
+// Mínimo de palpites próprios para liberar a visualização das apostas de outros
+// jogadores (perfil visitante). Antes exigia todos os 72; agora basta atingir
+// este limite.
+const int kRevealMinBets = 65;
+
 bool get isBettingLocked =>
     (kDebugMode && kDebugForceReveal) ||
     DateTime.now().toUtc().isAfter(kBetDeadline);

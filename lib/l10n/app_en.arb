@@ -272,7 +272,7 @@
   "versusShort": "vs",
   "hiddenUntilKickoff": "Hidden until kickoff",
   "completeBetsToView": "Complete your bets to see others'",
-  "completeBetsToViewSub": "You must fill in all of your bets before you can view the other participants' predictions.",
+  "completeBetsToViewSub": "You must place at least 65 of your bets before you can view the other participants' predictions.",
   "rankPositionShort": "{rank}th place",
   "@rankPositionShort": {
     "placeholders": {

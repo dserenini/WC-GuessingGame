@@ -272,7 +272,7 @@
   "versusShort": "vs",
   "hiddenUntilKickoff": "Oculto até o jogo começar",
   "completeBetsToView": "Complete suas apostas para ver as dos outros",
-  "completeBetsToViewSub": "Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.",
+  "completeBetsToViewSub": "Você precisa preencher pelo menos 65 das suas apostas para visualizar os palpites dos outros participantes.",
   "rankPositionShort": "{rank}º lugar",
   "@rankPositionShort": {
     "placeholders": {

@@ -1393,7 +1393,7 @@ abstract class AppLocalizations {
   /// No description provided for @completeBetsToViewSub.
   ///
   /// In pt, this message translates to:
-  /// **'Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.'**
+  /// **'Você precisa preencher pelo menos 65 das suas apostas para visualizar os palpites dos outros participantes.'**
   String get completeBetsToViewSub;
 
   /// No description provided for @rankPositionShort.

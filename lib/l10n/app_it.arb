@@ -272,7 +272,7 @@
   "versusShort": "vs",
   "hiddenUntilKickoff": "Nascosto fino al fischio d'inizio",
   "completeBetsToView": "Completa le tue scommesse per vedere quelle degli altri",
-  "completeBetsToViewSub": "Devi compilare tutte le tue scommesse prima di poter vedere i pronostici degli altri partecipanti.",
+  "completeBetsToViewSub": "Devi inserire almeno 65 delle tue scommesse prima di poter vedere i pronostici degli altri partecipanti.",
   "rankPositionShort": "{rank}º posto",
   "@rankPositionShort": {
     "placeholders": {

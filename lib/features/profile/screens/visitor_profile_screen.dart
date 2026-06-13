@@ -12,8 +12,8 @@ import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 
 /// Read-only view of another user's bets, reached by tapping their name in a
 /// ranking. Each match shows B's bet with the viewer's own bet faded beneath it,
-/// gated by [canRevealMatch]. Access requires the viewer to have completed all
-/// their own bets (anti-copy gate).
+/// gated by [canRevealMatch]. Access requires the viewer to have placed at least
+/// [kRevealMinBets] of their own bets (anti-copy gate).
 class VisitorProfileScreen extends ConsumerWidget {
   final String userId;
   final RankingEntry? entry;
@@ -57,10 +57,14 @@ class VisitorProfileScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _Error(message: e.toString()),
         data: (myStats) {
-          // Access gate: only viewers who filled all their own bets may peek.
+          // Access gate: viewers who filled at least kRevealMinBets of their own
+          // bets may peek (não precisa mais preencher todos os jogos).
           // Bypassed in debug builds with kDebugForceReveal, for local testing.
+          final required = myStats.totalMatches < kRevealMinBets
+              ? myStats.totalMatches
+              : kRevealMinBets;
           final gateOpen = (kDebugMode && kDebugForceReveal) ||
-              myStats.totalBets >= myStats.totalMatches;
+              myStats.totalBets >= required;
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -77,7 +81,7 @@ class VisitorProfileScreen extends ConsumerWidget {
                 if (!gateOpen)
                   _AccessGate(
                     done: myStats.totalBets,
-                    total: myStats.totalMatches,
+                    total: required,
                     l: l,
                   )
                 else

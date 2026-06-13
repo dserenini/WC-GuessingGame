@@ -699,7 +699,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get completeBetsToViewSub =>
-      'Devi compilare tutte le tue scommesse prima di poter vedere i pronostici degli altri partecipanti.';
+      'Devi inserire almeno 65 delle tue scommesse prima di poter vedere i pronostici degli altri partecipanti.';
 
   @override
   String rankPositionShort(int rank) {

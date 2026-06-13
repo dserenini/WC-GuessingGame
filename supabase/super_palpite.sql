@@ -11,6 +11,16 @@ DECLARE
   -- Data Limite Global: 10 de Junho 2026, 23:59 GMT-3 = 11 de Junho 2026, 02:59 UTC
   GLOBAL_DEADLINE TIMESTAMPTZ := '2026-06-11 02:59:00+00'; 
 BEGIN
+  -- 0. BYPASS de updates internos do sistema (pontuação/rollback): não mudam o
+  --    placar do palpite. Sem isto, encerrar/pontuar um jogo falha
+  --    (calculate_bet_points faz UPDATE bets.points num jogo não-'scheduled').
+  --    Ver fix_finish_scoring.sql / fix_check_bet_deadline_combined.sql.
+  IF TG_OP = 'UPDATE'
+     AND OLD.home_score_bet = NEW.home_score_bet
+     AND OLD.away_score_bet = NEW.away_score_bet THEN
+    RETURN NEW;
+  END IF;
+
   -- 1. Obter informações da partida
   SELECT match_date, status::TEXT INTO v_match_date, v_match_status
   FROM matches WHERE id = NEW.match_id;

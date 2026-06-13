@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/core/constants.dart';
@@ -10,12 +11,54 @@ import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
+import 'package:copa2026/shared/providers/locale_provider.dart';
 import 'package:copa2026/shared/utils/bet_points.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/profile/screens/profile_completion_screen.dart';
 import 'package:copa2026/l10n/team_translator.dart';
+
+// Usuários cujo idioma já foi gravado na conta nesta sessão (evita backfill
+// repetido a cada rebuild da tela).
+final Set<String> _localeBackfilled = <String>{};
+
+const List<String> _supportedLocales = ['pt', 'en', 'it'];
+
+/// Mantém o idioma do app alinhado com a conta:
+///  - conta tem idioma salvo e diferente do atual -> aplica (usuário voltando
+///    em outro aparelho/navegador);
+///  - conta ainda sem idioma (usuário antigo) -> grava o idioma local atual na
+///    conta (backfill silencioso, uma vez por sessão), vinculando a escolha.
+void _syncAccountLocale(WidgetRef ref, ProfileStats stats) {
+  final current = ref.read(localeProvider).languageCode;
+  final saved = stats.locale?.trim() ?? '';
+
+  if (saved.isNotEmpty) {
+    if (_supportedLocales.contains(saved) && saved != current) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(localeProvider.notifier).setLocale(saved);
+      });
+    }
+    return;
+  }
+
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null || _localeBackfilled.contains(user.id)) return;
+  _localeBackfilled.add(user.id);
+  final lang = _supportedLocales.contains(current) ? current : 'pt';
+  _backfillAccountLocale(user.id, lang);
+}
+
+Future<void> _backfillAccountLocale(String userId, String lang) async {
+  // Fire-and-forget: se a RLS bloquear, apenas não persiste (não trava a UI).
+  try {
+    await Supabase.instance.client
+        .from('profiles')
+        .update({'locale': lang})
+        .eq('id', userId);
+  } catch (_) {}
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -41,9 +84,17 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       data: (stats) {
-        if (stats.fullName == null || stats.fullName!.trim().isEmpty || stats.phone == null || stats.phone!.trim().isEmpty) {
+        // Onboarding pendente enquanto NOME ou TELEFONE faltarem na conta.
+        // Fonte única de verdade (banco), então é pedido só uma vez — mesmo em
+        // outro aparelho/navegador. O idioma é coletado junto (tela única) mas
+        // não bloqueia aqui (ver backfill abaixo para usuários antigos).
+        final needsOnboarding = (stats.fullName == null || stats.fullName!.trim().isEmpty) ||
+            (stats.phone == null || stats.phone!.trim().isEmpty);
+        if (needsOnboarding) {
           return const ProfileCompletionScreen();
         }
+
+        _syncAccountLocale(ref, stats);
 
         return Scaffold(
           appBar: AppBar(

@@ -18,11 +18,10 @@ class LocaleNotifier extends StateNotifier<Locale> {
   LocaleNotifier(this._prefs) : super(Locale(_prefs.getString('locale') ?? 'pt'));
 
   Future<void> setLocale(String languageCode) async {
+    // Cache local do idioma (a fonte de verdade do onboarding é a conta:
+    // profiles.locale). Serve para a UI já abrir no idioma certo antes de o
+    // perfil carregar.
     await _prefs.setString('locale', languageCode);
-    // Automatically flag that onboarding language selection is done
-    await _prefs.setBool('has_selected_lang', true);
     state = Locale(languageCode);
   }
-
-  bool get hasSelectedLanguage => _prefs.getBool('has_selected_lang') ?? false;
 }

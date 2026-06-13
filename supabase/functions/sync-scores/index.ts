@@ -110,7 +110,7 @@ Deno.serve(async () => {
   const { data: matchesRaw, error: mErr } = await supabase
     .from("matches")
     .select(
-      "id, group_letter, home_score, away_score, status, " +
+      "id, group_letter, home_score, away_score, status, match_date, " +
         "home_team:teams!matches_home_team_id_fkey(name), " +
         "away_team:teams!matches_away_team_id_fkey(name)",
     );
@@ -119,6 +119,7 @@ Deno.serve(async () => {
   const byPair = new Map<string, {
     id: string; group: string; home: string; away: string;
     curHome: number | null; curAway: number | null; curStatus: string;
+    matchDate: string | null;
   }>();
   for (const m of matchesRaw ?? []) {
     const home = (m as any).home_team?.name;
@@ -127,6 +128,7 @@ Deno.serve(async () => {
     byPair.set(pairKey(m.group_letter, home, away), {
       id: m.id, group: m.group_letter, home, away,
       curHome: m.home_score, curAway: m.away_score, curStatus: m.status,
+      matchDate: m.match_date,
     });
   }
 
@@ -156,7 +158,29 @@ Deno.serve(async () => {
     }
     matched++;
 
-    const status = mapStatus(g.finished, g.time_elapsed);
+    let status = mapStatus(g.finished, g.time_elapsed);
+
+    // Guarda anti-lixo: a fonte é gratuita/não-oficial e às vezes reporta jogos
+    // FUTUROS como live/finished com placar de placeholder. Um jogo não pode
+    // estar ao vivo/encerrado antes do horário marcado — força 'scheduled' para
+    // não gravar placar fantasma nem pontuar palpites num placar inventado.
+    if (status !== "scheduled" && our.matchDate) {
+      const kickoff = new Date(our.matchDate).getTime();
+      if (Number.isFinite(kickoff) && kickoff > Date.now()) {
+        status = "scheduled";
+      }
+    }
+
+    // Trava anti-flap: só encerra (e pontua) um jogo que JÁ estava 'live' no
+    // nosso banco — evita o pulo scheduled->finished por flap da fonte. Se a
+    // fonte declara 'finished' mas ainda não passamos por 'live', rebaixa para
+    // 'live' neste ciclo (captura o placar provisório); no próximo poll, já com
+    // curStatus='live', o encerramento/pontuação acontece de fato.
+    if (status === "finished" && our.curStatus !== "live" &&
+        our.curStatus !== "finished") {
+      status = "live";
+    }
+
     const setScores = status !== "scheduled"; // não grava placar de jogo não iniciado
 
     // Orienta pela identidade do time (à prova de inversão mandante/visitante).
@@ -189,20 +213,22 @@ Deno.serve(async () => {
       continue;
     }
 
+    // Alvo: jogo iniciado guarda o placar; jogo 'scheduled' NÃO tem placar
+    // (limpa qualquer placar fantasma que tenha sobrado de um tick anterior).
+    const targetHome = setScores ? homeScore : null;
+    const targetAway = setScores ? awayScore : null;
+
     // LIVE: só escreve se mudou (evita disparos redundantes de trigger/pontos).
     const sameStatus = our.curStatus === status;
-    const sameScore = !setScores ||
-      (our.curHome === homeScore && our.curAway === awayScore);
+    const sameScore = our.curHome === targetHome && our.curAway === targetAway;
     if (sameStatus && sameScore) continue;
 
     const patch: Record<string, unknown> = {
       status,
       api_fixture_id: Number(g.id),
+      home_score: targetHome,
+      away_score: targetAway,
     };
-    if (setScores) {
-      patch.home_score = homeScore;
-      patch.away_score = awayScore;
-    }
 
     const { error: uErr } = await supabase.from("matches").update(patch).eq("id", our.id);
     if (uErr) {

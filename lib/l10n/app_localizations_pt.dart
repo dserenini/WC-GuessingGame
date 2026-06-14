@@ -276,6 +276,78 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statsNoGames => 'Nenhum jogo nesta estatística ainda';
 
   @override
+  String get statsPersonalEmpty => 'Seus números aparecem conforme os jogos acontecem';
+
+  @override
+  String get statGroupPointsTitle => 'Pontos por Grupo';
+
+  @override
+  String get statGroupPointsSub => 'Onde você mais e menos pontuou';
+
+  @override
+  String get statDistributionTitle => 'Distribuição de Acertos';
+
+  @override
+  String get statDistributionSub => 'Exatos, resultados e erros';
+
+  @override
+  String get statDistResult => 'resultados';
+
+  @override
+  String get statDistZero => 'erros';
+
+  @override
+  String get statUtilization => 'Aproveitamento';
+
+  @override
+  String get statSignatureTitle => 'Placar-assinatura';
+
+  @override
+  String get statSignatureSub => 'O placar que você mais aposta';
+
+  @override
+  String get statHandTitle => 'Média de Gols';
+
+  @override
+  String get statHandSub => 'Sua média de gols por jogo vs a média da realidade';
+
+  @override
+  String get statHandReal => 'Real';
+
+  @override
+  String get statGoalsPerGame => 'gols/jogo';
+
+  @override
+  String get statLuckyTitle => 'Amuleto da Sorte / Azar';
+
+  @override
+  String get statLuckySub => 'Seleções onde você mais e menos pontua';
+
+  @override
+  String get statLucky => 'Sorte';
+
+  @override
+  String get statUnlucky => 'Azar';
+
+  @override
+  String get statStreakTitle => 'Maior Sequência';
+
+  @override
+  String get statStreakSub => 'Jogos seguidos pontuando';
+
+  @override
+  String get statBest => 'Melhor';
+
+  @override
+  String get statWorst => 'Pior';
+
+  @override
+  String get statBestPlural => 'Melhores';
+
+  @override
+  String get statWorstPlural => 'Piores';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override

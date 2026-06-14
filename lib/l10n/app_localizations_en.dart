@@ -276,6 +276,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsNoGames => 'No games for this stat yet';
 
   @override
+  String get statsPersonalEmpty => 'Your numbers show up as the games happen';
+
+  @override
+  String get statGroupPointsTitle => 'Points by Group';
+
+  @override
+  String get statGroupPointsSub => 'Where you scored most and least';
+
+  @override
+  String get statDistributionTitle => 'Hit Breakdown';
+
+  @override
+  String get statDistributionSub => 'Exact, result and misses';
+
+  @override
+  String get statDistResult => 'results';
+
+  @override
+  String get statDistZero => 'misses';
+
+  @override
+  String get statUtilization => 'Efficiency';
+
+  @override
+  String get statSignatureTitle => 'Signature Score';
+
+  @override
+  String get statSignatureSub => 'The scoreline you bet most';
+
+  @override
+  String get statHandTitle => 'Goal Average';
+
+  @override
+  String get statHandSub => 'Your goals per game vs. the real average';
+
+  @override
+  String get statHandReal => 'Real';
+
+  @override
+  String get statGoalsPerGame => 'goals/game';
+
+  @override
+  String get statLuckyTitle => 'Lucky / Unlucky Charm';
+
+  @override
+  String get statLuckySub => 'Teams where you score most and least';
+
+  @override
+  String get statLucky => 'Lucky';
+
+  @override
+  String get statUnlucky => 'Unlucky';
+
+  @override
+  String get statStreakTitle => 'Longest Streak';
+
+  @override
+  String get statStreakSub => 'Consecutive games scoring';
+
+  @override
+  String get statBest => 'Best';
+
+  @override
+  String get statWorst => 'Worst';
+
+  @override
+  String get statBestPlural => 'Best';
+
+  @override
+  String get statWorstPlural => 'Worst';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override

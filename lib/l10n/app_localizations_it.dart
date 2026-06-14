@@ -277,6 +277,78 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statsNoGames => 'Ancora nessuna partita per questa statistica';
 
   @override
+  String get statsPersonalEmpty => 'I tuoi numeri compaiono man mano che si giocano le partite';
+
+  @override
+  String get statGroupPointsTitle => 'Punti per Girone';
+
+  @override
+  String get statGroupPointsSub => 'Dove hai fatto più e meno punti';
+
+  @override
+  String get statDistributionTitle => 'Distribuzione Esiti';
+
+  @override
+  String get statDistributionSub => 'Esatti, risultati ed errori';
+
+  @override
+  String get statDistResult => 'risultati';
+
+  @override
+  String get statDistZero => 'errori';
+
+  @override
+  String get statUtilization => 'Efficienza';
+
+  @override
+  String get statSignatureTitle => 'Risultato firma';
+
+  @override
+  String get statSignatureSub => 'Il risultato che giochi di più';
+
+  @override
+  String get statHandTitle => 'Media Gol';
+
+  @override
+  String get statHandSub => 'La tua media gol a partita vs la media reale';
+
+  @override
+  String get statHandReal => 'Reale';
+
+  @override
+  String get statGoalsPerGame => 'gol/partita';
+
+  @override
+  String get statLuckyTitle => 'Amuleto Fortuna / Sfortuna';
+
+  @override
+  String get statLuckySub => 'Squadre dove fai più e meno punti';
+
+  @override
+  String get statLucky => 'Fortuna';
+
+  @override
+  String get statUnlucky => 'Sfortuna';
+
+  @override
+  String get statStreakTitle => 'Serie più Lunga';
+
+  @override
+  String get statStreakSub => 'Partite di fila a punti';
+
+  @override
+  String get statBest => 'Migliore';
+
+  @override
+  String get statWorst => 'Peggiore';
+
+  @override
+  String get statBestPlural => 'Migliori';
+
+  @override
+  String get statWorstPlural => 'Peggiori';
+
+  @override
   String get statPointsUnit => 'pti';
 
   @override

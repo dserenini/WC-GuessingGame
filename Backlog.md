@@ -19,7 +19,7 @@
   - 👑 Rei do Placar Exato (`points=3`, com pódio) · 🇧🇷 Pé-quente do Brasil (jogos do grupo C) · 🎯 Quase lá (errou o placar exato por 1 gol) · 🔥 Tacada do Dia (maior pontuação num único dia).
   - 📈 Mais Regular (pontuou no maior número de jogos finalizados) · 🎲 Os Corajosos (mais palpites ousados, ≥4 gols somados — oposto do Cartola) · 🗳️ Do Contra que Acertou (cravou placar que <20% do bolão apostou).
 
-  **B. Seu Raio-X pessoal** ✅ _(client-side)_
+  **B. Seu Raio-X pessoal (aba Pessoal)** — ✅ **COMPLETA** _(client-side)_
   - 📊 Pontos por Grupo (barras A→L, destaque melhor/pior) · 🍩 Distribuição 3/1/0 + aproveitamento · 🔢 Placar-assinatura (o resultado que você mais aposta) · ✋ Sua mão (média de gols previstos vs. real) · 🍀 Time da sorte / 💀 Time do azar · ⚡ Maior sequência pontuando.
 
   **C. Momentos & "Quase"** ✅ _(client-side)_

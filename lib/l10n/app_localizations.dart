@@ -544,6 +544,78 @@ abstract class AppLocalizations {
   /// No description provided for @statsNoGames.
   String get statsNoGames;
 
+  /// No description provided for @statsPersonalEmpty.
+  String get statsPersonalEmpty;
+
+  /// No description provided for @statGroupPointsTitle.
+  String get statGroupPointsTitle;
+
+  /// No description provided for @statGroupPointsSub.
+  String get statGroupPointsSub;
+
+  /// No description provided for @statDistributionTitle.
+  String get statDistributionTitle;
+
+  /// No description provided for @statDistributionSub.
+  String get statDistributionSub;
+
+  /// No description provided for @statDistResult.
+  String get statDistResult;
+
+  /// No description provided for @statDistZero.
+  String get statDistZero;
+
+  /// No description provided for @statUtilization.
+  String get statUtilization;
+
+  /// No description provided for @statSignatureTitle.
+  String get statSignatureTitle;
+
+  /// No description provided for @statSignatureSub.
+  String get statSignatureSub;
+
+  /// No description provided for @statHandTitle.
+  String get statHandTitle;
+
+  /// No description provided for @statHandSub.
+  String get statHandSub;
+
+  /// No description provided for @statHandReal.
+  String get statHandReal;
+
+  /// No description provided for @statGoalsPerGame.
+  String get statGoalsPerGame;
+
+  /// No description provided for @statLuckyTitle.
+  String get statLuckyTitle;
+
+  /// No description provided for @statLuckySub.
+  String get statLuckySub;
+
+  /// No description provided for @statLucky.
+  String get statLucky;
+
+  /// No description provided for @statUnlucky.
+  String get statUnlucky;
+
+  /// No description provided for @statStreakTitle.
+  String get statStreakTitle;
+
+  /// No description provided for @statStreakSub.
+  String get statStreakSub;
+
+  /// No description provided for @statBest.
+  String get statBest;
+
+  /// No description provided for @statWorst.
+  String get statWorst;
+
+  /// No description provided for @statBestPlural.
+  String get statBestPlural;
+
+  /// No description provided for @statWorstPlural.
+  String get statWorstPlural;
+
   /// No description provided for @statPointsUnit.
   String get statPointsUnit;
 

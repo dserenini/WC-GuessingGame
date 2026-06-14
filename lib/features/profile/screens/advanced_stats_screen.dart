@@ -3,10 +3,12 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart';
 import 'package:copa2026/features/profile/widgets/stat_ranking_card.dart';
+import 'package:copa2026/features/profile/widgets/personal_stats_cards.dart';
 
-/// Tela dedicada de "Estatísticas Avançadas" com abas. Esta v1 entrega apenas
-/// a aba Rankings (família A); as demais ficam como placeholder para já
-/// estabelecer a estrutura de navegação.
+/// Tela dedicada de "Estatísticas Avançadas" com abas. Famílias A (Rankings) e
+/// B (Pessoal) entregues. As abas "Conquistas" e "Bolão" ficam ocultas até
+/// serem implementadas — basta voltar a length: 4 e reincluir as Tabs/children
+/// (rótulos l.statsTabAchievements / l.statsTabPool já existem no i18n).
 class AdvancedStatsScreen extends StatelessWidget {
   const AdvancedStatsScreen({super.key});
 
@@ -15,27 +17,21 @@ class AdvancedStatsScreen extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
 
     return DefaultTabController(
-      length: 4,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: Text('📊 ${l.advancedStats}'),
           bottom: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: l.statsTabRankings),
               Tab(text: l.statsTabPersonal),
-              Tab(text: l.statsTabAchievements),
-              Tab(text: l.statsTabPool),
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
-            const _RankingsTab(),
-            _ComingSoonTab(label: l.statsTabPersonal),
-            _ComingSoonTab(label: l.statsTabAchievements),
-            _ComingSoonTab(label: l.statsTabPool),
+            _RankingsTab(),
+            PersonalStatsTab(),
           ],
         ),
       ),
@@ -108,40 +104,3 @@ class _RankingsTab extends StatelessWidget {
   }
 }
 
-class _ComingSoonTab extends StatelessWidget {
-  final String label;
-  const _ComingSoonTab({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l = AppLocalizations.of(context)!;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🚧', style: TextStyle(fontSize: 36)),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l.statsComingSoon,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurface.withOpacity(0.55),
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

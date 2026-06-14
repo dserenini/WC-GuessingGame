@@ -14,17 +14,38 @@ import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 /// ranking. Each match shows B's bet with the viewer's own bet faded beneath it,
 /// gated by [canRevealMatch]. Access requires the viewer to have placed at least
 /// [kRevealMinBets] of their own bets (anti-copy gate).
-class VisitorProfileScreen extends ConsumerWidget {
+class VisitorProfileScreen extends ConsumerStatefulWidget {
   final String userId;
   final RankingEntry? entry;
 
   const VisitorProfileScreen({super.key, required this.userId, this.entry});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VisitorProfileScreen> createState() =>
+      _VisitorProfileScreenState();
+}
+
+class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Consistência da comparação: a SUA aposta (allBetsProvider — global e de
+    // vida longa) costumava vir do cache enquanto a do jogador
+    // (userBetsProvider — criado na hora) vinha fresca. Após uma pontuação ao
+    // vivo, isso fazia o SEU ponto aparecer desatualizado (0) ao lado do dele
+    // (atualizado). Ao abrir o perfil de qualquer jogador, forçamos os dois — e
+    // os jogos, p/ placar/status — a buscar do servidor JUNTOS. Para jogo
+    // encerrado o badge lê bet.points do banco (ver bet_comparison_card.dart).
+    ref.invalidate(allBetsProvider);
+    ref.invalidate(userBetsProvider(widget.userId));
+    ref.invalidate(allMatchesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final name = entry?.displayName ?? '';
+    final name = widget.entry?.displayName ?? '';
     final myStatsAsync = ref.watch(profileStatsProvider);
 
     return Scaffold(
@@ -69,7 +90,7 @@ class VisitorProfileScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(allMatchesProvider);
-              ref.invalidate(userBetsProvider(userId));
+              ref.invalidate(userBetsProvider(widget.userId));
               ref.invalidate(allBetsProvider);
               ref.invalidate(revealConfigProvider);
               ref.invalidate(profileStatsProvider);
@@ -77,7 +98,7 @@ class VisitorProfileScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
-                _VisitorHeader(name: name, entry: entry, l: l),
+                _VisitorHeader(name: name, entry: widget.entry, l: l),
                 if (!gateOpen)
                   _AccessGate(
                     done: myStats.totalBets,
@@ -85,7 +106,7 @@ class VisitorProfileScreen extends ConsumerWidget {
                     l: l,
                   )
                 else
-                  _BetList(userId: userId, bName: name),
+                  _BetList(userId: widget.userId, bName: name),
               ],
             ),
           );

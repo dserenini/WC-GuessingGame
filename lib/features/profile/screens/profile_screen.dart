@@ -60,11 +60,29 @@ Future<void> _backfillAccountLocale(String userId, String lang) async {
   } catch (_) {}
 }
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // "Jogos do dia" mostra a SUA aposta (allBetsProvider) e o placar/status
+    // (allMatchesProvider via matchesOfDayProvider). Ambos são providers globais
+    // de vida longa: após uma pontuação ao vivo no servidor não se atualizam
+    // sozinhos, então o seu ponto podia ficar velho até um refresh forte. Ao
+    // abrir o perfil, forçamos os dois a buscar do servidor. (Mesma correção do
+    // perfil visitante.)
+    ref.invalidate(allBetsProvider);
+    ref.invalidate(allMatchesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(profileStatsProvider);
     final cs = Theme.of(context).colorScheme;
@@ -114,7 +132,11 @@ class ProfileScreen extends ConsumerWidget {
           ),
           drawer: const AppDrawer(),
           body: RefreshIndicator(
-            onRefresh: () async => ref.invalidate(profileStatsProvider),
+            onRefresh: () async {
+              ref.invalidate(profileStatsProvider);
+              ref.invalidate(allBetsProvider);
+              ref.invalidate(allMatchesProvider);
+            },
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [

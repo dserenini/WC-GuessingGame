@@ -22,7 +22,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
 
   <!-- Inter font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,6 +96,66 @@
       splash.classList.add('hidden');
       setTimeout(() => splash.remove(), 500);
     });
+  </script>
+
+  <!--
+    PWA: registra o nosso service worker (sw.js) e mantém o app sempre
+    atualizado. Quando uma versão nova é publicada, o SW novo assume o controle
+    e a página recarrega sozinha — sem precisar reinstalar o app.
+  -->
+  <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+
+      var reloading = false;
+      var updateApplied = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        // Ignora a primeira tomada de controle (instalação inicial); só
+        // recarrega quando aplicamos uma atualização de verdade.
+        if (!updateApplied || reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+
+      function applyUpdate(worker) {
+        if (!worker) return;
+        updateApplied = true;
+        worker.postMessage('skipWaiting');
+      }
+
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          // Atualização que já estava esperando quando o app foi (re)aberto.
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            applyUpdate(reg.waiting);
+          }
+
+          reg.addEventListener('updatefound', function () {
+            var nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', function () {
+              // Só é atualização se já existia um controlador antes.
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                applyUpdate(nw);
+              }
+            });
+          });
+
+          function checkForUpdate() { reg.update().catch(function () {}); }
+
+          // Checa por nova versão ao voltar o foco / reabrir o PWA.
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkForUpdate();
+          });
+          window.addEventListener('focus', checkForUpdate);
+          // Rede de segurança enquanto o app fica aberto.
+          setInterval(checkForUpdate, 15 * 60 * 1000);
+        }).catch(function (e) {
+          console.warn('Falha ao registrar o service worker:', e);
+        });
+      });
+    })();
   </script>
 
   <!-- Flutter bootstrap -->

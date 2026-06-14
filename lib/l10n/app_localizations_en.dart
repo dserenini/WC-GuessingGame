@@ -201,7 +201,169 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedStats => 'Advanced Stats';
 
   @override
-  String get advancedStatsSub => 'By group, round, team — coming soon!';
+  String get advancedStatsSub => 'See how you stack up against the pool';
+
+  @override
+  String get statsTabRankings => 'Rankings';
+
+  @override
+  String get statsTabPersonal => 'Personal';
+
+  @override
+  String get statsTabAchievements => 'Achievements';
+
+  @override
+  String get statsTabPool => 'Pool';
+
+  @override
+  String get statExactTitle => 'Exact Score King';
+
+  @override
+  String get statExactSub => 'Who nailed the most exact scores';
+
+  @override
+  String get statExactUnit => 'exact';
+
+  @override
+  String get statBrazilTitle => 'Brazil\'s Lucky Charm';
+
+  @override
+  String get statBrazilSub => 'Who scored the most on Brazil\'s matches';
+
+  @override
+  String get statNearMissTitle => 'So Close';
+
+  @override
+  String get statNearMissSub => 'Got the result but missed the score by 1 goal';
+
+  @override
+  String get statNearMissUnit => 'near';
+
+  @override
+  String get statDailyTitle => 'Best Day';
+
+  @override
+  String get statDailySub => 'Highest points in a single day';
+
+  @override
+  String get statRegularTitle => 'Most Consistent';
+
+  @override
+  String get statRegularSub => 'Scored in the most matches';
+
+  @override
+  String get statRegularUnit => 'games';
+
+  @override
+  String get statBoldTitle => 'The Bold Ones';
+
+  @override
+  String get statBoldSub => 'Who bets the riskiest scorelines';
+
+  @override
+  String get statBoldUnit => 'bold';
+
+  @override
+  String get statContrarianTitle => 'Right Against the Crowd';
+
+  @override
+  String get statContrarianSub => 'Nailed scores almost nobody picked';
+
+  @override
+  String get statContrarianUnit => 'rare';
+
+  @override
+  String get statsNoGames => 'No games for this stat yet';
+
+  @override
+  String get statsPersonalEmpty => 'Your numbers show up as the games happen';
+
+  @override
+  String get statGroupPointsTitle => 'Points by Group';
+
+  @override
+  String get statGroupPointsSub => 'Where you scored most and least';
+
+  @override
+  String get statDistributionTitle => 'Hit Breakdown';
+
+  @override
+  String get statDistributionSub => 'Exact, result and misses';
+
+  @override
+  String get statDistResult => 'results';
+
+  @override
+  String get statDistZero => 'misses';
+
+  @override
+  String get statUtilization => 'Efficiency';
+
+  @override
+  String get statSignatureTitle => 'Signature Score';
+
+  @override
+  String get statSignatureSub => 'The scoreline you bet most';
+
+  @override
+  String get statHandTitle => 'Goal Average';
+
+  @override
+  String get statHandSub => 'Your goals per game vs. the real average';
+
+  @override
+  String get statHandReal => 'Real';
+
+  @override
+  String get statGoalsPerGame => 'goals/game';
+
+  @override
+  String get statLuckyTitle => 'Lucky / Unlucky Charm';
+
+  @override
+  String get statLuckySub => 'Teams where you score most and least';
+
+  @override
+  String get statLucky => 'Lucky';
+
+  @override
+  String get statUnlucky => 'Unlucky';
+
+  @override
+  String get statStreakTitle => 'Longest Streak';
+
+  @override
+  String get statStreakSub => 'Consecutive games scoring';
+
+  @override
+  String get statBest => 'Best';
+
+  @override
+  String get statWorst => 'Worst';
+
+  @override
+  String get statBestPlural => 'Best';
+
+  @override
+  String get statWorstPlural => 'Worst';
+
+  @override
+  String get statPointsUnit => 'pts';
+
+  @override
+  String get statsYou => 'You';
+
+  @override
+  String get statsSeeAll => 'See all';
+
+  @override
+  String get statsComingSoon => 'Coming soon to this tab!';
+
+  @override
+  String get statsEmpty => 'Not enough data yet';
+
+  @override
+  String get statsError => 'Couldn\'t load';
 
   @override
   String get deleteBet => 'Delete Bet';

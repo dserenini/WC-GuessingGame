@@ -201,7 +201,169 @@ class AppLocalizationsPt extends AppLocalizations {
   String get advancedStats => 'Estatísticas Avançadas';
 
   @override
-  String get advancedStatsSub => 'Por grupo, rodada, seleção — em breve!';
+  String get advancedStatsSub => 'Veja como você se compara ao bolão';
+
+  @override
+  String get statsTabRankings => 'Rankings';
+
+  @override
+  String get statsTabPersonal => 'Pessoal';
+
+  @override
+  String get statsTabAchievements => 'Conquistas';
+
+  @override
+  String get statsTabPool => 'Bolão';
+
+  @override
+  String get statExactTitle => 'Rei do Placar Exato';
+
+  @override
+  String get statExactSub => 'Quem mais cravou o placar';
+
+  @override
+  String get statExactUnit => 'exatos';
+
+  @override
+  String get statBrazilTitle => 'Pé-quente do Brasil';
+
+  @override
+  String get statBrazilSub => 'Quem mais pontuou nos jogos do Brasil';
+
+  @override
+  String get statNearMissTitle => 'Quase lá';
+
+  @override
+  String get statNearMissSub => 'Cravaria o resultado, mas ficou no quase por 1 gol';
+
+  @override
+  String get statNearMissUnit => 'quase';
+
+  @override
+  String get statDailyTitle => 'Tacada do Dia';
+
+  @override
+  String get statDailySub => 'Maior pontuação num único dia';
+
+  @override
+  String get statRegularTitle => 'Mais Regular';
+
+  @override
+  String get statRegularSub => 'Pontuou no maior número de jogos';
+
+  @override
+  String get statRegularUnit => 'jogos';
+
+  @override
+  String get statBoldTitle => 'Os Corajosos';
+
+  @override
+  String get statBoldSub => 'Quem arrisca os placares mais ousados';
+
+  @override
+  String get statBoldUnit => 'ousados';
+
+  @override
+  String get statContrarianTitle => 'Do Contra que Acertou';
+
+  @override
+  String get statContrarianSub => 'Cravou placares que quase ninguém apostou';
+
+  @override
+  String get statContrarianUnit => 'raras';
+
+  @override
+  String get statsNoGames => 'Nenhum jogo nesta estatística ainda';
+
+  @override
+  String get statsPersonalEmpty => 'Seus números aparecem conforme os jogos acontecem';
+
+  @override
+  String get statGroupPointsTitle => 'Pontos por Grupo';
+
+  @override
+  String get statGroupPointsSub => 'Onde você mais e menos pontuou';
+
+  @override
+  String get statDistributionTitle => 'Distribuição de Acertos';
+
+  @override
+  String get statDistributionSub => 'Exatos, resultados e erros';
+
+  @override
+  String get statDistResult => 'resultados';
+
+  @override
+  String get statDistZero => 'erros';
+
+  @override
+  String get statUtilization => 'Aproveitamento';
+
+  @override
+  String get statSignatureTitle => 'Placar-assinatura';
+
+  @override
+  String get statSignatureSub => 'O placar que você mais aposta';
+
+  @override
+  String get statHandTitle => 'Média de Gols';
+
+  @override
+  String get statHandSub => 'Sua média de gols por jogo vs a média da realidade';
+
+  @override
+  String get statHandReal => 'Real';
+
+  @override
+  String get statGoalsPerGame => 'gols/jogo';
+
+  @override
+  String get statLuckyTitle => 'Amuleto da Sorte / Azar';
+
+  @override
+  String get statLuckySub => 'Seleções onde você mais e menos pontua';
+
+  @override
+  String get statLucky => 'Sorte';
+
+  @override
+  String get statUnlucky => 'Azar';
+
+  @override
+  String get statStreakTitle => 'Maior Sequência';
+
+  @override
+  String get statStreakSub => 'Jogos seguidos pontuando';
+
+  @override
+  String get statBest => 'Melhor';
+
+  @override
+  String get statWorst => 'Pior';
+
+  @override
+  String get statBestPlural => 'Melhores';
+
+  @override
+  String get statWorstPlural => 'Piores';
+
+  @override
+  String get statPointsUnit => 'pts';
+
+  @override
+  String get statsYou => 'Você';
+
+  @override
+  String get statsSeeAll => 'Ver todos';
+
+  @override
+  String get statsComingSoon => 'Em breve, nesta aba!';
+
+  @override
+  String get statsEmpty => 'Ainda não há dados suficientes';
+
+  @override
+  String get statsError => 'Não foi possível carregar';
 
   @override
   String get deleteBet => 'Deletar Aposta';

@@ -27,6 +27,10 @@ class BetComparisonCard extends ConsumerWidget {
   /// Whether B's bet may be shown (decided by canRevealMatch).
   final bool revealed;
 
+  /// When false, the faded "your bet" row is omitted — used for self views
+  /// (e.g. the personal-stats detail) where betB already is the viewer's bet.
+  final bool showViewerRow;
+
   const BetComparisonCard({
     super.key,
     required this.match,
@@ -34,6 +38,7 @@ class BetComparisonCard extends ConsumerWidget {
     required this.betA,
     required this.bDisplayName,
     required this.revealed,
+    this.showViewerRow = true,
   });
 
   @override
@@ -119,16 +124,18 @@ class BetComparisonCard extends ConsumerWidget {
               faded: false,
               l: l,
             ),
-            const SizedBox(height: 6),
-            _BetRow(
-              label: l.yourBet,
-              initial: null,
-              bet: betA,
-              points: pointsFor(betA),
-              isPartial: isPartial,
-              faded: true,
-              l: l,
-            ),
+            if (showViewerRow) ...[
+              const SizedBox(height: 6),
+              _BetRow(
+                label: l.yourBet,
+                initial: null,
+                bet: betA,
+                points: pointsFor(betA),
+                isPartial: isPartial,
+                faded: true,
+                l: l,
+              ),
+            ],
           ],
         ),
       ),

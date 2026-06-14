@@ -202,7 +202,169 @@ class AppLocalizationsIt extends AppLocalizations {
   String get advancedStats => 'Statistiche Avanzate';
 
   @override
-  String get advancedStatsSub => 'Per gruppo, turno, squadra — in arrivo!';
+  String get advancedStatsSub => 'Scopri come ti confronti con il girone';
+
+  @override
+  String get statsTabRankings => 'Classifiche';
+
+  @override
+  String get statsTabPersonal => 'Personale';
+
+  @override
+  String get statsTabAchievements => 'Traguardi';
+
+  @override
+  String get statsTabPool => 'Girone';
+
+  @override
+  String get statExactTitle => 'Re del Risultato Esatto';
+
+  @override
+  String get statExactSub => 'Chi ha azzeccato più risultati esatti';
+
+  @override
+  String get statExactUnit => 'esatti';
+
+  @override
+  String get statBrazilTitle => 'Portafortuna del Brasile';
+
+  @override
+  String get statBrazilSub => 'Chi ha fatto più punti sulle partite del Brasile';
+
+  @override
+  String get statNearMissTitle => 'Quasi';
+
+  @override
+  String get statNearMissSub => 'Ha azzeccato l\'esito ma sbagliato il risultato per 1 gol';
+
+  @override
+  String get statNearMissUnit => 'quasi';
+
+  @override
+  String get statDailyTitle => 'Giornata Top';
+
+  @override
+  String get statDailySub => 'Punteggio più alto in un solo giorno';
+
+  @override
+  String get statRegularTitle => 'Più Regolare';
+
+  @override
+  String get statRegularSub => 'Ha fatto punti nel maggior numero di partite';
+
+  @override
+  String get statRegularUnit => 'partite';
+
+  @override
+  String get statBoldTitle => 'I Coraggiosi';
+
+  @override
+  String get statBoldSub => 'Chi rischia i risultati più audaci';
+
+  @override
+  String get statBoldUnit => 'audaci';
+
+  @override
+  String get statContrarianTitle => 'Controcorrente vincente';
+
+  @override
+  String get statContrarianSub => 'Ha azzeccato risultati che quasi nessuno ha scelto';
+
+  @override
+  String get statContrarianUnit => 'rare';
+
+  @override
+  String get statsNoGames => 'Ancora nessuna partita per questa statistica';
+
+  @override
+  String get statsPersonalEmpty => 'I tuoi numeri compaiono man mano che si giocano le partite';
+
+  @override
+  String get statGroupPointsTitle => 'Punti per Girone';
+
+  @override
+  String get statGroupPointsSub => 'Dove hai fatto più e meno punti';
+
+  @override
+  String get statDistributionTitle => 'Distribuzione Esiti';
+
+  @override
+  String get statDistributionSub => 'Esatti, risultati ed errori';
+
+  @override
+  String get statDistResult => 'risultati';
+
+  @override
+  String get statDistZero => 'errori';
+
+  @override
+  String get statUtilization => 'Efficienza';
+
+  @override
+  String get statSignatureTitle => 'Risultato firma';
+
+  @override
+  String get statSignatureSub => 'Il risultato che giochi di più';
+
+  @override
+  String get statHandTitle => 'Media Gol';
+
+  @override
+  String get statHandSub => 'La tua media gol a partita vs la media reale';
+
+  @override
+  String get statHandReal => 'Reale';
+
+  @override
+  String get statGoalsPerGame => 'gol/partita';
+
+  @override
+  String get statLuckyTitle => 'Amuleto Fortuna / Sfortuna';
+
+  @override
+  String get statLuckySub => 'Squadre dove fai più e meno punti';
+
+  @override
+  String get statLucky => 'Fortuna';
+
+  @override
+  String get statUnlucky => 'Sfortuna';
+
+  @override
+  String get statStreakTitle => 'Serie più Lunga';
+
+  @override
+  String get statStreakSub => 'Partite di fila a punti';
+
+  @override
+  String get statBest => 'Migliore';
+
+  @override
+  String get statWorst => 'Peggiore';
+
+  @override
+  String get statBestPlural => 'Migliori';
+
+  @override
+  String get statWorstPlural => 'Peggiori';
+
+  @override
+  String get statPointsUnit => 'pti';
+
+  @override
+  String get statsYou => 'Tu';
+
+  @override
+  String get statsSeeAll => 'Vedi tutti';
+
+  @override
+  String get statsComingSoon => 'Presto in questa scheda!';
+
+  @override
+  String get statsEmpty => 'Dati ancora insufficienti';
+
+  @override
+  String get statsError => 'Caricamento non riuscito';
 
   @override
   String get deleteBet => 'Elimina Scommessa';

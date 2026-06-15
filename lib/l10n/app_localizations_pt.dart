@@ -444,7 +444,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achDiaCheioName => 'Dia Cheio';
 
   @override
-  String get achDiaCheioDesc => 'Pontue em todos os jogos de um dia';
+  String get achDiaCheioDesc => 'Pontue em todos os jogos de um dia (com 3+ jogos)';
 
   @override
   String get achVoltaName => 'Volta ao Mundo';

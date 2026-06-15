@@ -167,7 +167,7 @@
   "achPequenteName": "Caldissimo",
   "achPequenteDesc": "Fai punti in 5 partite di fila",
   "achDiaCheioName": "Giornata Piena",
-  "achDiaCheioDesc": "Fai punti in tutte le partite di un giorno",
+  "achDiaCheioDesc": "Fai punti in tutte le partite di un giorno (con 3+ partite)",
   "achVoltaName": "Giro del Mondo",
   "achVoltaDesc": "Fai punti in tutti i gironi",
   "achDonoName": "Padrone del Girone",

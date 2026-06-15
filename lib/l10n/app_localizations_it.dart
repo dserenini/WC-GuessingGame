@@ -445,7 +445,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achDiaCheioName => 'Giornata Piena';
 
   @override
-  String get achDiaCheioDesc => 'Fai punti in tutte le partite di un giorno';
+  String get achDiaCheioDesc => 'Fai punti in tutte le partite di un giorno (con 3+ partite)';
 
   @override
   String get achVoltaName => 'Giro del Mondo';

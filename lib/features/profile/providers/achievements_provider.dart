@@ -149,9 +149,13 @@ List<AchievementState> _compute(
     }
   }
 
-  // Best day for "Dia Cheio" (highest scored/total ratio; tie → more games).
+  // "Dia Cheio" só conta dias com pelo menos 3 jogos — senão quem pontuou no
+  // único jogo de um dia ganharia o emblema de graça. Melhor dia = maior razão
+  // acertos/jogos (desempate: mais jogos).
+  const minGamesForFullDay = 3;
   String? bestDay;
   for (final k in dayTotal.keys) {
+    if (dayTotal[k]! < minGamesForFullDay) continue;
     if (bestDay == null) {
       bestDay = k;
       continue;
@@ -193,7 +197,7 @@ List<AchievementState> _compute(
     AchievementState(
         key: 'diacheio',
         current: bestDay == null ? 0 : (dayScored[bestDay] ?? 0),
-        target: bestDay == null ? 1 : dayTotal[bestDay]!,
+        target: bestDay == null ? minGamesForFullDay : dayTotal[bestDay]!,
         evidence: bestDay == null ? const [] : (dayIds[bestDay] ?? const [])),
     AchievementState(
         key: 'voltamundo',

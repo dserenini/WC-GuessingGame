@@ -167,7 +167,7 @@
   "achPequenteName": "Pé-quente",
   "achPequenteDesc": "Pontue em 5 jogos seguidos",
   "achDiaCheioName": "Dia Cheio",
-  "achDiaCheioDesc": "Pontue em todos os jogos de um dia",
+  "achDiaCheioDesc": "Pontue em todos os jogos de um dia (com 3+ jogos)",
   "achVoltaName": "Volta ao Mundo",
   "achVoltaDesc": "Pontue em todos os grupos",
   "achDonoName": "Dono do Grupo",

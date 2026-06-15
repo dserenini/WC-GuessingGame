@@ -444,7 +444,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achDiaCheioName => 'Full Day';
 
   @override
-  String get achDiaCheioDesc => 'Score in every game of a day';
+  String get achDiaCheioDesc => 'Score in every game of a day (with 3+ games)';
 
   @override
   String get achVoltaName => 'Around the World';

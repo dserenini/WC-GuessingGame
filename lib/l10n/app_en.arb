@@ -167,7 +167,7 @@
   "achPequenteName": "Red Hot",
   "achPequenteDesc": "Score in 5 games in a row",
   "achDiaCheioName": "Full Day",
-  "achDiaCheioDesc": "Score in every game of a day",
+  "achDiaCheioDesc": "Score in every game of a day (with 3+ games)",
   "achVoltaName": "Around the World",
   "achVoltaDesc": "Score in every group",
   "achDonoName": "Group Boss",

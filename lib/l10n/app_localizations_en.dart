@@ -1048,4 +1048,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errSyncFailed =>
       'Couldn\'t sync the spreadsheet. Check your connection and try again.';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterRound1 => 'Round 1';
+
+  @override
+  String get filterRound2 => 'Round 2';
+
+  @override
+  String get filterRound3 => 'Round 3';
+
+  @override
+  String get filterDay => 'Today';
+
+  @override
+  String get filterFinished => 'Finished';
+
+  @override
+  String get filterUnfinished => 'Not finished';
+
+  @override
+  String get filterExact => 'Exact score';
+
+  @override
+  String get filterResult => 'Result';
+
+  @override
+  String get filterLost => 'Missed';
+
+  @override
+  String get filterNoGames => 'No games match these filters';
 }

@@ -393,5 +393,16 @@
   "errBetMatchStarted": "This match already started or ended — you can't change the bet.",
   "errBetDeadlinePassed": "The deadline to change this bet has passed (less than 1 hour to kickoff).",
   "errSuperPalpiteLimit": "You've already used all 10 Super Bets.",
-  "errSyncFailed": "Couldn't sync the spreadsheet. Check your connection and try again."
+  "errSyncFailed": "Couldn't sync the spreadsheet. Check your connection and try again.",
+  "filterAll": "All",
+  "filterRound1": "Round 1",
+  "filterRound2": "Round 2",
+  "filterRound3": "Round 3",
+  "filterDay": "Today",
+  "filterFinished": "Finished",
+  "filterUnfinished": "Not finished",
+  "filterExact": "Exact score",
+  "filterResult": "Result",
+  "filterLost": "Missed",
+  "filterNoGames": "No games match these filters"
 }

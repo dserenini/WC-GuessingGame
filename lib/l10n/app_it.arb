@@ -393,5 +393,16 @@
   "errBetMatchStarted": "La partita è già iniziata o terminata — non puoi modificare il pronostico.",
   "errBetDeadlinePassed": "Il termine per modificare questo pronostico è scaduto (meno di 1 ora al fischio d'inizio).",
   "errSuperPalpiteLimit": "Hai già usato tutti i 10 Super Pronostici.",
-  "errSyncFailed": "Impossibile sincronizzare il foglio. Controlla la connessione e riprova."
+  "errSyncFailed": "Impossibile sincronizzare il foglio. Controlla la connessione e riprova.",
+  "filterAll": "Tutti",
+  "filterRound1": "Giornata 1",
+  "filterRound2": "Giornata 2",
+  "filterRound3": "Giornata 3",
+  "filterDay": "Di oggi",
+  "filterFinished": "Finite",
+  "filterUnfinished": "Non finite",
+  "filterExact": "Risultato esatto",
+  "filterResult": "Esito",
+  "filterLost": "Persa",
+  "filterNoGames": "Nessuna partita con questi filtri"
 }

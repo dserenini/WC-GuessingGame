@@ -234,7 +234,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statNearMissTitle => 'Quase lá';
 
   @override
-  String get statNearMissSub => 'Cravaria o resultado, mas ficou no quase por 1 gol';
+  String get statNearMissSub =>
+      'Cravaria o resultado, mas ficou no quase por 1 gol';
 
   @override
   String get statNearMissUnit => 'quase';
@@ -276,7 +277,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statsNoGames => 'Nenhum jogo nesta estatística ainda';
 
   @override
-  String get statsPersonalEmpty => 'Seus números aparecem conforme os jogos acontecem';
+  String get statsPersonalEmpty =>
+      'Seus números aparecem conforme os jogos acontecem';
 
   @override
   String get statGroupPointsTitle => 'Pontos por Grupo';
@@ -309,7 +311,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statHandTitle => 'Média de Gols';
 
   @override
-  String get statHandSub => 'Sua média de gols por jogo vs a média da realidade';
+  String get statHandSub =>
+      'Sua média de gols por jogo vs a média da realidade';
 
   @override
   String get statHandReal => 'Real';
@@ -426,7 +429,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achOusadiaName => 'Ousadia e Alegria';
 
   @override
-  String get achOusadiaDesc => 'Crave um palpite ousado (≥5 de diferença ou ≥7 gols)';
+  String get achOusadiaDesc =>
+      'Crave um palpite ousado (≥5 de diferença ou ≥7 gols)';
 
   @override
   String get achEmbaladoName => 'Embalado';
@@ -444,7 +448,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achDiaCheioName => 'Dia Cheio';
 
   @override
-  String get achDiaCheioDesc => 'Pontue em todos os jogos de um dia (com 3+ jogos)';
+  String get achDiaCheioDesc =>
+      'Pontue em todos os jogos de um dia (com 3+ jogos)';
 
   @override
   String get achVoltaName => 'Volta ao Mundo';
@@ -486,7 +491,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achQuaseName => 'Quase Lá';
 
   @override
-  String get achQuaseDesc => 'Acumule 5 "quases" (errou o placar por 1 gol)';
+  String get achQuaseDesc => 'Acumule 5 \"quases\" (errou o placar por 1 gol)';
 
   @override
   String get achNewUnlocked => 'Nova conquista!';
@@ -1048,4 +1053,37 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get errSyncFailed =>
       'Não foi possível sincronizar a planilha. Verifique a conexão e tente novamente.';
+
+  @override
+  String get filterAll => 'Todos';
+
+  @override
+  String get filterRound1 => 'Rodada 1';
+
+  @override
+  String get filterRound2 => 'Rodada 2';
+
+  @override
+  String get filterRound3 => 'Rodada 3';
+
+  @override
+  String get filterDay => 'Do dia';
+
+  @override
+  String get filterFinished => 'Finalizados';
+
+  @override
+  String get filterUnfinished => 'Não finalizados';
+
+  @override
+  String get filterExact => 'Placar exato';
+
+  @override
+  String get filterResult => 'Resultado';
+
+  @override
+  String get filterLost => 'Perdida';
+
+  @override
+  String get filterNoGames => 'Nenhum jogo com esses filtros';
 }

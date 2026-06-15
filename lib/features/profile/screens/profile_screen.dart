@@ -79,8 +79,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // sozinhos, então o seu ponto podia ficar velho até um refresh forte. Ao
     // abrir o perfil, forçamos os dois a buscar do servidor. (Mesma correção do
     // perfil visitante.)
-    ref.invalidate(allBetsProvider);
-    ref.invalidate(allMatchesProvider);
+    //
+    // Deferido para depois do primeiro frame: chamar ref.invalidate dentro do
+    // initState acessa o ProviderScope (inherited widget) antes do initState
+    // concluir, o que dispara um assert em modo debug (invisível em release).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(allBetsProvider);
+      ref.invalidate(allMatchesProvider);
+    });
   }
 
   @override

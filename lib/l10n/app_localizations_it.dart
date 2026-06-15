@@ -229,13 +229,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statBrazilTitle => 'Portafortuna del Brasile';
 
   @override
-  String get statBrazilSub => 'Chi ha fatto più punti sulle partite del Brasile';
+  String get statBrazilSub =>
+      'Chi ha fatto più punti sulle partite del Brasile';
 
   @override
   String get statNearMissTitle => 'Quasi';
 
   @override
-  String get statNearMissSub => 'Ha azzeccato l\'esito ma sbagliato il risultato per 1 gol';
+  String get statNearMissSub =>
+      'Ha azzeccato l\'esito ma sbagliato il risultato per 1 gol';
 
   @override
   String get statNearMissUnit => 'quasi';
@@ -268,7 +270,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statContrarianTitle => 'Controcorrente vincente';
 
   @override
-  String get statContrarianSub => 'Ha azzeccato risultati che quasi nessuno ha scelto';
+  String get statContrarianSub =>
+      'Ha azzeccato risultati che quasi nessuno ha scelto';
 
   @override
   String get statContrarianUnit => 'rare';
@@ -277,7 +280,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statsNoGames => 'Ancora nessuna partita per questa statistica';
 
   @override
-  String get statsPersonalEmpty => 'I tuoi numeri compaiono man mano che si giocano le partite';
+  String get statsPersonalEmpty =>
+      'I tuoi numeri compaiono man mano che si giocano le partite';
 
   @override
   String get statGroupPointsTitle => 'Punti per Girone';
@@ -427,7 +431,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achOusadiaName => 'Coraggio e Allegria';
 
   @override
-  String get achOusadiaDesc => 'Azzecca un pronostico audace (5+ di scarto o 7+ gol)';
+  String get achOusadiaDesc =>
+      'Azzecca un pronostico audace (5+ di scarto o 7+ gol)';
 
   @override
   String get achEmbaladoName => 'In Fiamme';
@@ -445,7 +450,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achDiaCheioName => 'Giornata Piena';
 
   @override
-  String get achDiaCheioDesc => 'Fai punti in tutte le partite di un giorno (con 3+ partite)';
+  String get achDiaCheioDesc =>
+      'Fai punti in tutte le partite di un giorno (con 3+ partite)';
 
   @override
   String get achVoltaName => 'Giro del Mondo';
@@ -469,7 +475,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achProfetaName => 'Profeta';
 
   @override
-  String get achProfetaDesc => 'Azzecca un risultato che meno del 10% ha azzeccato';
+  String get achProfetaDesc =>
+      'Azzecca un risultato che meno del 10% ha azzeccato';
 
   @override
   String get achPanelaName => 'Benvenuto nel Gruppo';
@@ -487,7 +494,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achQuaseName => 'Quasi';
 
   @override
-  String get achQuaseDesc => 'Colleziona 5 "quasi" (sbagliato per 1 gol)';
+  String get achQuaseDesc => 'Colleziona 5 \"quasi\" (sbagliato per 1 gol)';
 
   @override
   String get achNewUnlocked => 'Nuovo traguardo!';
@@ -1053,4 +1060,37 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get errSyncFailed =>
       'Impossibile sincronizzare il foglio. Controlla la connessione e riprova.';
+
+  @override
+  String get filterAll => 'Tutti';
+
+  @override
+  String get filterRound1 => 'Giornata 1';
+
+  @override
+  String get filterRound2 => 'Giornata 2';
+
+  @override
+  String get filterRound3 => 'Giornata 3';
+
+  @override
+  String get filterDay => 'Di oggi';
+
+  @override
+  String get filterFinished => 'Finite';
+
+  @override
+  String get filterUnfinished => 'Non finite';
+
+  @override
+  String get filterExact => 'Risultato esatto';
+
+  @override
+  String get filterResult => 'Esito';
+
+  @override
+  String get filterLost => 'Persa';
+
+  @override
+  String get filterNoGames => 'Nessuna partita con questi filtri';
 }

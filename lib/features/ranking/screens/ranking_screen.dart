@@ -459,9 +459,10 @@ class RankingTile extends StatelessWidget {
       _ => '${entry.rank}',
     };
 
-    // Tapping a name opens that user's bets — only once betting is locked
-    // (so nobody can peek before the deadline) and never for your own row.
-    final tappable = isBettingLocked && !isMe;
+    // Tapping a name opens that user's bets. Other players are gated until
+    // betting is locked (so nobody peeks before the deadline); your own row is
+    // always tappable, since reviewing your own bets carries no copy risk.
+    final tappable = isMe || isBettingLocked;
 
     final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 300),

@@ -473,324 +473,645 @@ abstract class AppLocalizations {
   String get advancedStatsSub;
 
   /// No description provided for @statsTabRankings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rankings'**
   String get statsTabRankings;
 
   /// No description provided for @statsTabPersonal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pessoal'**
   String get statsTabPersonal;
 
   /// No description provided for @statsTabAchievements.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conquistas'**
   String get statsTabAchievements;
 
   /// No description provided for @statsTabPool.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bolão'**
   String get statsTabPool;
 
   /// No description provided for @statExactTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rei do Placar Exato'**
   String get statExactTitle;
 
   /// No description provided for @statExactSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem mais cravou o placar'**
   String get statExactSub;
 
   /// No description provided for @statExactUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'exatos'**
   String get statExactUnit;
 
   /// No description provided for @statBrazilTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pé-quente do Brasil'**
   String get statBrazilTitle;
 
   /// No description provided for @statBrazilSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem mais pontuou nos jogos do Brasil'**
   String get statBrazilSub;
 
   /// No description provided for @statNearMissTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quase lá'**
   String get statNearMissTitle;
 
   /// No description provided for @statNearMissSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cravaria o resultado, mas ficou no quase por 1 gol'**
   String get statNearMissSub;
 
   /// No description provided for @statNearMissUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'quase'**
   String get statNearMissUnit;
 
   /// No description provided for @statDailyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tacada do Dia'**
   String get statDailyTitle;
 
   /// No description provided for @statDailySub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior pontuação num único dia'**
   String get statDailySub;
 
   /// No description provided for @statRegularTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais Regular'**
   String get statRegularTitle;
 
   /// No description provided for @statRegularSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontuou no maior número de jogos'**
   String get statRegularSub;
 
   /// No description provided for @statRegularUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'jogos'**
   String get statRegularUnit;
 
   /// No description provided for @statBoldTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os Corajosos'**
   String get statBoldTitle;
 
   /// No description provided for @statBoldSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem arrisca os placares mais ousados'**
   String get statBoldSub;
 
   /// No description provided for @statBoldUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'ousados'**
   String get statBoldUnit;
 
   /// No description provided for @statContrarianTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Do Contra que Acertou'**
   String get statContrarianTitle;
 
   /// No description provided for @statContrarianSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cravou placares que quase ninguém apostou'**
   String get statContrarianSub;
 
   /// No description provided for @statContrarianUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'raras'**
   String get statContrarianUnit;
 
   /// No description provided for @statsNoGames.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum jogo nesta estatística ainda'**
   String get statsNoGames;
 
   /// No description provided for @statsPersonalEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seus números aparecem conforme os jogos acontecem'**
   String get statsPersonalEmpty;
 
   /// No description provided for @statGroupPointsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontos por Grupo'**
   String get statGroupPointsTitle;
 
   /// No description provided for @statGroupPointsSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde você mais e menos pontuou'**
   String get statGroupPointsSub;
 
   /// No description provided for @statDistributionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Distribuição de Acertos'**
   String get statDistributionTitle;
 
   /// No description provided for @statDistributionSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exatos, resultados e erros'**
   String get statDistributionSub;
 
   /// No description provided for @statDistResult.
+  ///
+  /// In pt, this message translates to:
+  /// **'resultados'**
   String get statDistResult;
 
   /// No description provided for @statDistZero.
+  ///
+  /// In pt, this message translates to:
+  /// **'erros'**
   String get statDistZero;
 
   /// No description provided for @statUtilization.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aproveitamento'**
   String get statUtilization;
 
   /// No description provided for @statSignatureTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Placar-assinatura'**
   String get statSignatureTitle;
 
   /// No description provided for @statSignatureSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'O placar que você mais aposta'**
   String get statSignatureSub;
 
   /// No description provided for @statHandTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de Gols'**
   String get statHandTitle;
 
   /// No description provided for @statHandSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sua média de gols por jogo vs a média da realidade'**
   String get statHandSub;
 
   /// No description provided for @statHandReal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Real'**
   String get statHandReal;
 
   /// No description provided for @statGoalsPerGame.
+  ///
+  /// In pt, this message translates to:
+  /// **'gols/jogo'**
   String get statGoalsPerGame;
 
   /// No description provided for @statLuckyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amuleto da Sorte / Azar'**
   String get statLuckyTitle;
 
   /// No description provided for @statLuckySub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seleções onde você mais e menos pontua'**
   String get statLuckySub;
 
   /// No description provided for @statLucky.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sorte'**
   String get statLucky;
 
   /// No description provided for @statUnlucky.
+  ///
+  /// In pt, this message translates to:
+  /// **'Azar'**
   String get statUnlucky;
 
   /// No description provided for @statStreakTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior Sequência'**
   String get statStreakTitle;
 
   /// No description provided for @statStreakSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogos seguidos pontuando'**
   String get statStreakSub;
 
   /// No description provided for @statBest.
+  ///
+  /// In pt, this message translates to:
+  /// **'Melhor'**
   String get statBest;
 
   /// No description provided for @statWorst.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pior'**
   String get statWorst;
 
   /// No description provided for @statBestPlural.
+  ///
+  /// In pt, this message translates to:
+  /// **'Melhores'**
   String get statBestPlural;
 
   /// No description provided for @statWorstPlural.
+  ///
+  /// In pt, this message translates to:
+  /// **'Piores'**
   String get statWorstPlural;
 
   /// No description provided for @poolUnpredictableTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogos mais imprevisíveis'**
   String get poolUnpredictableTitle;
 
   /// No description provided for @poolUnpredictableSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde menos gente cravou o placar'**
   String get poolUnpredictableSub;
 
   /// No description provided for @poolEveryoneKnewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esse todo mundo sabia'**
   String get poolEveryoneKnewTitle;
 
   /// No description provided for @poolEveryoneKnewSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde mais gente cravou o placar'**
   String get poolEveryoneKnewSub;
 
   /// No description provided for @poolPopularTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpites mais populares'**
   String get poolPopularTitle;
 
   /// No description provided for @poolPopularSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os placares mais apostados do bolão'**
   String get poolPopularSub;
 
   /// No description provided for @poolUniqueTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpites únicos'**
   String get poolUniqueTitle;
 
   /// No description provided for @poolUniqueSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os placares mais raros do bolão'**
   String get poolUniqueSub;
 
   /// No description provided for @poolNailedLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'cravaram'**
   String get poolNailedLabel;
 
   /// No description provided for @poolWhoNailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem cravou'**
   String get poolWhoNailed;
 
   /// No description provided for @poolNobodyNailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ninguém cravou este jogo'**
   String get poolNobodyNailed;
 
   /// No description provided for @poolLookupTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Consultar um placar'**
   String get poolLookupTitle;
 
   /// No description provided for @poolLookupHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'ex.: 1-1'**
   String get poolLookupHint;
 
   /// No description provided for @poolLookupNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum palpite com esse placar'**
   String get poolLookupNotFound;
 
   /// No description provided for @achBronze.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bronze'**
   String get achBronze;
 
   /// No description provided for @achPrata.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prata'**
   String get achPrata;
 
   /// No description provided for @achOuro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ouro'**
   String get achOuro;
 
   /// No description provided for @achRarityOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'dos jogadores'**
   String get achRarityOf;
 
   /// No description provided for @achUnlocked.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conquistado'**
   String get achUnlocked;
 
   /// No description provided for @achUnlockedOn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conquistado em'**
   String get achUnlockedOn;
 
   /// No description provided for @achViewGames.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver os jogos'**
   String get achViewGames;
 
   /// No description provided for @achExactTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Placares Exatos'**
   String get achExactTitle;
 
   /// No description provided for @achExactDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crave placares exatos'**
   String get achExactDesc;
 
   /// No description provided for @achEmpateName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sabia do Empate'**
   String get achEmpateName;
 
   /// No description provided for @achEmpateDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crave um empate'**
   String get achEmpateDesc;
 
   /// No description provided for @achOusadiaName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ousadia e Alegria'**
   String get achOusadiaName;
 
   /// No description provided for @achOusadiaDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crave um palpite ousado (≥5 de diferença ou ≥7 gols)'**
   String get achOusadiaDesc;
 
   /// No description provided for @achEmbaladoName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Embalado'**
   String get achEmbaladoName;
 
   /// No description provided for @achEmbaladoDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontue em vários jogos seguidos'**
   String get achEmbaladoDesc;
 
   /// No description provided for @achPequenteName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pé-quente'**
   String get achPequenteName;
 
   /// No description provided for @achPequenteDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontue em 5 jogos seguidos'**
   String get achPequenteDesc;
 
   /// No description provided for @achDiaCheioName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dia Cheio'**
   String get achDiaCheioName;
 
   /// No description provided for @achDiaCheioDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontue em todos os jogos de um dia (com 3+ jogos)'**
   String get achDiaCheioDesc;
 
   /// No description provided for @achVoltaName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volta ao Mundo'**
   String get achVoltaName;
 
   /// No description provided for @achVoltaDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontue em todos os grupos'**
   String get achVoltaDesc;
 
   /// No description provided for @achDonoName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dono do Grupo'**
   String get achDonoName;
 
   /// No description provided for @achDonoDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Faça 6+ pontos num grupo'**
   String get achDonoDesc;
 
   /// No description provided for @achBrasilName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coração Verde-Amarelo'**
   String get achBrasilName;
 
   /// No description provided for @achBrasilDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontue num jogo do Brasil'**
   String get achBrasilDesc;
 
   /// No description provided for @achProfetaName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Profeta'**
   String get achProfetaName;
 
   /// No description provided for @achProfetaDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crave um placar que menos de 10% cravou'**
   String get achProfetaDesc;
 
   /// No description provided for @achPanelaName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bem-vindo à Panela'**
   String get achPanelaName;
 
   /// No description provided for @achPanelaDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre em uma liga'**
   String get achPanelaDesc;
 
   /// No description provided for @achMeioSeculoName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tá chovendo pontos'**
   String get achMeioSeculoName;
 
   /// No description provided for @achMeioSeculoDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alcance 50 pontos no total'**
   String get achMeioSeculoDesc;
 
   /// No description provided for @achQuaseName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quase Lá'**
   String get achQuaseName;
 
   /// No description provided for @achQuaseDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acumule 5 \"quases\" (errou o placar por 1 gol)'**
   String get achQuaseDesc;
 
   /// No description provided for @achNewUnlocked.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova conquista!'**
   String get achNewUnlocked;
 
   /// No description provided for @achNice.
+  ///
+  /// In pt, this message translates to:
+  /// **'Boa!'**
   String get achNice;
 
   /// No description provided for @achViewAchievement.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver conquista'**
   String get achViewAchievement;
 
   /// No description provided for @achClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar'**
   String get achClose;
 
   /// No description provided for @statPointsUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'pts'**
   String get statPointsUnit;
 
   /// No description provided for @statsYou.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
   String get statsYou;
 
   /// No description provided for @statsSeeAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver todos'**
   String get statsSeeAll;
 
   /// No description provided for @statsSeeMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver mais'**
   String get statsSeeMore;
 
   /// No description provided for @statsSeeLess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver menos'**
   String get statsSeeLess;
 
   /// No description provided for @statsComingSoon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em breve, nesta aba!'**
   String get statsComingSoon;
 
   /// No description provided for @statsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há dados suficientes'**
   String get statsEmpty;
 
   /// No description provided for @statsError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar'**
   String get statsError;
 
   /// No description provided for @deleteBet.
@@ -1764,6 +2085,72 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível sincronizar a planilha. Verifique a conexão e tente novamente.'**
   String get errSyncFailed;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos'**
+  String get filterAll;
+
+  /// No description provided for @filterRound1.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rodada 1'**
+  String get filterRound1;
+
+  /// No description provided for @filterRound2.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rodada 2'**
+  String get filterRound2;
+
+  /// No description provided for @filterRound3.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rodada 3'**
+  String get filterRound3;
+
+  /// No description provided for @filterDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Do dia'**
+  String get filterDay;
+
+  /// No description provided for @filterFinished.
+  ///
+  /// In pt, this message translates to:
+  /// **'Finalizados'**
+  String get filterFinished;
+
+  /// No description provided for @filterUnfinished.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não finalizados'**
+  String get filterUnfinished;
+
+  /// No description provided for @filterExact.
+  ///
+  /// In pt, this message translates to:
+  /// **'Placar exato'**
+  String get filterExact;
+
+  /// No description provided for @filterResult.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado'**
+  String get filterResult;
+
+  /// No description provided for @filterLost.
+  ///
+  /// In pt, this message translates to:
+  /// **'Perdida'**
+  String get filterLost;
+
+  /// No description provided for @filterNoGames.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum jogo com esses filtros'**
+  String get filterNoGames;
 }
 
 class _AppLocalizationsDelegate

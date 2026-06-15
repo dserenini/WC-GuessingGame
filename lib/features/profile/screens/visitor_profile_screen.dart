@@ -6,11 +6,13 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/models/match.dart';
+import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart';
 import 'package:copa2026/features/profile/widgets/bet_comparison_card.dart';
 import 'package:copa2026/shared/providers/reveal_config_provider.dart';
+import 'package:copa2026/shared/utils/bet_points.dart';
 
 /// Read-only view of another user's bets, reached by tapping their name in a
 /// ranking. Each match shows B's bet with the viewer's own bet faded beneath it,
@@ -50,9 +52,15 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
     // (atualizado). Ao abrir o perfil de qualquer jogador, forçamos os dois — e
     // os jogos, p/ placar/status — a buscar do servidor JUNTOS. Para jogo
     // encerrado o badge lê bet.points do banco (ver bet_comparison_card.dart).
-    ref.invalidate(allBetsProvider);
-    ref.invalidate(userBetsProvider(widget.userId));
-    ref.invalidate(allMatchesProvider);
+    // Deferido para depois do primeiro frame: ref.invalidate dentro do
+    // initState acessa o ProviderScope (inherited widget) antes do initState
+    // concluir, o que dispara um assert em modo debug (invisível em release).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(allBetsProvider);
+      ref.invalidate(userBetsProvider(widget.userId));
+      ref.invalidate(allMatchesProvider);
+    });
   }
 
   @override
@@ -60,6 +68,7 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final name = widget.entry?.displayName ?? '';
+    final isSelf = widget.userId == ref.watch(currentUserProvider)?.id;
     final myStatsAsync = ref.watch(profileStatsProvider);
 
     return Scaffold(
@@ -78,9 +87,10 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.visibility_outlined, size: 13, color: cs.primary),
+                  Icon(isSelf ? Icons.person_outline : Icons.visibility_outlined,
+                      size: 13, color: cs.primary),
                   const SizedBox(width: 4),
-                  Text(l.visitorMode,
+                  Text(isSelf ? l.youLabel : l.visitorMode,
                       style: TextStyle(fontSize: 11, color: cs.primary, fontWeight: FontWeight.w600)),
                 ],
               ),
@@ -98,7 +108,9 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
           final required = myStats.totalMatches < kRevealMinBets
               ? myStats.totalMatches
               : kRevealMinBets;
-          final gateOpen = (kDebugMode && kDebugForceReveal) ||
+          // Viewing your own bets is always allowed: no anti-copy gate applies.
+          final gateOpen = isSelf ||
+              (kDebugMode && kDebugForceReveal) ||
               myStats.totalBets >= required;
 
           return RefreshIndicator(
@@ -121,7 +133,12 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
                     l: l,
                   )
                 else
-                  _BetList(userId: widget.userId, bName: name, statFilter: widget.statFilter),
+                  _BetList(
+                    userId: widget.userId,
+                    bName: isSelf ? l.statsYou : name,
+                    statFilter: widget.statFilter,
+                    isSelf: isSelf,
+                  ),
               ],
             ),
           );
@@ -220,17 +237,111 @@ class _VisitorHeader extends StatelessWidget {
 // ─────────────────────────────────────────────
 // Bet list (matches + comparison cards)
 // ─────────────────────────────────────────────
-class _BetList extends ConsumerWidget {
+/// Quick-filter dimensions for the bet list. Both are single-select and
+/// independent: the user picks one [_ScopeFilter] (round / day / none) and one
+/// [_StatusFilter] (finished / unfinished / none), and they combine.
+enum _ScopeFilter { all, round1, round2, round3, day }
+
+enum _StatusFilter { all, finished, unfinished }
+
+/// Bet-outcome filter (multi-select): exact score (3 pts), correct result
+/// (1 pt) or missed (0 pts). Evaluated against the **screen owner's** bet.
+enum _Outcome { exact, result, lost }
+
+class _BetList extends ConsumerStatefulWidget {
   final String userId;
   final String bName;
   final StatRanking? statFilter;
+
+  /// Self view: the bets shown are the viewer's own, so the comparison row is
+  /// dropped and every match is revealed (no anti-copy gating for your own bets).
+  final bool isSelf;
+
   const _BetList(
-      {required this.userId, required this.bName, this.statFilter});
+      {required this.userId,
+      required this.bName,
+      this.statFilter,
+      this.isSelf = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BetList> createState() => _BetListState();
+}
+
+class _BetListState extends ConsumerState<_BetList> {
+  _ScopeFilter _scope = _ScopeFilter.all;
+  _StatusFilter _status = _StatusFilter.all;
+  final Set<_Outcome> _outcomes = {};
+
+  /// Round 1..3 derived from the sequential `api_match_id` (1-24, 25-48, 49-72).
+  /// Each matchday has 24 games and the ids are assigned in chronological order,
+  /// so integer-dividing the id reproduces the round without a DB column.
+  int? _roundOf(MatchModel m) {
+    final id = int.tryParse(m.apiMatchId ?? '');
+    if (id == null) return null;
+    return ((id - 1) ~/ 24) + 1;
+  }
+
+  bool _passScope(MatchModel m, Set<String> dayIds) {
+    switch (_scope) {
+      case _ScopeFilter.all:
+        return true;
+      case _ScopeFilter.round1:
+        return _roundOf(m) == 1;
+      case _ScopeFilter.round2:
+        return _roundOf(m) == 2;
+      case _ScopeFilter.round3:
+        return _roundOf(m) == 3;
+      case _ScopeFilter.day:
+        return dayIds.contains(m.id);
+    }
+  }
+
+  bool _passStatus(MatchModel m) {
+    switch (_status) {
+      case _StatusFilter.all:
+        return true;
+      case _StatusFilter.finished:
+        return m.status == MatchStatus.finished;
+      case _StatusFilter.unfinished:
+        return m.status != MatchStatus.finished; // live + scheduled
+    }
+  }
+
+  /// Points the screen owner's [bet] scored on [m]: persisted points once the
+  /// game is finished, provisional points while it is live, and null when there
+  /// is no determined outcome yet (scheduled, or the owner didn't bet). Mirrors
+  /// the badge logic in bet_comparison_card.dart.
+  int? _ownerPoints(MatchModel m, BetModel? bet) {
+    if (bet == null) return null;
+    if (m.status == MatchStatus.finished) return bet.points;
+    if (m.status == MatchStatus.live &&
+        m.homeScore != null &&
+        m.awayScore != null) {
+      return computeBetPoints(
+        homeBet: bet.homeScoreBet,
+        awayBet: bet.awayScoreBet,
+        homeReal: m.homeScore!,
+        awayReal: m.awayScore!,
+      );
+    }
+    return null;
+  }
+
+  bool _passOutcome(MatchModel m, BetModel? ownerBet) {
+    if (_outcomes.isEmpty) return true; // no outcome filter active
+    final pts = _ownerPoints(m, ownerBet);
+    if (pts == null) return false; // no determined outcome → excluded
+    if (_outcomes.contains(_Outcome.exact) && pts == 3) return true;
+    if (_outcomes.contains(_Outcome.result) && pts == 1) return true;
+    if (_outcomes.contains(_Outcome.lost) && pts == 0) return true;
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(allMatchesProvider);
-    final bBetsAsync = ref.watch(userBetsProvider(userId));
+    final bBetsAsync = ref.watch(userBetsProvider(widget.userId));
     final aBetsAsync = ref.watch(allBetsProvider);
     final cfgAsync = ref.watch(revealConfigProvider);
 
@@ -240,8 +351,8 @@ class _BetList extends ConsumerWidget {
     final cfg = cfgAsync.valueOrNull;
 
     // The "Do Contra" filter needs cross-pool data from a dedicated view.
-    final contrarianIds = statFilter == StatRanking.contrarian
-        ? ref.watch(contrarianMatchesProvider(userId)).valueOrNull
+    final contrarianIds = widget.statFilter == StatRanking.contrarian
+        ? ref.watch(contrarianMatchesProvider(widget.userId)).valueOrNull
         : const <String>{};
 
     if (matches == null ||
@@ -255,36 +366,179 @@ class _BetList extends ConsumerWidget {
       );
     }
 
-    final visible = statFilter == null
-        ? matches
-        : _applyStatFilter(statFilter!, matches, bBets, contrarianIds);
+    // Stat drill-downs arrive pre-filtered to a curated subset; the quick
+    // filters only make sense on the full bet list, so the bar is hidden there.
+    final showFilters = widget.statFilter == null;
 
-    if (visible.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
-        child: Center(
-          child: Text(
-            AppLocalizations.of(context)!.statsNoGames,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                ),
-          ),
-        ),
-      );
-    }
+    final base = widget.statFilter == null
+        ? matches
+        : _applyStatFilter(widget.statFilter!, matches, bBets, contrarianIds);
+
+    final dayIds = showFilters && _scope == _ScopeFilter.day
+        ? ref.watch(matchesOfDayProvider).map((m) => m.id).toSet()
+        : const <String>{};
+
+    final visible = showFilters
+        ? base
+            .where((m) =>
+                _passScope(m, dayIds) &&
+                _passStatus(m) &&
+                _passOutcome(m, bBets[m.id]))
+            .toList()
+        : base;
 
     return Column(
       children: [
-        for (final m in visible)
-          BetComparisonCard(
-            match: m,
-            betB: bBets[m.id],
-            betA: aBets[m.id],
-            bDisplayName: bName,
-            revealed: canRevealMatch(m, matches, cfg),
+        if (showFilters)
+          _FilterBar(
+            scope: _scope,
+            status: _status,
+            outcomes: _outcomes,
+            l: l,
+            onScope: (s) => setState(() => _scope = s),
+            onStatus: (s) => setState(() {
+              _status = s;
+              // Outcome (exact/result/missed) only consolidates once a game is
+              // over, so picking "not finished" would always return empty —
+              // force the outcome filter back to "all".
+              if (s == _StatusFilter.unfinished) _outcomes.clear();
+            }),
+            onToggleOutcome: (o) => setState(() {
+              if (!_outcomes.remove(o)) _outcomes.add(o);
+            }),
+            onClearOutcomes: () => setState(_outcomes.clear),
           ),
+        if (visible.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+            child: Center(
+              child: Text(
+                showFilters ? l.filterNoGames : l.statsNoGames,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color:
+                          Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+              ),
+            ),
+          )
+        else
+          for (final m in visible)
+            BetComparisonCard(
+              match: m,
+              betB: bBets[m.id],
+              betA: aBets[m.id],
+              bDisplayName: widget.bName,
+              revealed: widget.isSelf || canRevealMatch(m, matches, cfg),
+              showViewerRow: !widget.isSelf,
+            ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Quick-filter bar: two single-select chip rows (scope + status)
+// ─────────────────────────────────────────────
+class _FilterBar extends StatelessWidget {
+  final _ScopeFilter scope;
+  final _StatusFilter status;
+  final Set<_Outcome> outcomes;
+  final AppLocalizations l;
+  final ValueChanged<_ScopeFilter> onScope;
+  final ValueChanged<_StatusFilter> onStatus;
+  final ValueChanged<_Outcome> onToggleOutcome;
+  final VoidCallback onClearOutcomes;
+
+  const _FilterBar({
+    required this.scope,
+    required this.status,
+    required this.outcomes,
+    required this.l,
+    required this.onScope,
+    required this.onStatus,
+    required this.onToggleOutcome,
+    required this.onClearOutcomes,
+  });
+
+  Widget _chip(String label, bool selected, VoidCallback onTap,
+      {bool enabled = true}) {
+    // Tight chips so a row fits on a single line instead of wrapping: trimmed
+    // internal padding, smaller label, and a denser visual density.
+    return ChoiceChip(
+      label: Text(label, style: const TextStyle(fontSize: 12.5)),
+      selected: selected,
+      onSelected: enabled ? (_) => onTap() : null,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Margin matches the score/player banners (horizontal 16) and chips Wrap to
+    // the next line so the bar never exceeds the banners' width.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 8,
+            children: [
+              _chip(l.filterAll, scope == _ScopeFilter.all,
+                  () => onScope(_ScopeFilter.all)),
+              _chip(l.filterRound1, scope == _ScopeFilter.round1,
+                  () => onScope(_ScopeFilter.round1)),
+              _chip(l.filterRound2, scope == _ScopeFilter.round2,
+                  () => onScope(_ScopeFilter.round2)),
+              _chip(l.filterRound3, scope == _ScopeFilter.round3,
+                  () => onScope(_ScopeFilter.round3)),
+              _chip(l.filterDay, scope == _ScopeFilter.day,
+                  () => onScope(_ScopeFilter.day)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 8,
+            children: [
+              _chip(l.filterAll, status == _StatusFilter.all,
+                  () => onStatus(_StatusFilter.all)),
+              _chip(l.filterFinished, status == _StatusFilter.finished,
+                  () => onStatus(_StatusFilter.finished)),
+              _chip(l.filterUnfinished, status == _StatusFilter.unfinished,
+                  () => onStatus(_StatusFilter.unfinished)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Outcome row is multi-select: "Todos" is active when nothing is
+          // picked; the others toggle independently and accumulate. Disabled
+          // while "not finished" is active, since scores aren't consolidated yet.
+          Builder(builder: (_) {
+            final outcomeEnabled = status != _StatusFilter.unfinished;
+            return Wrap(
+              spacing: 6,
+              runSpacing: 8,
+              children: [
+                _chip(l.filterAll, outcomes.isEmpty, onClearOutcomes),
+                _chip(l.filterExact, outcomes.contains(_Outcome.exact),
+                    () => onToggleOutcome(_Outcome.exact),
+                    enabled: outcomeEnabled),
+                _chip(l.filterResult, outcomes.contains(_Outcome.result),
+                    () => onToggleOutcome(_Outcome.result),
+                    enabled: outcomeEnabled),
+                _chip(l.filterLost, outcomes.contains(_Outcome.lost),
+                    () => onToggleOutcome(_Outcome.lost),
+                    enabled: outcomeEnabled),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 }

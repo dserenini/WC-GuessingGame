@@ -88,15 +88,20 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
         'locale': locale,
       };
 
-      // A coluna `username` tem constraint NOT NULL + `username_not_empty` no
-      // banco. Mesmo num UPDATE, o Postgres revalida a CHECK na linha inteira:
-      // se o perfil ficou com username vazio (conta antiga/criada fora do
-      // trigger handle_new_user), o upsert falha com 23514. Então, só quando o
-      // username atual está vazio, geramos um a partir do e-mail (mesma
-      // convenção do trigger). Username já válido nunca é sobrescrito.
+      // A coluna `username` é NOT NULL, DEFAULT '' e CHECK (username <> '').
+      // O upsert do PostgREST é INSERT ... ON CONFLICT (id) DO UPDATE, e o
+      // Postgres valida NOT NULL/CHECK no tuple do INSERT (que nasce com o
+      // DEFAULT '') ANTES de detectar o conflito de id e cair no UPDATE. Logo,
+      // OMITIR `username` estoura 23514 (username_not_empty) sempre — mesmo
+      // quando a linha já existe com um username válido, pois o caminho do
+      // UPDATE (que o preservaria) nem chega a rodar. Por isso reenviamos
+      // SEMPRE o username: o atual quando existe (preserva), ou um derivado do
+      // e-mail no caso raro de estar ausente (mesma convenção do trigger).
       final currentUsername =
           ref.read(profileStatsProvider).valueOrNull?.username.trim() ?? '';
-      if (currentUsername.isEmpty) {
+      if (currentUsername.isNotEmpty) {
+        payload['username'] = currentUsername;
+      } else {
         final email = user.email ?? '';
         final base = email.contains('@') ? email.split('@').first : email;
         payload['username'] =

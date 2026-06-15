@@ -6,6 +6,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
+import 'package:copa2026/shared/utils/error_messages.dart';
 
 /// Onboarding único, pedido UMA vez por conta: idioma + nome + telefone.
 ///
@@ -79,19 +80,36 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
           '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim();
       final locale = ref.read(localeProvider).languageCode;
 
+      final payload = <String, dynamic>{
+        'id': user.id,
+        'full_name': fullName,
+        'display_preference': _displayPreference,
+        'phone': _phoneNumber.trim(),
+        'locale': locale,
+      };
+
+      // A coluna `username` tem constraint NOT NULL + `username_not_empty` no
+      // banco. Mesmo num UPDATE, o Postgres revalida a CHECK na linha inteira:
+      // se o perfil ficou com username vazio (conta antiga/criada fora do
+      // trigger handle_new_user), o upsert falha com 23514. Então, só quando o
+      // username atual está vazio, geramos um a partir do e-mail (mesma
+      // convenção do trigger). Username já válido nunca é sobrescrito.
+      final currentUsername =
+          ref.read(profileStatsProvider).valueOrNull?.username.trim() ?? '';
+      if (currentUsername.isEmpty) {
+        final email = user.email ?? '';
+        final base = email.contains('@') ? email.split('@').first : email;
+        payload['username'] =
+            base.isNotEmpty ? base : 'user_${user.id.substring(0, 8)}';
+      }
+
       // upsert (em vez de update) garante que a linha seja criada se faltar e
       // evita o "0 linhas afetadas sem erro" que prendia o usuário no onboarding.
       // .select().single() confirma que a gravação realmente colou (sob RLS,
       // uma gravação bloqueada lança erro em vez de falhar em silêncio).
       final saved = await Supabase.instance.client
           .from('profiles')
-          .upsert({
-            'id': user.id,
-            'full_name': fullName,
-            'display_preference': _displayPreference,
-            'phone': _phoneNumber.trim(),
-            'locale': locale,
-          })
+          .upsert(payload)
           .select('full_name, phone, locale')
           .single();
 
@@ -106,8 +124,9 @@ class _ProfileCompletionScreenState extends ConsumerState<ProfileCompletionScree
       ref.invalidate(profileStatsProvider);
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(describeError(l, e))),
         );
       }
     } finally {

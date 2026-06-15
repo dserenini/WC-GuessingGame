@@ -11,6 +11,16 @@ DECLARE
   -- Data Limite Global: 10 de Junho 2026, 23:59 GMT-3 = 11 de Junho 2026, 02:59 UTC
   GLOBAL_DEADLINE TIMESTAMPTZ := '2026-06-11 02:59:00+00'; 
 BEGIN
+  -- 0. BYPASS de updates internos do sistema (pontuação/rollback): não mudam o
+  --    placar do palpite. Sem isto, encerrar/pontuar um jogo falha
+  --    (calculate_bet_points faz UPDATE bets.points num jogo não-'scheduled').
+  --    Ver fix_finish_scoring.sql / fix_check_bet_deadline_combined.sql.
+  IF TG_OP = 'UPDATE'
+     AND OLD.home_score_bet = NEW.home_score_bet
+     AND OLD.away_score_bet = NEW.away_score_bet THEN
+    RETURN NEW;
+  END IF;
+
   -- 1. Obter informações da partida
   SELECT match_date, status::TEXT INTO v_match_date, v_match_status
   FROM matches WHERE id = NEW.match_id;
@@ -27,9 +37,23 @@ BEGIN
 
   -- 4. Regra da Data Limite Global (Super Palpite)
   IF NOW() > GLOBAL_DEADLINE THEN
-     -- Se for update e o placar não mudou, ignorar (ex: sync repetido)
-     IF TG_OP = 'UPDATE' AND OLD.home_score_bet = NEW.home_score_bet AND OLD.away_score_bet = NEW.away_score_bet THEN
-       RETURN NEW;
+     -- ATENÇÃO: o app salva via upsert (INSERT ... ON CONFLICT DO UPDATE).
+     -- Quando a aposta JÁ existe, o Postgres dispara primeiro o trigger
+     -- BEFORE INSERT e, ao detectar o conflito, dispara também o BEFORE UPDATE.
+     -- Sem o tratamento abaixo, uma única alteração de placar contaria 2 Super
+     -- Palpites (um em cada disparo).
+     IF TG_OP = 'INSERT' THEN
+       -- Se já existe aposta, este INSERT vai virar UPDATE pelo ON CONFLICT.
+       -- Deixamos o caminho do UPDATE contar (uma única vez).
+       IF EXISTS (SELECT 1 FROM bets WHERE user_id = NEW.user_id AND match_id = NEW.match_id) THEN
+         RETURN NEW;
+       END IF;
+       -- Caso contrário é uma aposta realmente nova após o deadline → conta abaixo.
+     ELSIF TG_OP = 'UPDATE' THEN
+       -- Placar não mudou (ex: sync repetido) → não conta.
+       IF OLD.home_score_bet = NEW.home_score_bet AND OLD.away_score_bet = NEW.away_score_bet THEN
+         RETURN NEW;
+       END IF;
      END IF;
 
      -- Verificar saldo do usuário

@@ -14,14 +14,11 @@ import 'package:copa2026/features/profile/screens/profile_screen.dart';
 import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
 import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
-import 'package:copa2026/features/auth/screens/onboarding_screen.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/features/auth/screens/update_password_screen.dart';
-import 'package:copa2026/shared/providers/locale_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  final localeNotifier = ref.watch(localeProvider.notifier);
 
   return GoRouter(
     initialLocation: '/profile',
@@ -30,31 +27,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = authStateValue?.session;
       final authEvent = authStateValue?.event;
       final isLoggedIn = session != null;
-      
+
       final isLoginPage = state.matchedLocation == '/login';
-      final isOnboarding = state.matchedLocation == '/onboarding';
       final isUpdatePassword = state.matchedLocation == '/update-password';
-      final hasSelectedLanguage = localeNotifier.hasSelectedLanguage;
 
       if (authEvent == AuthChangeEvent.passwordRecovery && !isUpdatePassword) {
         return '/update-password';
       }
 
       if (!isLoggedIn && !isLoginPage && !isUpdatePassword) return '/login';
-      
+
+      // O onboarding (idioma + nome + telefone) agora é uma etapa da própria
+      // tela de Perfil, decidida pelos dados da conta (ver ProfileScreen).
       if (isLoggedIn && authEvent != AuthChangeEvent.passwordRecovery) {
-        if (!hasSelectedLanguage && !isOnboarding && !isUpdatePassword) return '/onboarding';
-        if (hasSelectedLanguage && (isLoginPage || isOnboarding || isUpdatePassword)) return '/profile';
+        if (isLoginPage || isUpdatePassword) return '/profile';
       }
-      
+
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/onboarding',
-        name: 'onboarding',
-        builder: (_, __) => const OnboardingScreen(),
-      ),
       GoRoute(
         path: '/profile',
         name: 'profile',

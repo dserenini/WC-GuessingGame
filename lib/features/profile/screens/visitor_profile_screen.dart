@@ -14,9 +14,9 @@ import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 
 /// Read-only view of another user's bets, reached by tapping their name in a
 /// ranking. Each match shows B's bet with the viewer's own bet faded beneath it,
-/// gated by [canRevealMatch]. Access requires the viewer to have completed all
-/// their own bets (anti-copy gate).
-class VisitorProfileScreen extends ConsumerWidget {
+/// gated by [canRevealMatch]. Access requires the viewer to have placed at least
+/// [kRevealMinBets] of their own bets (anti-copy gate).
+class VisitorProfileScreen extends ConsumerStatefulWidget {
   final String userId;
   final RankingEntry? entry;
 
@@ -35,10 +35,31 @@ class VisitorProfileScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VisitorProfileScreen> createState() =>
+      _VisitorProfileScreenState();
+}
+
+class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Consistência da comparação: a SUA aposta (allBetsProvider — global e de
+    // vida longa) costumava vir do cache enquanto a do jogador
+    // (userBetsProvider — criado na hora) vinha fresca. Após uma pontuação ao
+    // vivo, isso fazia o SEU ponto aparecer desatualizado (0) ao lado do dele
+    // (atualizado). Ao abrir o perfil de qualquer jogador, forçamos os dois — e
+    // os jogos, p/ placar/status — a buscar do servidor JUNTOS. Para jogo
+    // encerrado o badge lê bet.points do banco (ver bet_comparison_card.dart).
+    ref.invalidate(allBetsProvider);
+    ref.invalidate(userBetsProvider(widget.userId));
+    ref.invalidate(allMatchesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final name = entry?.displayName ?? '';
+    final name = widget.entry?.displayName ?? '';
     final myStatsAsync = ref.watch(profileStatsProvider);
 
     return Scaffold(
@@ -71,15 +92,19 @@ class VisitorProfileScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _Error(message: e.toString()),
         data: (myStats) {
-          // Access gate: only viewers who filled all their own bets may peek.
+          // Access gate: viewers who filled at least kRevealMinBets of their own
+          // bets may peek (não precisa mais preencher todos os jogos).
           // Bypassed in debug builds with kDebugForceReveal, for local testing.
+          final required = myStats.totalMatches < kRevealMinBets
+              ? myStats.totalMatches
+              : kRevealMinBets;
           final gateOpen = (kDebugMode && kDebugForceReveal) ||
-              myStats.totalBets >= myStats.totalMatches;
+              myStats.totalBets >= required;
 
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(allMatchesProvider);
-              ref.invalidate(userBetsProvider(userId));
+              ref.invalidate(userBetsProvider(widget.userId));
               ref.invalidate(allBetsProvider);
               ref.invalidate(revealConfigProvider);
               ref.invalidate(profileStatsProvider);
@@ -88,15 +113,15 @@ class VisitorProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 24),
               children: [
                 _VisitorHeader(
-                    name: name, entry: entry, l: l, contextLabel: contextLabel),
+                    name: name, entry: widget.entry, l: l, contextLabel: widget.contextLabel),
                 if (!gateOpen)
                   _AccessGate(
                     done: myStats.totalBets,
-                    total: myStats.totalMatches,
+                    total: required,
                     l: l,
                   )
                 else
-                  _BetList(userId: userId, bName: name, statFilter: statFilter),
+                  _BetList(userId: widget.userId, bName: name, statFilter: widget.statFilter),
               ],
             ),
           );

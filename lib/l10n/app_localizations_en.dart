@@ -1016,7 +1016,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completeBetsToViewSub =>
-      'You must fill in all of your bets before you can view the other participants\' predictions.';
+      'You must place at least 65 of your bets before you can view the other participants\' predictions.';
 
   @override
   String rankPositionShort(int rank) {

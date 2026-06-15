@@ -14,6 +14,7 @@ class ProfileStats {
   final int resultHits;  // points == 1 (acerto no resultado)
   final int superPalpitesUsed;
   final String? phone;
+  final String? locale;
   final bool paid;
 
   const ProfileStats({
@@ -29,6 +30,7 @@ class ProfileStats {
     required this.resultHits,
     required this.superPalpitesUsed,
     this.phone,
+    this.locale,
     required this.paid,
   });
 }
@@ -44,7 +46,7 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
   // Fetch profile
   final profileData = await client
       .from('profiles')
-      .select('username, full_name, display_preference, avatar_url, super_palpites_used, phone, paid')
+      .select('username, full_name, display_preference, avatar_url, super_palpites_used, phone, locale, paid')
       .eq('id', user.id)
       .single();
 
@@ -87,6 +89,7 @@ final profileStatsProvider = FutureProvider<ProfileStats>((ref) async {
     resultHits: resultHits,
     superPalpitesUsed: (profileData['super_palpites_used'] as num?)?.toInt() ?? 0,
     phone: profileData['phone'] as String?,
+    locale: profileData['locale'] as String?,
     paid: profileData['paid'] == true,
   );
 });

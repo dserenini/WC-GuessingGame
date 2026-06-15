@@ -1016,7 +1016,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get completeBetsToViewSub =>
-      'Você precisa preencher todas as suas apostas para visualizar os palpites dos outros participantes.';
+      'Você precisa preencher pelo menos 65 das suas apostas para visualizar os palpites dos outros participantes.';
 
   @override
   String rankPositionShort(int rank) {

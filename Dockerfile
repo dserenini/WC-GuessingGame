@@ -23,10 +23,20 @@ ARG SUPABASE_ANON_KEY
 ARG MASTER_DATA_CSV_URL
 
 # Build Web Minified
+# --pwa-strategy=none: o service worker do Flutter foi deprecado e gerava um
+# cache que prendia o app na versão da instalação. Usamos o nosso próprio
+# service worker (web/sw.js, network-first) registrado pelo index.html.
 RUN flutter build web --release \
+    --pwa-strategy=none \
     --dart-define=SUPABASE_URL=$SUPABASE_URL \
     --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
     --dart-define=MASTER_DATA_CSV_URL=$MASTER_DATA_CSV_URL
+
+# Com --pwa-strategy=none o Flutter escreve um flutter_service_worker.js VAZIO.
+# Sobrescrevemos com o nosso stub de "cura", que desinstala o service worker de
+# cache antigo (cache-first) que ainda prende usuários instalados em versões
+# anteriores. Sem isso, eles nunca recebem a atualização.
+RUN cp web/flutter_service_worker.js build/web/flutter_service_worker.js
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2: Serve with Nginx

@@ -503,6 +503,47 @@ FROM bets b
 JOIN profiles p ON p.id = b.user_id;
 
 -- ─────────────────────────────────────────────
+-- ACHIEVEMENTS (Estatísticas Avançadas — aba "Conquistas")
+-- A lógica de cada conquista é avaliada no cliente; aqui só persistimos o
+-- desbloqueio (com data) e expomos a raridade (quantos têm cada conquista).
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_achievements (
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  achievement_key TEXT NOT NULL,
+  unlocked_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, achievement_key)
+);
+
+ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read achievements"
+  ON user_achievements FOR SELECT USING (true);
+
+CREATE POLICY "Users insert their own achievements"
+  ON user_achievements FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Grava as conquistas recém-desbloqueadas do usuário chamador (idempotente).
+CREATE OR REPLACE FUNCTION grant_achievements(p_keys TEXT[])
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  INSERT INTO user_achievements (user_id, achievement_key)
+  SELECT auth.uid(), k FROM unnest(p_keys) AS k
+  WHERE auth.uid() IS NOT NULL
+  ON CONFLICT (user_id, achievement_key) DO NOTHING;
+$$;
+
+GRANT EXECUTE ON FUNCTION grant_achievements(TEXT[]) TO authenticated;
+
+-- Quantos jogadores já têm cada conquista (para o "% dos jogadores").
+CREATE OR REPLACE VIEW achievement_rarity WITH (security_invoker = on) AS
+SELECT achievement_key, COUNT(DISTINCT user_id) AS n_users
+FROM user_achievements
+GROUP BY achievement_key;
+
+-- ─────────────────────────────────────────────
 -- ENABLE REALTIME
 -- ─────────────────────────────────────────────
 ALTER PUBLICATION supabase_realtime ADD TABLE bets;

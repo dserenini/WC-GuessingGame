@@ -25,8 +25,9 @@
   **C. Momentos & "Quase"** ✅ _(client-side)_
   - 😤 Por um gol (seus jogos quase cravados) · 🦓 Sua maior zebra (placar exato num jogo improvável) · 🤡 Seu pior palpite (maior diferença apostado × real).
 
-  **E. Gamificação / diversão**
-  - 🎭 Arquétipo de Apostador (O Profeta, O Patriota, O Cartola, Coração na Mão, Pé-Frio…) ✅ · 🏅 Conquistas/Badges (Hat-trick de Exatos, Patriota, Vidente, Zebreiro) ✅/🔶 · 🎁 Wrapped do Bolão (card estilo Spotify Wrapped, compartilhável, fim da fase de grupos) ✅.
+  **E. Gamificação (aba Conquistas)** — ✅ **COMPLETA** _(álbum de emblemas; tabela user_achievements + RPC grant_achievements + view achievement_rarity)_
+  - Grid com 15 conquistas (cinza→dourado, barra de progresso, raridade "% dos jogadores", evidência "ver os jogos"): tier Placares Exatos (Bronze/Prata/Ouro = 1/3/5), Sabia do Empate, Ousadia e Alegria, Embalado (3), Pé-quente (5), Dia Cheio, Volta ao Mundo, Dono do Grupo, Coração Verde-Amarelo, Profeta (<10%), Bem-vindo à Panela, Meio Século (50 pts), Quase Lá.
+  - Futuro (2ª leva): 🎭 Arquétipo de Apostador · 🎁 Wrapped do Bolão · marcos competitivos (No Pódio/#1) · Fundador/Sociável · conquistas secretas.
 
   **F. Curiosidades coletivas (aba Bolão)** — ✅ **COMPLETA** _(views: score_popularity, match_predictability, bet_pickers)_
   - 🎲 Jogos mais imprevisíveis (menos cravaram) · 🧠 Esse todo mundo sabia (mais cravaram) — ambos mostram jogo/placar, quantos e quem cravou · 📊 Palpites mais populares (% + abs, com consulta de placar) · 🦄 Palpites únicos (mais raros; desempate por diferença de gols, depois total de gols; toque mostra jogo × usuário).

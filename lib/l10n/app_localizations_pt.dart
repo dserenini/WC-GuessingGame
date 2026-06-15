@@ -390,6 +390,117 @@ class AppLocalizationsPt extends AppLocalizations {
   String get poolLookupNotFound => 'Nenhum palpite com esse placar';
 
   @override
+  String get achBronze => 'Bronze';
+
+  @override
+  String get achPrata => 'Prata';
+
+  @override
+  String get achOuro => 'Ouro';
+
+  @override
+  String get achRarityOf => 'dos jogadores';
+
+  @override
+  String get achUnlocked => 'Conquistado';
+
+  @override
+  String get achUnlockedOn => 'Conquistado em';
+
+  @override
+  String get achViewGames => 'Ver os jogos';
+
+  @override
+  String get achExactTitle => 'Placares Exatos';
+
+  @override
+  String get achExactDesc => 'Crave placares exatos';
+
+  @override
+  String get achEmpateName => 'Sabia do Empate';
+
+  @override
+  String get achEmpateDesc => 'Crave um empate';
+
+  @override
+  String get achOusadiaName => 'Ousadia e Alegria';
+
+  @override
+  String get achOusadiaDesc => 'Crave um palpite ousado (≥5 de diferença ou ≥7 gols)';
+
+  @override
+  String get achEmbaladoName => 'Embalado';
+
+  @override
+  String get achEmbaladoDesc => 'Pontue em vários jogos seguidos';
+
+  @override
+  String get achPequenteName => 'Pé-quente';
+
+  @override
+  String get achPequenteDesc => 'Pontue em 5 jogos seguidos';
+
+  @override
+  String get achDiaCheioName => 'Dia Cheio';
+
+  @override
+  String get achDiaCheioDesc => 'Pontue em todos os jogos de um dia';
+
+  @override
+  String get achVoltaName => 'Volta ao Mundo';
+
+  @override
+  String get achVoltaDesc => 'Pontue em todos os grupos';
+
+  @override
+  String get achDonoName => 'Dono do Grupo';
+
+  @override
+  String get achDonoDesc => 'Faça 6+ pontos num grupo';
+
+  @override
+  String get achBrasilName => 'Coração Verde-Amarelo';
+
+  @override
+  String get achBrasilDesc => 'Pontue num jogo do Brasil';
+
+  @override
+  String get achProfetaName => 'Profeta';
+
+  @override
+  String get achProfetaDesc => 'Crave um placar que menos de 10% cravou';
+
+  @override
+  String get achPanelaName => 'Bem-vindo à Panela';
+
+  @override
+  String get achPanelaDesc => 'Entre em uma liga';
+
+  @override
+  String get achMeioSeculoName => 'Tá chovendo pontos';
+
+  @override
+  String get achMeioSeculoDesc => 'Alcance 50 pontos no total';
+
+  @override
+  String get achQuaseName => 'Quase Lá';
+
+  @override
+  String get achQuaseDesc => 'Acumule 5 "quases" (errou o placar por 1 gol)';
+
+  @override
+  String get achNewUnlocked => 'Nova conquista!';
+
+  @override
+  String get achNice => 'Boa!';
+
+  @override
+  String get achViewAchievement => 'Ver conquista';
+
+  @override
+  String get achClose => 'Fechar';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override

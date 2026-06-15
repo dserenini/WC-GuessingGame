@@ -658,6 +658,117 @@ abstract class AppLocalizations {
   /// No description provided for @poolLookupNotFound.
   String get poolLookupNotFound;
 
+  /// No description provided for @achBronze.
+  String get achBronze;
+
+  /// No description provided for @achPrata.
+  String get achPrata;
+
+  /// No description provided for @achOuro.
+  String get achOuro;
+
+  /// No description provided for @achRarityOf.
+  String get achRarityOf;
+
+  /// No description provided for @achUnlocked.
+  String get achUnlocked;
+
+  /// No description provided for @achUnlockedOn.
+  String get achUnlockedOn;
+
+  /// No description provided for @achViewGames.
+  String get achViewGames;
+
+  /// No description provided for @achExactTitle.
+  String get achExactTitle;
+
+  /// No description provided for @achExactDesc.
+  String get achExactDesc;
+
+  /// No description provided for @achEmpateName.
+  String get achEmpateName;
+
+  /// No description provided for @achEmpateDesc.
+  String get achEmpateDesc;
+
+  /// No description provided for @achOusadiaName.
+  String get achOusadiaName;
+
+  /// No description provided for @achOusadiaDesc.
+  String get achOusadiaDesc;
+
+  /// No description provided for @achEmbaladoName.
+  String get achEmbaladoName;
+
+  /// No description provided for @achEmbaladoDesc.
+  String get achEmbaladoDesc;
+
+  /// No description provided for @achPequenteName.
+  String get achPequenteName;
+
+  /// No description provided for @achPequenteDesc.
+  String get achPequenteDesc;
+
+  /// No description provided for @achDiaCheioName.
+  String get achDiaCheioName;
+
+  /// No description provided for @achDiaCheioDesc.
+  String get achDiaCheioDesc;
+
+  /// No description provided for @achVoltaName.
+  String get achVoltaName;
+
+  /// No description provided for @achVoltaDesc.
+  String get achVoltaDesc;
+
+  /// No description provided for @achDonoName.
+  String get achDonoName;
+
+  /// No description provided for @achDonoDesc.
+  String get achDonoDesc;
+
+  /// No description provided for @achBrasilName.
+  String get achBrasilName;
+
+  /// No description provided for @achBrasilDesc.
+  String get achBrasilDesc;
+
+  /// No description provided for @achProfetaName.
+  String get achProfetaName;
+
+  /// No description provided for @achProfetaDesc.
+  String get achProfetaDesc;
+
+  /// No description provided for @achPanelaName.
+  String get achPanelaName;
+
+  /// No description provided for @achPanelaDesc.
+  String get achPanelaDesc;
+
+  /// No description provided for @achMeioSeculoName.
+  String get achMeioSeculoName;
+
+  /// No description provided for @achMeioSeculoDesc.
+  String get achMeioSeculoDesc;
+
+  /// No description provided for @achQuaseName.
+  String get achQuaseName;
+
+  /// No description provided for @achQuaseDesc.
+  String get achQuaseDesc;
+
+  /// No description provided for @achNewUnlocked.
+  String get achNewUnlocked;
+
+  /// No description provided for @achNice.
+  String get achNice;
+
+  /// No description provided for @achViewAchievement.
+  String get achViewAchievement;
+
+  /// No description provided for @achClose.
+  String get achClose;
+
   /// No description provided for @statPointsUnit.
   String get statPointsUnit;
 

@@ -391,6 +391,117 @@ class AppLocalizationsIt extends AppLocalizations {
   String get poolLookupNotFound => 'Nessun pronostico con quel risultato';
 
   @override
+  String get achBronze => 'Bronzo';
+
+  @override
+  String get achPrata => 'Argento';
+
+  @override
+  String get achOuro => 'Oro';
+
+  @override
+  String get achRarityOf => 'dei giocatori';
+
+  @override
+  String get achUnlocked => 'Sbloccato';
+
+  @override
+  String get achUnlockedOn => 'Sbloccato il';
+
+  @override
+  String get achViewGames => 'Vedi le partite';
+
+  @override
+  String get achExactTitle => 'Risultati Esatti';
+
+  @override
+  String get achExactDesc => 'Azzecca risultati esatti';
+
+  @override
+  String get achEmpateName => 'Sapevo del Pari';
+
+  @override
+  String get achEmpateDesc => 'Azzecca un pareggio';
+
+  @override
+  String get achOusadiaName => 'Coraggio e Allegria';
+
+  @override
+  String get achOusadiaDesc => 'Azzecca un pronostico audace (5+ di scarto o 7+ gol)';
+
+  @override
+  String get achEmbaladoName => 'In Fiamme';
+
+  @override
+  String get achEmbaladoDesc => 'Fai punti in più partite di fila';
+
+  @override
+  String get achPequenteName => 'Caldissimo';
+
+  @override
+  String get achPequenteDesc => 'Fai punti in 5 partite di fila';
+
+  @override
+  String get achDiaCheioName => 'Giornata Piena';
+
+  @override
+  String get achDiaCheioDesc => 'Fai punti in tutte le partite di un giorno';
+
+  @override
+  String get achVoltaName => 'Giro del Mondo';
+
+  @override
+  String get achVoltaDesc => 'Fai punti in tutti i gironi';
+
+  @override
+  String get achDonoName => 'Padrone del Girone';
+
+  @override
+  String get achDonoDesc => 'Fai 6+ punti in un girone';
+
+  @override
+  String get achBrasilName => 'Cuore Verdeoro';
+
+  @override
+  String get achBrasilDesc => 'Fai punti in una partita del Brasile';
+
+  @override
+  String get achProfetaName => 'Profeta';
+
+  @override
+  String get achProfetaDesc => 'Azzecca un risultato che meno del 10% ha azzeccato';
+
+  @override
+  String get achPanelaName => 'Benvenuto nel Gruppo';
+
+  @override
+  String get achPanelaDesc => 'Entra in una lega';
+
+  @override
+  String get achMeioSeculoName => 'Piove Punti';
+
+  @override
+  String get achMeioSeculoDesc => 'Raggiungi 50 punti totali';
+
+  @override
+  String get achQuaseName => 'Quasi';
+
+  @override
+  String get achQuaseDesc => 'Colleziona 5 "quasi" (sbagliato per 1 gol)';
+
+  @override
+  String get achNewUnlocked => 'Nuovo traguardo!';
+
+  @override
+  String get achNice => 'Forte!';
+
+  @override
+  String get achViewAchievement => 'Vedi traguardo';
+
+  @override
+  String get achClose => 'Chiudi';
+
+  @override
   String get statPointsUnit => 'pti';
 
   @override

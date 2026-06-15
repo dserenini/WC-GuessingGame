@@ -86,7 +86,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/stats',
         name: 'advanced-stats',
-        builder: (_, __) => const AdvancedStatsScreen(),
+        builder: (_, state) {
+          final tab = state.extra is int ? state.extra as int : 0;
+          return AdvancedStatsScreen(initialTab: tab);
+        },
       ),
       GoRoute(
         path: '/user/:userId',

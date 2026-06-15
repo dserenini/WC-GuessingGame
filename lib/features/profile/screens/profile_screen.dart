@@ -15,6 +15,8 @@ import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/profile/screens/profile_completion_screen.dart';
+import 'package:copa2026/features/profile/providers/achievements_provider.dart';
+import 'package:copa2026/features/profile/widgets/achievements_cards.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -25,6 +27,16 @@ class ProfileScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(profileStatsProvider);
     final cs = Theme.of(context).colorScheme;
+
+    // Pop a celebration on the home screen when new achievements unlock.
+    ref.listen(achievementSyncProvider, (prev, next) {
+      final newly = next.valueOrNull?.newlyGranted ?? const <String>[];
+      if (newly.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) showAchievementCelebration(context, newly, l);
+        });
+      }
+    });
 
     return statsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),

@@ -390,6 +390,117 @@ class AppLocalizationsEn extends AppLocalizations {
   String get poolLookupNotFound => 'No picks with that scoreline';
 
   @override
+  String get achBronze => 'Bronze';
+
+  @override
+  String get achPrata => 'Silver';
+
+  @override
+  String get achOuro => 'Gold';
+
+  @override
+  String get achRarityOf => 'of players';
+
+  @override
+  String get achUnlocked => 'Unlocked';
+
+  @override
+  String get achUnlockedOn => 'Unlocked on';
+
+  @override
+  String get achViewGames => 'View the games';
+
+  @override
+  String get achExactTitle => 'Exact Scores';
+
+  @override
+  String get achExactDesc => 'Nail exact scorelines';
+
+  @override
+  String get achEmpateName => 'Knew the Draw';
+
+  @override
+  String get achEmpateDesc => 'Nail a draw';
+
+  @override
+  String get achOusadiaName => 'Living Dangerously';
+
+  @override
+  String get achOusadiaDesc => 'Nail a bold pick (5+ goal gap or 7+ goals)';
+
+  @override
+  String get achEmbaladoName => 'On Fire';
+
+  @override
+  String get achEmbaladoDesc => 'Score in several games in a row';
+
+  @override
+  String get achPequenteName => 'Red Hot';
+
+  @override
+  String get achPequenteDesc => 'Score in 5 games in a row';
+
+  @override
+  String get achDiaCheioName => 'Full Day';
+
+  @override
+  String get achDiaCheioDesc => 'Score in every game of a day';
+
+  @override
+  String get achVoltaName => 'Around the World';
+
+  @override
+  String get achVoltaDesc => 'Score in every group';
+
+  @override
+  String get achDonoName => 'Group Boss';
+
+  @override
+  String get achDonoDesc => 'Get 6+ points in a group';
+
+  @override
+  String get achBrasilName => 'Green & Yellow Heart';
+
+  @override
+  String get achBrasilDesc => 'Score in a Brazil game';
+
+  @override
+  String get achProfetaName => 'Prophet';
+
+  @override
+  String get achProfetaDesc => 'Nail a scoreline fewer than 10% nailed';
+
+  @override
+  String get achPanelaName => 'Welcome Aboard';
+
+  @override
+  String get achPanelaDesc => 'Join a league';
+
+  @override
+  String get achMeioSeculoName => 'Raining Points';
+
+  @override
+  String get achMeioSeculoDesc => 'Reach 50 total points';
+
+  @override
+  String get achQuaseName => 'So Close';
+
+  @override
+  String get achQuaseDesc => 'Rack up 5 near-misses (off by 1 goal)';
+
+  @override
+  String get achNewUnlocked => 'New achievement!';
+
+  @override
+  String get achNice => 'Nice!';
+
+  @override
+  String get achViewAchievement => 'View achievement';
+
+  @override
+  String get achClose => 'Close';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override

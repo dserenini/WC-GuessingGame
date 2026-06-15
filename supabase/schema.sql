@@ -474,6 +474,35 @@ WHERE b.points = 3
   AND sp.n_same::numeric / mt.n_bets < 0.20;
 
 -- ─────────────────────────────────────────────
+-- POOL-WIDE CURIOSITIES (Estatísticas Avançadas — família F, aba "Bolão")
+-- Agregados sobre TODOS os palpites do bolão. Só expõem dados já legíveis
+-- (bets SELECT USING(true)); o gating de reveal é aplicado no cliente.
+-- ─────────────────────────────────────────────
+
+-- Distribuição de placares apostados (palpites populares / únicos).
+CREATE OR REPLACE VIEW score_popularity WITH (security_invoker = on) AS
+SELECT home_score_bet, away_score_bet, COUNT(*) AS n
+FROM bets
+GROUP BY home_score_bet, away_score_bet;
+
+-- Quantas pessoas cravaram cada jogo finalizado (mais/menos previsíveis).
+CREATE OR REPLACE VIEW match_predictability WITH (security_invoker = on) AS
+SELECT b.match_id,
+       COUNT(*) FILTER (WHERE b.points = 3) AS exact_count,
+       COUNT(*)                             AS total_bets
+FROM bets b
+JOIN matches m ON m.id = b.match_id AND m.status = 'finished'
+GROUP BY b.match_id;
+
+-- Palpites com a identidade do apostador, para os detalhes "quem cravou /
+-- quem apostou esse placar". Filtrado no cliente por match_id+points ou placar.
+CREATE OR REPLACE VIEW bet_pickers WITH (security_invoker = on) AS
+SELECT b.match_id, b.home_score_bet, b.away_score_bet, b.points,
+       p.id AS user_id, p.username, p.full_name, p.display_preference, p.avatar_url
+FROM bets b
+JOIN profiles p ON p.id = b.user_id;
+
+-- ─────────────────────────────────────────────
 -- ENABLE REALTIME
 -- ─────────────────────────────────────────────
 ALTER PUBLICATION supabase_realtime ADD TABLE bets;

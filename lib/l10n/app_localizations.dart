@@ -616,6 +616,48 @@ abstract class AppLocalizations {
   /// No description provided for @statWorstPlural.
   String get statWorstPlural;
 
+  /// No description provided for @poolUnpredictableTitle.
+  String get poolUnpredictableTitle;
+
+  /// No description provided for @poolUnpredictableSub.
+  String get poolUnpredictableSub;
+
+  /// No description provided for @poolEveryoneKnewTitle.
+  String get poolEveryoneKnewTitle;
+
+  /// No description provided for @poolEveryoneKnewSub.
+  String get poolEveryoneKnewSub;
+
+  /// No description provided for @poolPopularTitle.
+  String get poolPopularTitle;
+
+  /// No description provided for @poolPopularSub.
+  String get poolPopularSub;
+
+  /// No description provided for @poolUniqueTitle.
+  String get poolUniqueTitle;
+
+  /// No description provided for @poolUniqueSub.
+  String get poolUniqueSub;
+
+  /// No description provided for @poolNailedLabel.
+  String get poolNailedLabel;
+
+  /// No description provided for @poolWhoNailed.
+  String get poolWhoNailed;
+
+  /// No description provided for @poolNobodyNailed.
+  String get poolNobodyNailed;
+
+  /// No description provided for @poolLookupTitle.
+  String get poolLookupTitle;
+
+  /// No description provided for @poolLookupHint.
+  String get poolLookupHint;
+
+  /// No description provided for @poolLookupNotFound.
+  String get poolLookupNotFound;
+
   /// No description provided for @statPointsUnit.
   String get statPointsUnit;
 
@@ -624,6 +666,12 @@ abstract class AppLocalizations {
 
   /// No description provided for @statsSeeAll.
   String get statsSeeAll;
+
+  /// No description provided for @statsSeeMore.
+  String get statsSeeMore;
+
+  /// No description provided for @statsSeeLess.
+  String get statsSeeLess;
 
   /// No description provided for @statsComingSoon.
   String get statsComingSoon;

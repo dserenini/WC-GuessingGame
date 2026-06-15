@@ -349,6 +349,48 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statWorstPlural => 'Peggiori';
 
   @override
+  String get poolUnpredictableTitle => 'Partite più imprevedibili';
+
+  @override
+  String get poolUnpredictableSub => 'Dove meno gente ha azzeccato';
+
+  @override
+  String get poolEveryoneKnewTitle => 'Lo sapevano tutti';
+
+  @override
+  String get poolEveryoneKnewSub => 'Dove più gente ha azzeccato';
+
+  @override
+  String get poolPopularTitle => 'Pronostici più popolari';
+
+  @override
+  String get poolPopularSub => 'I risultati più giocati del girone';
+
+  @override
+  String get poolUniqueTitle => 'Pronostici unici';
+
+  @override
+  String get poolUniqueSub => 'I risultati più rari del girone';
+
+  @override
+  String get poolNailedLabel => 'azzeccato';
+
+  @override
+  String get poolWhoNailed => 'Chi ha azzeccato';
+
+  @override
+  String get poolNobodyNailed => 'Nessuno ha azzeccato questa partita';
+
+  @override
+  String get poolLookupTitle => 'Cerca un risultato';
+
+  @override
+  String get poolLookupHint => 'es. 1-1';
+
+  @override
+  String get poolLookupNotFound => 'Nessun pronostico con quel risultato';
+
+  @override
   String get statPointsUnit => 'pti';
 
   @override
@@ -356,6 +398,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get statsSeeAll => 'Vedi tutti';
+
+  @override
+  String get statsSeeMore => 'Mostra altri';
+
+  @override
+  String get statsSeeLess => 'Mostra meno';
 
   @override
   String get statsComingSoon => 'Presto in questa scheda!';

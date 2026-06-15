@@ -348,6 +348,48 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statWorstPlural => 'Piores';
 
   @override
+  String get poolUnpredictableTitle => 'Jogos mais imprevisíveis';
+
+  @override
+  String get poolUnpredictableSub => 'Onde menos gente cravou o placar';
+
+  @override
+  String get poolEveryoneKnewTitle => 'Esse todo mundo sabia';
+
+  @override
+  String get poolEveryoneKnewSub => 'Onde mais gente cravou o placar';
+
+  @override
+  String get poolPopularTitle => 'Palpites mais populares';
+
+  @override
+  String get poolPopularSub => 'Os placares mais apostados do bolão';
+
+  @override
+  String get poolUniqueTitle => 'Palpites únicos';
+
+  @override
+  String get poolUniqueSub => 'Os placares mais raros do bolão';
+
+  @override
+  String get poolNailedLabel => 'cravaram';
+
+  @override
+  String get poolWhoNailed => 'Quem cravou';
+
+  @override
+  String get poolNobodyNailed => 'Ninguém cravou este jogo';
+
+  @override
+  String get poolLookupTitle => 'Consultar um placar';
+
+  @override
+  String get poolLookupHint => 'ex.: 1-1';
+
+  @override
+  String get poolLookupNotFound => 'Nenhum palpite com esse placar';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override
@@ -355,6 +397,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get statsSeeAll => 'Ver todos';
+
+  @override
+  String get statsSeeMore => 'Ver mais';
+
+  @override
+  String get statsSeeLess => 'Ver menos';
 
   @override
   String get statsComingSoon => 'Em breve, nesta aba!';

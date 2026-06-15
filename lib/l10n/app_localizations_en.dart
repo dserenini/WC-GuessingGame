@@ -348,6 +348,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statWorstPlural => 'Worst';
 
   @override
+  String get poolUnpredictableTitle => 'Most unpredictable games';
+
+  @override
+  String get poolUnpredictableSub => 'Where the fewest nailed the score';
+
+  @override
+  String get poolEveryoneKnewTitle => 'Everyone saw it coming';
+
+  @override
+  String get poolEveryoneKnewSub => 'Where the most nailed the score';
+
+  @override
+  String get poolPopularTitle => 'Most popular picks';
+
+  @override
+  String get poolPopularSub => 'The pool\'s most-bet scorelines';
+
+  @override
+  String get poolUniqueTitle => 'Unique picks';
+
+  @override
+  String get poolUniqueSub => 'The pool\'s rarest scorelines';
+
+  @override
+  String get poolNailedLabel => 'nailed it';
+
+  @override
+  String get poolWhoNailed => 'Who nailed it';
+
+  @override
+  String get poolNobodyNailed => 'Nobody nailed this game';
+
+  @override
+  String get poolLookupTitle => 'Look up a scoreline';
+
+  @override
+  String get poolLookupHint => 'e.g. 1-1';
+
+  @override
+  String get poolLookupNotFound => 'No picks with that scoreline';
+
+  @override
   String get statPointsUnit => 'pts';
 
   @override
@@ -355,6 +397,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsSeeAll => 'See all';
+
+  @override
+  String get statsSeeMore => 'See more';
+
+  @override
+  String get statsSeeLess => 'See less';
 
   @override
   String get statsComingSoon => 'Coming soon to this tab!';

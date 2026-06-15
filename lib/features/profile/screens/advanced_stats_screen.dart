@@ -4,11 +4,12 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart';
 import 'package:copa2026/features/profile/widgets/stat_ranking_card.dart';
 import 'package:copa2026/features/profile/widgets/personal_stats_cards.dart';
+import 'package:copa2026/features/profile/widgets/pool_stats_cards.dart';
 
-/// Tela dedicada de "Estatísticas Avançadas" com abas. Famílias A (Rankings) e
-/// B (Pessoal) entregues. As abas "Conquistas" e "Bolão" ficam ocultas até
-/// serem implementadas — basta voltar a length: 4 e reincluir as Tabs/children
-/// (rótulos l.statsTabAchievements / l.statsTabPool já existem no i18n).
+/// Tela dedicada de "Estatísticas Avançadas" com abas. Famílias A (Rankings),
+/// B (Pessoal) e F (Bolão) entregues. A aba "Conquistas" fica oculta até ser
+/// implementada — basta aumentar o length e reincluir a Tab/child
+/// (rótulo l.statsTabAchievements já existe no i18n).
 class AdvancedStatsScreen extends StatelessWidget {
   const AdvancedStatsScreen({super.key});
 
@@ -17,7 +18,7 @@ class AdvancedStatsScreen extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text('📊 ${l.advancedStats}'),
@@ -25,6 +26,7 @@ class AdvancedStatsScreen extends StatelessWidget {
             tabs: [
               Tab(text: l.statsTabRankings),
               Tab(text: l.statsTabPersonal),
+              Tab(text: l.statsTabPool),
             ],
           ),
         ),
@@ -32,6 +34,7 @@ class AdvancedStatsScreen extends StatelessWidget {
           children: [
             _RankingsTab(),
             PersonalStatsTab(),
+            PoolStatsTab(),
           ],
         ),
       ),

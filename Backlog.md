@@ -28,7 +28,7 @@
   **E. Gamificação / diversão**
   - 🎭 Arquétipo de Apostador (O Profeta, O Patriota, O Cartola, Coração na Mão, Pé-Frio…) ✅ · 🏅 Conquistas/Badges (Hat-trick de Exatos, Patriota, Vidente, Zebreiro) ✅/🔶 · 🎁 Wrapped do Bolão (card estilo Spotify Wrapped, compartilhável, fim da fase de grupos) ✅.
 
-  **F. Curiosidades coletivas**
-  - 🧩 Jogo mais difícil do bolão (onde menos gente pontuou) · 📌 Palpite mais popular (placar mais apostado num jogo).
+  **F. Curiosidades coletivas (aba Bolão)** — ✅ **COMPLETA** _(views: score_popularity, match_predictability, bet_pickers)_
+  - 🎲 Jogos mais imprevisíveis (menos cravaram) · 🧠 Esse todo mundo sabia (mais cravaram) — ambos mostram jogo/placar, quantos e quem cravou · 📊 Palpites mais populares (% + abs, com consulta de placar) · 🦄 Palpites únicos (mais raros; desempate por diferença de gols, depois total de gols; toque mostra jogo × usuário).
 
 

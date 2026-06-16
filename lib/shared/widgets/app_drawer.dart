@@ -6,6 +6,8 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/shared/models/match.dart';
+import 'package:copa2026/shared/models/bet.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -80,105 +82,64 @@ class AppDrawer extends ConsumerWidget {
             const Divider(height: 1),
             const SizedBox(height: 8),
 
-            // ── Perfil ────────────────────────
-            _DrawerItem(
-              icon: '👤',
-              label: l.myProfile,
-              selected: currentPath == '/profile',
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/profile');
-              },
-            ),
-
-            // ── Ranking ──────────────────────
-            _DrawerItem(
-              icon: '🏆',
-              label: l.ranking,
-              selected: currentPath == '/ranking',
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/ranking');
-              },
-            ),
-            _DrawerItem(
-              icon: '🏅',
-              label: l.privateLeagues,
-              selected: currentPath == '/leagues',
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/leagues');
-              },
-            ),
-
-            const Divider(height: 24),
-
-            // ── Groups A–L ───────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Text(
-                l.groups,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: cs.onSurface.withOpacity(0.4),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                    ),
-              ),
-            ),
+            // ── Main navigation (scrolls; Groups A–L collapse under "Apostas")
             Expanded(
-              child: ListView.builder(
-                itemCount: kGroups.length,
-                itemBuilder: (_, i) {
-                  final g = kGroups[i];
-                  final path = '/groups/$g';
-                  
-                  final groupMatches = allMatches.where((m) => m.groupLetter == g).toList();
-                  final totalMatches = groupMatches.length;
-                  final placedBets = groupMatches.where((m) => allBets.containsKey(m.id)).length;
-                  
-                  Widget? trailingIndicator;
-                  if (totalMatches > 0) {
-                    final isComplete = placedBets == totalMatches;
-                    final isZero = placedBets == 0;
-                    
-                    Color statusColor;
-                    if (isComplete) {
-                      statusColor = Colors.greenAccent.shade400;
-                    } else if (isZero) {
-                      statusColor = Colors.redAccent.shade400;
-                    } else {
-                      statusColor = Colors.amberAccent.shade400;
-                    }
-
-                    trailingIndicator = Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.15),
-                        border: Border.all(color: statusColor.withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '$placedBets/$totalMatches',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return _DrawerItem(
-                    label: '${l.group} $g',
-                    selected: currentPath == path,
-                    trailing: trailingIndicator,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _DrawerItem(
+                    icon: '🏠',
+                    label: l.home,
+                    selected: currentPath == '/profile',
                     onTap: () {
                       Navigator.pop(context);
-                      context.go(path);
+                      context.go('/profile');
                     },
-                  );
-                },
+                  ),
+                  _DrawerItem(
+                    icon: '🏅',
+                    label: l.statsTabAchievements,
+                    selected: currentPath == '/achievements',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/achievements');
+                    },
+                  ),
+                  _DrawerItem(
+                    icon: '📊',
+                    label: l.advancedStats,
+                    selected: currentPath == '/stats',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/stats');
+                    },
+                  ),
+                  _DrawerItem(
+                    icon: '🏆',
+                    label: l.ranking,
+                    selected: currentPath == '/ranking',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/ranking');
+                    },
+                  ),
+                  _DrawerItem(
+                    icon: '🛡️',
+                    label: l.privateLeagues,
+                    selected: currentPath == '/leagues',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.go('/leagues');
+                    },
+                  ),
+                  // ── Apostas → Grupos A–L (colapsável) ──
+                  _BetsGroup(
+                    currentPath: currentPath,
+                    allMatches: allMatches,
+                    allBets: allBets,
+                    l: l,
+                  ),
+                ],
               ),
             ),
 
@@ -219,6 +180,99 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// "Apostas" — collapsible group holding Groups A–L
+// ─────────────────────────────────────────────
+class _BetsGroup extends StatelessWidget {
+  final String currentPath;
+  final List<MatchModel> allMatches;
+  final Map<String, BetModel> allBets;
+  final AppLocalizations l;
+
+  const _BetsGroup({
+    required this.currentPath,
+    required this.allMatches,
+    required this.allBets,
+    required this.l,
+  });
+
+  /// Per-group bet-progress badge (X/Y, green = complete, amber = partial,
+  /// red = none). Null when the group has no matches loaded yet.
+  Widget? _badge(String g) {
+    final groupMatches = allMatches.where((m) => m.groupLetter == g).toList();
+    final total = groupMatches.length;
+    if (total == 0) return null;
+    final placed = groupMatches.where((m) => allBets.containsKey(m.id)).length;
+
+    final Color statusColor = placed == total
+        ? Colors.greenAccent.shade400
+        : placed == 0
+            ? Colors.redAccent.shade400
+            : Colors.amberAccent.shade400;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.15),
+        border: Border.all(color: statusColor.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '$placed/$total',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: statusColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final onGroups = currentPath.startsWith('/groups/');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Theme(
+        // Drop the ExpansionTile's default top/bottom divider lines.
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          // Auto-open while browsing a group so the active one is visible.
+          initiallyExpanded: onGroups,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.only(left: 16, bottom: 4),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          leading: const Text('🎯', style: TextStyle(fontSize: 18)),
+          title: Text(
+            l.bets,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: onGroups ? FontWeight.w600 : FontWeight.w400,
+              color: onGroups ? cs.primary : null,
+            ),
+          ),
+          children: [
+            for (final g in kGroups)
+              _DrawerItem(
+                label: '${l.group} $g',
+                selected: currentPath == '/groups/$g',
+                trailing: _badge(g),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/groups/$g');
+                },
+              ),
           ],
         ),
       ),

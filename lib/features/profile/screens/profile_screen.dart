@@ -19,6 +19,8 @@ import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/profile/screens/profile_completion_screen.dart';
 import 'package:copa2026/features/profile/providers/achievements_provider.dart';
 import 'package:copa2026/features/profile/widgets/achievements_cards.dart';
+import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
+import 'package:copa2026/shared/widgets/bet_filter_bar.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 
 // Usuários cujo idioma já foi gravado na conta nesta sessão (evita backfill
@@ -135,7 +137,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('👤 ${l.myProfile}'),
+            title: Text('🏠 ${l.home}'),
             leadingWidth: 100,
             leading: Row(
               children: [
@@ -176,9 +178,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // ── Super Palpite Card ─────────────────────────
                 _SuperPalpiteCard(stats: stats, l: l),
                 const SizedBox(height: 24),
-
-                // ── Advanced stats entry ──────────────────
-                _AdvancedStatsEntryCard(l: l),
               ],
             ),
           ),
@@ -265,28 +264,76 @@ class _ProfileHeader extends StatelessWidget {
 // ─────────────────────────────────────────────
 // MATCHES OF THE DAY
 // ─────────────────────────────────────────────
-class _TodayMatchesSection extends ConsumerWidget {
+/// Date-only (year/month/day) in the user's timezone, used to group matches by
+/// matchday and to drive the day picker.
+DateTime _localDate(DateTime utc, Duration offset) {
+  final t = utc.toUtc().add(offset);
+  return DateTime(t.year, t.month, t.day);
+}
+
+class _TodayMatchesSection extends ConsumerStatefulWidget {
   const _TodayMatchesSection();
 
-  String _formatDay(DateTime d, Duration offset) {
-    final t = d.toUtc().add(offset);
-    return '${t.day.toString().padLeft(2, '0')}/'
-        '${t.month.toString().padLeft(2, '0')}';
+  @override
+  ConsumerState<_TodayMatchesSection> createState() =>
+      _TodayMatchesSectionState();
+}
+
+class _TodayMatchesSectionState extends ConsumerState<_TodayMatchesSection> {
+  // null → follow the current tournament day; set → a user-picked matchday.
+  DateTime? _selectedDay;
+
+  String _fmt(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+
+  Future<void> _pickDay(BuildContext context, List<DateTime> matchDays,
+      DateTime current) async {
+    final days = matchDays.toSet();
+    final sorted = matchDays.toList()..sort();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: sorted.first,
+      lastDate: sorted.last,
+      selectableDayPredicate: (d) =>
+          days.contains(DateTime(d.year, d.month, d.day)),
+    );
+    if (picked != null) {
+      setState(() =>
+          _selectedDay = DateTime(picked.year, picked.month, picked.day));
+    }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final matches = ref.watch(matchesOfDayProvider);
-    if (matches.isEmpty) return const SizedBox.shrink();
-
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final bets = ref.watch(allBetsProvider).valueOrNull ?? {};
     final offset = ref.watch(timezoneProvider);
-    final dateLabel = matches.first.matchDate != null
-        ? _formatDay(matches.first.matchDate!, offset)
-        : null;
+    final bets = ref.watch(allBetsProvider).valueOrNull ?? {};
+
+    final all = ref.watch(allMatchesProvider).valueOrNull ?? const [];
+    final dated = all.where((m) => m.matchDate != null).toList();
+    if (dated.isEmpty) return const SizedBox.shrink();
+
+    // Distinct matchdays (for the picker) and the default = current tournament
+    // day, falling back to the last matchday once the tournament is over.
+    final matchDays = <DateTime>{
+      for (final m in dated) _localDate(m.matchDate!, offset)
+    }.toList()
+      ..sort();
+    // Default = current tournament day (the next day with games, in the user's
+    // timezone), falling back to the last matchday once the tournament is over.
+    final todays = ref.watch(matchesOfDayProvider);
+    final defaultDay = todays.isNotEmpty && todays.first.matchDate != null
+        ? _localDate(todays.first.matchDate!, offset)
+        : matchDays.last;
+    final day = _selectedDay ?? defaultDay;
+
+    final shown = dated
+        .where((m) => _localDate(m.matchDate!, offset) == day)
+        .toList()
+      ..sort((a, b) => a.matchDate!.compareTo(b.matchDate!));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,27 +350,44 @@ class _TodayMatchesSection extends ConsumerWidget {
                 style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const Spacer(),
-              if (dateLabel != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    dateLabel,
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w700,
+              // Date chip → opens a calendar restricted to days that have games.
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => _pickDay(context, matchDays, day),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today,
+                            size: 13, color: cs.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          _fmt(day),
+                          style: tt.labelMedium?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down,
+                            size: 18, color: cs.primary),
+                      ],
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
         // Coluna única de cards full-width (mesma largura de Pontos/Super).
-        ...matches.map((m) => _MatchOfDayCard(
+        ...shown.map((m) => _MatchOfDayCard(
               match: m,
               bet: bets[m.id],
               offset: offset,
@@ -696,16 +760,38 @@ class _BetProgressCard extends StatelessWidget {
 // ─────────────────────────────────────────────
 // POINTS CARD
 // ─────────────────────────────────────────────
-class _PointsCard extends StatelessWidget {
+class _PointsCard extends ConsumerWidget {
   final ProfileStats stats;
   final AppLocalizations l;
   const _PointsCard({required this.stats, required this.l});
 
+  /// Opens the viewer's own bets (self mode) pre-filtered to a given outcome,
+  /// so tapping "exact hits" / "result hits" jumps straight to those games.
+  /// Builds a partial entry from the already-loaded [stats] so the header shows
+  /// name/avatar/points instantly; the screen fills in the exact rank once the
+  /// ranking stream loads.
+  void _openSelfBets(BuildContext context, WidgetRef ref, BetOutcome outcome) {
+    final uid = ref.read(currentUserProvider)?.id;
+    if (uid == null) return;
+    final partial = RankingEntry(
+      userId: uid,
+      username: stats.username,
+      fullName: stats.fullName,
+      displayPreference: stats.displayPreference,
+      avatarUrl: stats.avatarUrl,
+      totalPoints: stats.totalPoints,
+      totalBets: stats.totalBets,
+      rank: 0, // filled in by the screen from the ranking stream
+    );
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => VisitorProfileScreen(
+          userId: uid, entry: partial, initialOutcome: outcome),
+    ));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final betsWithResults = stats.exactHits + stats.resultHits +
-        (stats.totalBets - stats.exactHits - stats.resultHits);
 
     return Card(
       child: Padding(
@@ -764,6 +850,8 @@ class _PointsCard extends StatelessWidget {
                     value: '${stats.exactHits}',
                     subtitle: '× 3pts',
                     color: kGold,
+                    onTap: () =>
+                        _openSelfBets(context, ref, BetOutcome.exact),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -774,6 +862,8 @@ class _PointsCard extends StatelessWidget {
                     value: '${stats.resultHits}',
                     subtitle: '× 1pt',
                     color: cs.primary,
+                    onTap: () =>
+                        _openSelfBets(context, ref, BetOutcome.result),
                   ),
                 ),
               ],
@@ -795,19 +885,24 @@ class _StatTile extends StatelessWidget {
   final String subtitle;
   final Color color;
 
+  /// When set, the tile is tappable (opens the user's own bets filtered to the
+  /// matching outcome) and shows a chevron affordance.
+  final VoidCallback? onTap;
+
   const _StatTile({
     required this.icon,
     required this.label,
     required this.value,
     required this.subtitle,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Container(
+    final content = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
@@ -831,6 +926,9 @@ class _StatTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (onTap != null)
+                Icon(Icons.chevron_right,
+                    size: 16, color: cs.onSurface.withOpacity(0.35)),
             ],
           ),
           const SizedBox(height: 8),
@@ -857,57 +955,14 @@ class _StatTile extends StatelessWidget {
         ],
       ),
     );
-  }
-}
 
-// ─────────────────────────────────────────────
-// ADVANCED STATS ENTRY CARD
-// ─────────────────────────────────────────────
-class _AdvancedStatsEntryCard extends StatelessWidget {
-  final AppLocalizations l;
-  const _AdvancedStatsEntryCard({required this.l});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/stats'),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: cs.primary.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.primary.withOpacity(0.25)),
-        ),
-        child: Row(
-          children: [
-            const Text('📊', style: TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l.advancedStats,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l.advancedStatsSub,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: cs.onSurface.withOpacity(0.55),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: cs.primary.withOpacity(0.7)),
-          ],
-        ),
+    if (onTap == null) return content;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: content,
       ),
     );
   }

@@ -13,6 +13,7 @@ import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
 import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
 import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
+import 'package:copa2026/features/profile/screens/achievements_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/features/auth/screens/update_password_screen.dart';
@@ -81,6 +82,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tab = state.extra is int ? state.extra as int : 0;
           return AdvancedStatsScreen(initialTab: tab);
         },
+      ),
+      GoRoute(
+        path: '/achievements',
+        name: 'achievements',
+        builder: (_, __) => const AchievementsScreen(),
       ),
       GoRoute(
         path: '/user/:userId',

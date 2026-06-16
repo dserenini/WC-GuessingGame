@@ -8,6 +8,7 @@ import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart';
 import 'package:copa2026/features/profile/widgets/bet_comparison_card.dart';
@@ -29,12 +30,17 @@ class VisitorProfileScreen extends ConsumerStatefulWidget {
   final StatRanking? statFilter;
   final String? contextLabel;
 
+  /// Optional outcome filter to pre-apply (e.g. opening "exact hits" from the
+  /// profile points card jumps straight to those games).
+  final BetOutcome? initialOutcome;
+
   const VisitorProfileScreen({
     super.key,
     required this.userId,
     this.entry,
     this.statFilter,
     this.contextLabel,
+    this.initialOutcome,
   });
 
   @override
@@ -68,8 +74,23 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final name = widget.entry?.displayName ?? '';
     final isSelf = widget.userId == ref.watch(currentUserProvider)?.id;
+    // For self (or when no entry was passed), resolve the user's ranking row so
+    // the header shows their exact position. A partial entry passed from the
+    // profile (rank 0) is shown instantly and upgraded once the stream loads.
+    RankingEntry? entry = widget.entry;
+    if (isSelf || entry == null) {
+      final ranks = ref.watch(rankingProvider).valueOrNull;
+      if (ranks != null) {
+        for (final e in ranks) {
+          if (e.userId == widget.userId) {
+            entry = e;
+            break;
+          }
+        }
+      }
+    }
+    final name = entry?.displayName ?? '';
     final myStatsAsync = ref.watch(profileStatsProvider);
 
     return Scaffold(
@@ -126,7 +147,7 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
               padding: const EdgeInsets.only(bottom: 24),
               children: [
                 _VisitorHeader(
-                    name: name, entry: widget.entry, l: l, contextLabel: widget.contextLabel),
+                    name: name, entry: entry, l: l, contextLabel: widget.contextLabel),
                 if (!gateOpen)
                   _AccessGate(
                     done: myStats.totalBets,
@@ -139,6 +160,7 @@ class _VisitorProfileScreenState extends ConsumerState<VisitorProfileScreen> {
                     bName: isSelf ? l.statsYou : name,
                     statFilter: widget.statFilter,
                     isSelf: isSelf,
+                    initialOutcome: widget.initialOutcome,
                   ),
               ],
             ),
@@ -211,7 +233,10 @@ class _VisitorHeader extends StatelessWidget {
                 ] else if (entry != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '${l.rankPositionShort(entry!.rank)} · ${l.rankingBetsCount(entry!.totalBets)}',
+                    // Rank omitted until the ranking stream resolves it (rank 0).
+                    entry!.rank > 0
+                        ? '${l.rankPositionShort(entry!.rank)} · ${l.rankingBetsCount(entry!.totalBets)}'
+                        : l.rankingBetsCount(entry!.totalBets),
                     style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 12),
                   ),
                 ],
@@ -247,11 +272,16 @@ class _BetList extends ConsumerStatefulWidget {
   /// dropped and every match is revealed (no anti-copy gating for your own bets).
   final bool isSelf;
 
+  /// Outcome filter to pre-select when the list opens (deep-link from the
+  /// profile points card).
+  final BetOutcome? initialOutcome;
+
   const _BetList(
       {required this.userId,
       required this.bName,
       this.statFilter,
-      this.isSelf = false});
+      this.isSelf = false,
+      this.initialOutcome});
 
   @override
   ConsumerState<_BetList> createState() => _BetListState();
@@ -261,6 +291,12 @@ class _BetListState extends ConsumerState<_BetList> {
   BetScope _scope = BetScope.all;
   BetStatus _status = BetStatus.all;
   final Set<BetOutcome> _outcomes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialOutcome != null) _outcomes.add(widget.initialOutcome!);
+  }
 
   /// Points the screen owner's [bet] scored on [m]: persisted points once the
   /// game is finished, provisional points while it is live, and null when there

@@ -148,6 +148,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myProfile => 'My Profile';
 
   @override
+  String get home => 'Home';
+
+  @override
+  String get bets => 'Bets';
+
+  @override
   String get betsFilled => 'Bets Filled';
 
   @override
@@ -486,7 +492,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achQuaseName => 'So Close';
 
   @override
-  String get achQuaseDesc => 'Rack up 5 near-misses (off by 1 goal)';
+  String get achQuaseDesc => 'Rack up near-misses (off by 1 goal)';
 
   @override
   String get achNewUnlocked => 'New achievement!';
@@ -1099,4 +1105,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchScore => 'Search score (e.g. 2-1)';
+
+  @override
+  String generalRankPosition(int rank) {
+    return '${rank}th overall';
+  }
 }

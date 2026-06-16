@@ -148,6 +148,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get myProfile => 'Il mio Profilo';
 
   @override
+  String get home => 'Home';
+
+  @override
+  String get bets => 'Pronostici';
+
+  @override
   String get betsFilled => 'Scommesse Compilate';
 
   @override
@@ -494,7 +500,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get achQuaseName => 'Quasi';
 
   @override
-  String get achQuaseDesc => 'Colleziona 5 \"quasi\" (sbagliato per 1 gol)';
+  String get achQuaseDesc => 'Colleziona \"quasi\" (sbagliato per 1 gol)';
 
   @override
   String get achNewUnlocked => 'Nuovo traguardo!';
@@ -1114,4 +1120,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get searchScore => 'Cerca risultato (es. 2-1)';
+
+  @override
+  String generalRankPosition(int rank) {
+    return '$rankº in classifica generale';
+  }
 }

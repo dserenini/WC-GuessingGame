@@ -5,14 +5,11 @@ import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart'
 import 'package:copa2026/features/profile/widgets/stat_ranking_card.dart';
 import 'package:copa2026/features/profile/widgets/personal_stats_cards.dart';
 import 'package:copa2026/features/profile/widgets/pool_stats_cards.dart';
-import 'package:copa2026/features/profile/widgets/achievements_cards.dart';
+import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 /// Tela dedicada de "Estatísticas Avançadas" com abas. Famílias A (Rankings),
-/// B (Pessoal), E (Conquistas) e F (Bolão) entregues.
-/// Index of the "Conquistas" tab (last), used when deep-linking from the
-/// achievement celebration dialog.
-const int kAchievementsTabIndex = 3;
-
+/// B (Pessoal) e F (Bolão). As Conquistas têm página própria (/achievements).
 class AdvancedStatsScreen extends StatelessWidget {
   final int initialTab;
   const AdvancedStatsScreen({super.key, this.initialTab = 0});
@@ -22,11 +19,24 @@ class AdvancedStatsScreen extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
 
     return DefaultTabController(
-      length: 4,
-      initialIndex: initialTab.clamp(0, 3),
+      length: 3,
+      initialIndex: initialTab.clamp(0, 2),
       child: Scaffold(
+        drawer: const AppDrawer(),
         appBar: AppBar(
           title: Text('📊 ${l.advancedStats}'),
+          leadingWidth: 100,
+          leading: Row(
+            children: [
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+              const NotificationBell(),
+            ],
+          ),
           bottom: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -34,7 +44,6 @@ class AdvancedStatsScreen extends StatelessWidget {
               Tab(text: l.statsTabRankings),
               Tab(text: l.statsTabPersonal),
               Tab(text: l.statsTabPool),
-              Tab(text: l.statsTabAchievements),
             ],
           ),
         ),
@@ -43,7 +52,6 @@ class AdvancedStatsScreen extends StatelessWidget {
             _RankingsTab(),
             PersonalStatsTab(),
             PoolStatsTab(),
-            AchievementsTab(),
           ],
         ),
       ),

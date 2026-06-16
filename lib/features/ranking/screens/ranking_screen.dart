@@ -438,7 +438,16 @@ class RankingTile extends StatelessWidget {
   final bool isMe;
   final AppLocalizations l;
 
-  const RankingTile({super.key, required this.entry, required this.isMe, required this.l});
+  /// Optional second line under the name. When null, only the name is shown
+  /// (general ranking). Leagues pass the user's overall-ranking position here.
+  final String? subtitle;
+
+  const RankingTile(
+      {super.key,
+      required this.entry,
+      required this.isMe,
+      required this.l,
+      this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -525,12 +534,13 @@ class RankingTile extends StatelessWidget {
                       fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
-                  Text(
-                    l.rankingBetsCount(entry.totalBets),
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.onSurface.withOpacity(0.5),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurface.withOpacity(0.5),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

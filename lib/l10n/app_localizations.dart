@@ -370,6 +370,18 @@ abstract class AppLocalizations {
   /// **'Meu Perfil'**
   String get myProfile;
 
+  /// No description provided for @home.
+  ///
+  /// In pt, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @bets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apostas'**
+  String get bets;
+
   /// No description provided for @betsFilled.
   ///
   /// In pt, this message translates to:
@@ -1039,7 +1051,7 @@ abstract class AppLocalizations {
   /// No description provided for @achQuaseDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Acumule 5 \"quases\" (errou o placar por 1 gol)'**
+  /// **'Acumule \"quases\" (errou o placar por 1 gol)'**
   String get achQuaseDesc;
 
   /// No description provided for @achNewUnlocked.
@@ -2187,6 +2199,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Buscar placar (ex.: 2-1)'**
   String get searchScore;
+
+  /// No description provided for @generalRankPosition.
+  ///
+  /// In pt, this message translates to:
+  /// **'{rank}º no Ranking Geral'**
+  String generalRankPosition(int rank);
 }
 
 class _AppLocalizationsDelegate

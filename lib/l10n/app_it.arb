@@ -53,6 +53,8 @@
   "codeCopied": "Codice copiato!",
 
   "myProfile": "Il mio Profilo",
+  "home": "Home",
+  "bets": "Pronostici",
   "betsFilled": "Scommesse Compilate",
   "totalPoints": "Punti Totali",
   "exactHits": "Punteggio Esatto",
@@ -181,7 +183,7 @@
   "achMeioSeculoName": "Piove Punti",
   "achMeioSeculoDesc": "Raggiungi 50 punti totali",
   "achQuaseName": "Quasi",
-  "achQuaseDesc": "Colleziona 5 \"quasi\" (sbagliato per 1 gol)",
+  "achQuaseDesc": "Colleziona \"quasi\" (sbagliato per 1 gol)",
   "achNewUnlocked": "Nuovo traguardo!",
   "achNice": "Forte!",
   "achViewAchievement": "Vedi traguardo",
@@ -410,5 +412,11 @@
   "leagueBetsNobody": "Nessuno della lega ha pronosticato questa partita",
   "leagueBetsLockedUntilDeadline": "Disponibile dopo la chiusura dei pronostici",
   "filterLosing": "In perdita",
-  "searchScore": "Cerca risultato (es. 2-1)"
+  "searchScore": "Cerca risultato (es. 2-1)",
+  "generalRankPosition": "{rank}º in classifica generale",
+  "@generalRankPosition": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  }
 }

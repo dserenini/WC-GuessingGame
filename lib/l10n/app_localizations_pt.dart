@@ -147,6 +147,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get myProfile => 'Meu Perfil';
 
   @override
+  String get home => 'Home';
+
+  @override
+  String get bets => 'Apostas';
+
+  @override
   String get betsFilled => 'Apostas Preenchidas';
 
   @override
@@ -491,7 +497,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get achQuaseName => 'Quase Lá';
 
   @override
-  String get achQuaseDesc => 'Acumule 5 \"quases\" (errou o placar por 1 gol)';
+  String get achQuaseDesc => 'Acumule \"quases\" (errou o placar por 1 gol)';
 
   @override
   String get achNewUnlocked => 'Nova conquista!';
@@ -1106,4 +1112,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get searchScore => 'Buscar placar (ex.: 2-1)';
+
+  @override
+  String generalRankPosition(int rank) {
+    return '$rankº no Ranking Geral';
+  }
 }

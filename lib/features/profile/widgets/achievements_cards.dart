@@ -6,7 +6,6 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/profile/providers/achievements_provider.dart';
 import 'package:copa2026/features/profile/screens/achievement_detail_screen.dart';
-import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
 
 /// (emoji, name, description) for an achievement key.
 ({String emoji, String name, String desc}) achMeta(String key, AppLocalizations l) {
@@ -37,7 +36,9 @@ import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
       return (emoji: '🏟️', name: l.achPanelaName, desc: l.achPanelaDesc);
     case 'meioseculo':
       return (emoji: '🏅', name: l.achMeioSeculoName, desc: l.achMeioSeculoDesc);
-    case 'quasela':
+    case 'quasela_bronze':
+    case 'quasela_prata':
+    case 'quasela_ouro':
       return (emoji: '😤', name: l.achQuaseName, desc: l.achQuaseDesc);
     default:
       return (emoji: '🏆', name: key, desc: '');
@@ -70,6 +71,7 @@ class AchievementsTab extends ConsumerWidget {
     final byKey = {for (final s in states) s.key: s};
     final exactTiers = [for (final k in kExactTierKeys) byKey[k]!];
     final streakTiers = [for (final k in kStreakTierKeys) byKey[k]!];
+    final nearMissTiers = [for (final k in kNearMissTierKeys) byKey[k]!];
     final singles = states.where((s) => !kAchievementTierKeys.contains(s.key)).toList();
     final done = states.where((s) => s.unlocked).length;
 
@@ -100,6 +102,15 @@ class AchievementsTab extends ConsumerWidget {
             emoji: '🔥',
             desc: l.achEmbaladoDesc,
             tiers: streakTiers,
+            unlocked: unlocked,
+            rarity: rarity,
+            l: l),
+        const SizedBox(height: 12),
+        _TierCard(
+            title: l.achQuaseName,
+            emoji: '😤',
+            desc: l.achQuaseDesc,
+            tiers: nearMissTiers,
             unlocked: unlocked,
             rarity: rarity,
             l: l),
@@ -375,8 +386,8 @@ void showAchievementCelebration(
       onClose: () => Navigator.of(dialogCtx).pop(),
       onView: () {
         Navigator.of(dialogCtx).pop();
-        // Deep-link to the Conquistas tab (last tab).
-        context.push('/stats', extra: kAchievementsTabIndex);
+        // Deep-link to the dedicated Conquistas page.
+        context.push('/achievements');
       },
     ),
   );

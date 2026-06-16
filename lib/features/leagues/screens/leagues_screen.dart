@@ -201,6 +201,12 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
     final cs = Theme.of(context).colorScheme;
     final rankAsync = ref.watch(myLeaguesRankingProvider(widget.leagueId));
     final currentUid = ref.watch(currentUserProvider)?.id;
+    // Overall-ranking position per user, to show under each name in the league.
+    final generalRanks = ref.watch(rankingProvider).valueOrNull;
+    final generalRankByUser = <String, int>{
+      if (generalRanks != null)
+        for (final e in generalRanks) e.userId: e.rank,
+    };
 
     return rankAsync.when(
       loading: () => const Padding(
@@ -270,11 +276,17 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
                   ),
                 ),
               ),
-            ...filtered.map<Widget>((entry) => RankingTile(
-                  entry: entry,
-                  isMe: entry.userId == currentUid,
-                  l: l,
-                )),
+            ...filtered.map<Widget>((entry) {
+              final generalRank = generalRankByUser[entry.userId];
+              return RankingTile(
+                entry: entry,
+                isMe: entry.userId == currentUid,
+                l: l,
+                subtitle: generalRank != null
+                    ? l.generalRankPosition(generalRank)
+                    : null,
+              );
+            }),
           ],
         );
       },

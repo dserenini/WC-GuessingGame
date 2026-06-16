@@ -19,10 +19,20 @@ const List<String> kStreakTierKeys = [
   'embalado_prata', //  5 in a row
   'embalado_ouro', //   7 in a row
 ];
-const List<List<String>> kAchievementTierGroups = [kExactTierKeys, kStreakTierKeys];
+const List<String> kNearMissTierKeys = [
+  'quasela_bronze', // 5 near-misses
+  'quasela_prata', //  10 near-misses
+  'quasela_ouro', //   15 near-misses
+];
+const List<List<String>> kAchievementTierGroups = [
+  kExactTierKeys,
+  kStreakTierKeys,
+  kNearMissTierKeys,
+];
 const Set<String> kAchievementTierKeys = {
   'exatos_bronze', 'exatos_prata', 'exatos_ouro',
   'embalado_bronze', 'embalado_prata', 'embalado_ouro',
+  'quasela_bronze', 'quasela_prata', 'quasela_ouro',
 };
 
 class AchievementState {
@@ -223,7 +233,20 @@ List<AchievementState> _compute(
     AchievementState(
         key: 'meioseculo', current: totalPoints, target: 50, evidence: scoredIds),
     AchievementState(
-        key: 'quasela', current: nearMissIds.length, target: 5, evidence: nearMissIds),
+        key: 'quasela_bronze',
+        current: nearMissIds.length,
+        target: 5,
+        evidence: nearMissIds),
+    AchievementState(
+        key: 'quasela_prata',
+        current: nearMissIds.length,
+        target: 10,
+        evidence: nearMissIds),
+    AchievementState(
+        key: 'quasela_ouro',
+        current: nearMissIds.length,
+        target: 15,
+        evidence: nearMissIds),
   ];
 }
 

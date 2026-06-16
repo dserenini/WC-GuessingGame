@@ -53,6 +53,8 @@
   "codeCopied": "Código copiado!",
 
   "myProfile": "Meu Perfil",
+  "home": "Home",
+  "bets": "Apostas",
   "betsFilled": "Apostas Preenchidas",
   "totalPoints": "Pontos Totais",
   "exactHits": "Acerto no Placar",
@@ -181,7 +183,7 @@
   "achMeioSeculoName": "Tá chovendo pontos",
   "achMeioSeculoDesc": "Alcance 50 pontos no total",
   "achQuaseName": "Quase Lá",
-  "achQuaseDesc": "Acumule 5 \"quases\" (errou o placar por 1 gol)",
+  "achQuaseDesc": "Acumule \"quases\" (errou o placar por 1 gol)",
   "achNewUnlocked": "Nova conquista!",
   "achNice": "Boa!",
   "achViewAchievement": "Ver conquista",
@@ -410,5 +412,11 @@
   "leagueBetsNobody": "Ninguém da liga palpitou neste jogo",
   "leagueBetsLockedUntilDeadline": "Disponível após o encerramento das apostas",
   "filterLosing": "Perdendo",
-  "searchScore": "Buscar placar (ex.: 2-1)"
+  "searchScore": "Buscar placar (ex.: 2-1)",
+  "generalRankPosition": "{rank}º no Ranking Geral",
+  "@generalRankPosition": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  }
 }

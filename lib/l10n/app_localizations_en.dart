@@ -1081,4 +1081,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterNoGames => 'No games match these filters';
+
+  @override
+  String get viewBets => 'View bets';
+
+  @override
+  String get leagueBetsSelectMatch => 'Pick a match to see the league\'s bets';
+
+  @override
+  String get leagueBetsNobody => 'No one in the league bet on this match';
+
+  @override
+  String get leagueBetsLockedUntilDeadline => 'Available after betting closes';
+
+  @override
+  String get filterLosing => 'Losing';
+
+  @override
+  String get searchScore => 'Search score (e.g. 2-1)';
 }

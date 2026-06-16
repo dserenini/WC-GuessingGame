@@ -404,5 +404,11 @@
   "filterExact": "Exact score",
   "filterResult": "Result",
   "filterLost": "Missed",
-  "filterNoGames": "No games match these filters"
+  "filterNoGames": "No games match these filters",
+  "viewBets": "View bets",
+  "leagueBetsSelectMatch": "Pick a match to see the league's bets",
+  "leagueBetsNobody": "No one in the league bet on this match",
+  "leagueBetsLockedUntilDeadline": "Available after betting closes",
+  "filterLosing": "Losing",
+  "searchScore": "Search score (e.g. 2-1)"
 }

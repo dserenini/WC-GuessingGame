@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/features/leagues/screens/league_ranking_export_screen.dart';
+import 'package:copa2026/features/leagues/screens/league_match_bets_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -112,7 +114,7 @@ class _LeagueCard extends ConsumerWidget {
           ],
         ),
         children: [
-          _LeagueRankingList(leagueId: league.id),
+          _LeagueRankingList(leagueId: league.id, leagueName: league.name),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextButton.icon(
@@ -176,7 +178,8 @@ class _LeagueCard extends ConsumerWidget {
 
 class _LeagueRankingList extends ConsumerStatefulWidget {
   final String leagueId;
-  const _LeagueRankingList({required this.leagueId});
+  final String leagueName;
+  const _LeagueRankingList({required this.leagueId, required this.leagueName});
 
   @override
   ConsumerState<_LeagueRankingList> createState() => _LeagueRankingListState();
@@ -215,6 +218,27 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
 
         return Column(
           children: [
+            // "Ver apostas": comparativo de palpites por jogo dentro da liga.
+            // Só após o prazo global (ninguém espia antes do fim das apostas).
+            if (isBettingLocked)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => LeagueMatchBetsScreen(
+                          leagueId: widget.leagueId,
+                          leagueName: widget.leagueName,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.scoreboard_outlined, size: 18),
+                    label: Text(l.viewBets),
+                  ),
+                ),
+              ),
             // Campo de busca aparece só quando a liga tem membros suficientes
             // para justificá-lo.
             if (entries.length > 8)

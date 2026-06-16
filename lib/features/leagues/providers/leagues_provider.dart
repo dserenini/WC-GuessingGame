@@ -20,6 +20,24 @@ final myLeaguesProvider = FutureProvider<List<LeagueModel>>((ref) async {
       .toList();
 });
 
+/// Every bet placed on a single match, keyed by user_id. RLS allows reading all
+/// bets (`bets` SELECT USING (true)), so this returns all users' bets; callers
+/// intersect with a league's member list to scope it. autoDispose so each open
+/// of the league scorelines view re-fetches the current state.
+final matchBetsProvider =
+    FutureProvider.autoDispose.family<Map<String, BetModel>, String>(
+        (ref, matchId) async {
+  final rows = await Supabase.instance.client
+      .from('bets')
+      .select()
+      .eq('match_id', matchId);
+
+  return {
+    for (final b in (rows as List))
+      (b as Map<String, dynamic>)['user_id'] as String: BetModel.fromJson(b),
+  };
+});
+
 final leagueNotifierProvider =
     StateNotifierProvider<LeagueNotifier, AsyncValue<void>>((ref) {
   return LeagueNotifier(ref);

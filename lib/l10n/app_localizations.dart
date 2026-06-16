@@ -2151,6 +2151,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhum jogo com esses filtros'**
   String get filterNoGames;
+
+  /// No description provided for @viewBets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver apostas'**
+  String get viewBets;
+
+  /// No description provided for @leagueBetsSelectMatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecione um jogo para ver os palpites da liga'**
+  String get leagueBetsSelectMatch;
+
+  /// No description provided for @leagueBetsNobody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ninguém da liga palpitou neste jogo'**
+  String get leagueBetsNobody;
+
+  /// No description provided for @leagueBetsLockedUntilDeadline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disponível após o encerramento das apostas'**
+  String get leagueBetsLockedUntilDeadline;
+
+  /// No description provided for @filterLosing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Perdendo'**
+  String get filterLosing;
+
+  /// No description provided for @searchScore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar placar (ex.: 2-1)'**
+  String get searchScore;
 }
 
 class _AppLocalizationsDelegate

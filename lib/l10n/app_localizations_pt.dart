@@ -1086,4 +1086,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get filterNoGames => 'Nenhum jogo com esses filtros';
+
+  @override
+  String get viewBets => 'Ver apostas';
+
+  @override
+  String get leagueBetsSelectMatch =>
+      'Selecione um jogo para ver os palpites da liga';
+
+  @override
+  String get leagueBetsNobody => 'Ninguém da liga palpitou neste jogo';
+
+  @override
+  String get leagueBetsLockedUntilDeadline =>
+      'Disponível após o encerramento das apostas';
+
+  @override
+  String get filterLosing => 'Perdendo';
+
+  @override
+  String get searchScore => 'Buscar placar (ex.: 2-1)';
 }

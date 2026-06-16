@@ -404,5 +404,11 @@
   "filterExact": "Placar exato",
   "filterResult": "Resultado",
   "filterLost": "Perdida",
-  "filterNoGames": "Nenhum jogo com esses filtros"
+  "filterNoGames": "Nenhum jogo com esses filtros",
+  "viewBets": "Ver apostas",
+  "leagueBetsSelectMatch": "Selecione um jogo para ver os palpites da liga",
+  "leagueBetsNobody": "Ninguém da liga palpitou neste jogo",
+  "leagueBetsLockedUntilDeadline": "Disponível após o encerramento das apostas",
+  "filterLosing": "Perdendo",
+  "searchScore": "Buscar placar (ex.: 2-1)"
 }

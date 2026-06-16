@@ -1093,4 +1093,25 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get filterNoGames => 'Nessuna partita con questi filtri';
+
+  @override
+  String get viewBets => 'Vedi pronostici';
+
+  @override
+  String get leagueBetsSelectMatch =>
+      'Scegli una partita per vedere i pronostici della lega';
+
+  @override
+  String get leagueBetsNobody =>
+      'Nessuno della lega ha pronosticato questa partita';
+
+  @override
+  String get leagueBetsLockedUntilDeadline =>
+      'Disponibile dopo la chiusura dei pronostici';
+
+  @override
+  String get filterLosing => 'In perdita';
+
+  @override
+  String get searchScore => 'Cerca risultato (es. 2-1)';
 }

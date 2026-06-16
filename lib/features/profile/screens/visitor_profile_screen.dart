@@ -13,6 +13,7 @@ import 'package:copa2026/features/profile/providers/stat_rankings_provider.dart'
 import 'package:copa2026/features/profile/widgets/bet_comparison_card.dart';
 import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 import 'package:copa2026/shared/utils/bet_points.dart';
+import 'package:copa2026/shared/widgets/bet_filter_bar.dart';
 
 /// Read-only view of another user's bets, reached by tapping their name in a
 /// ranking. Each match shows B's bet with the viewer's own bet faded beneath it,
@@ -237,17 +238,6 @@ class _VisitorHeader extends StatelessWidget {
 // ─────────────────────────────────────────────
 // Bet list (matches + comparison cards)
 // ─────────────────────────────────────────────
-/// Quick-filter dimensions for the bet list. Both are single-select and
-/// independent: the user picks one [_ScopeFilter] (round / day / none) and one
-/// [_StatusFilter] (finished / unfinished / none), and they combine.
-enum _ScopeFilter { all, round1, round2, round3, day }
-
-enum _StatusFilter { all, finished, unfinished }
-
-/// Bet-outcome filter (multi-select): exact score (3 pts), correct result
-/// (1 pt) or missed (0 pts). Evaluated against the **screen owner's** bet.
-enum _Outcome { exact, result, lost }
-
 class _BetList extends ConsumerStatefulWidget {
   final String userId;
   final String bName;
@@ -268,44 +258,9 @@ class _BetList extends ConsumerStatefulWidget {
 }
 
 class _BetListState extends ConsumerState<_BetList> {
-  _ScopeFilter _scope = _ScopeFilter.all;
-  _StatusFilter _status = _StatusFilter.all;
-  final Set<_Outcome> _outcomes = {};
-
-  /// Round 1..3 derived from the sequential `api_match_id` (1-24, 25-48, 49-72).
-  /// Each matchday has 24 games and the ids are assigned in chronological order,
-  /// so integer-dividing the id reproduces the round without a DB column.
-  int? _roundOf(MatchModel m) {
-    final id = int.tryParse(m.apiMatchId ?? '');
-    if (id == null) return null;
-    return ((id - 1) ~/ 24) + 1;
-  }
-
-  bool _passScope(MatchModel m, Set<String> dayIds) {
-    switch (_scope) {
-      case _ScopeFilter.all:
-        return true;
-      case _ScopeFilter.round1:
-        return _roundOf(m) == 1;
-      case _ScopeFilter.round2:
-        return _roundOf(m) == 2;
-      case _ScopeFilter.round3:
-        return _roundOf(m) == 3;
-      case _ScopeFilter.day:
-        return dayIds.contains(m.id);
-    }
-  }
-
-  bool _passStatus(MatchModel m) {
-    switch (_status) {
-      case _StatusFilter.all:
-        return true;
-      case _StatusFilter.finished:
-        return m.status == MatchStatus.finished;
-      case _StatusFilter.unfinished:
-        return m.status != MatchStatus.finished; // live + scheduled
-    }
-  }
+  BetScope _scope = BetScope.all;
+  BetStatus _status = BetStatus.all;
+  final Set<BetOutcome> _outcomes = {};
 
   /// Points the screen owner's [bet] scored on [m]: persisted points once the
   /// game is finished, provisional points while it is live, and null when there
@@ -331,9 +286,9 @@ class _BetListState extends ConsumerState<_BetList> {
     if (_outcomes.isEmpty) return true; // no outcome filter active
     final pts = _ownerPoints(m, ownerBet);
     if (pts == null) return false; // no determined outcome → excluded
-    if (_outcomes.contains(_Outcome.exact) && pts == 3) return true;
-    if (_outcomes.contains(_Outcome.result) && pts == 1) return true;
-    if (_outcomes.contains(_Outcome.lost) && pts == 0) return true;
+    if (_outcomes.contains(BetOutcome.exact) && pts == 3) return true;
+    if (_outcomes.contains(BetOutcome.result) && pts == 1) return true;
+    if (_outcomes.contains(BetOutcome.lost) && pts == 0) return true;
     return false;
   }
 
@@ -374,15 +329,15 @@ class _BetListState extends ConsumerState<_BetList> {
         ? matches
         : _applyStatFilter(widget.statFilter!, matches, bBets, contrarianIds);
 
-    final dayIds = showFilters && _scope == _ScopeFilter.day
+    final dayIds = showFilters && _scope == BetScope.day
         ? ref.watch(matchesOfDayProvider).map((m) => m.id).toSet()
         : const <String>{};
 
     final visible = showFilters
         ? base
             .where((m) =>
-                _passScope(m, dayIds) &&
-                _passStatus(m) &&
+                betPassScope(_scope, m, dayIds) &&
+                betPassStatus(_status, m) &&
                 _passOutcome(m, bBets[m.id]))
             .toList()
         : base;
@@ -390,18 +345,18 @@ class _BetListState extends ConsumerState<_BetList> {
     return Column(
       children: [
         if (showFilters)
-          _FilterBar(
+          BetFilterBar(
             scope: _scope,
             status: _status,
+            showOutcome: true,
             outcomes: _outcomes,
-            l: l,
             onScope: (s) => setState(() => _scope = s),
             onStatus: (s) => setState(() {
               _status = s;
               // Outcome (exact/result/missed) only consolidates once a game is
               // over, so picking "not finished" would always return empty —
               // force the outcome filter back to "all".
-              if (s == _StatusFilter.unfinished) _outcomes.clear();
+              if (s == BetStatus.unfinished) _outcomes.clear();
             }),
             onToggleOutcome: (o) => setState(() {
               if (!_outcomes.remove(o)) _outcomes.add(o);
@@ -433,112 +388,6 @@ class _BetListState extends ConsumerState<_BetList> {
               showViewerRow: !widget.isSelf,
             ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-// Quick-filter bar: two single-select chip rows (scope + status)
-// ─────────────────────────────────────────────
-class _FilterBar extends StatelessWidget {
-  final _ScopeFilter scope;
-  final _StatusFilter status;
-  final Set<_Outcome> outcomes;
-  final AppLocalizations l;
-  final ValueChanged<_ScopeFilter> onScope;
-  final ValueChanged<_StatusFilter> onStatus;
-  final ValueChanged<_Outcome> onToggleOutcome;
-  final VoidCallback onClearOutcomes;
-
-  const _FilterBar({
-    required this.scope,
-    required this.status,
-    required this.outcomes,
-    required this.l,
-    required this.onScope,
-    required this.onStatus,
-    required this.onToggleOutcome,
-    required this.onClearOutcomes,
-  });
-
-  Widget _chip(String label, bool selected, VoidCallback onTap,
-      {bool enabled = true}) {
-    // Tight chips so a row fits on a single line instead of wrapping: trimmed
-    // internal padding, smaller label, and a denser visual density.
-    return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontSize: 12.5)),
-      selected: selected,
-      onSelected: enabled ? (_) => onTap() : null,
-      labelPadding: const EdgeInsets.symmetric(horizontal: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Margin matches the score/player banners (horizontal 16) and chips Wrap to
-    // the next line so the bar never exceeds the banners' width.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 8,
-            children: [
-              _chip(l.filterAll, scope == _ScopeFilter.all,
-                  () => onScope(_ScopeFilter.all)),
-              _chip(l.filterRound1, scope == _ScopeFilter.round1,
-                  () => onScope(_ScopeFilter.round1)),
-              _chip(l.filterRound2, scope == _ScopeFilter.round2,
-                  () => onScope(_ScopeFilter.round2)),
-              _chip(l.filterRound3, scope == _ScopeFilter.round3,
-                  () => onScope(_ScopeFilter.round3)),
-              _chip(l.filterDay, scope == _ScopeFilter.day,
-                  () => onScope(_ScopeFilter.day)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 8,
-            children: [
-              _chip(l.filterAll, status == _StatusFilter.all,
-                  () => onStatus(_StatusFilter.all)),
-              _chip(l.filterFinished, status == _StatusFilter.finished,
-                  () => onStatus(_StatusFilter.finished)),
-              _chip(l.filterUnfinished, status == _StatusFilter.unfinished,
-                  () => onStatus(_StatusFilter.unfinished)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Outcome row is multi-select: "Todos" is active when nothing is
-          // picked; the others toggle independently and accumulate. Disabled
-          // while "not finished" is active, since scores aren't consolidated yet.
-          Builder(builder: (_) {
-            final outcomeEnabled = status != _StatusFilter.unfinished;
-            return Wrap(
-              spacing: 6,
-              runSpacing: 8,
-              children: [
-                _chip(l.filterAll, outcomes.isEmpty, onClearOutcomes),
-                _chip(l.filterExact, outcomes.contains(_Outcome.exact),
-                    () => onToggleOutcome(_Outcome.exact),
-                    enabled: outcomeEnabled),
-                _chip(l.filterResult, outcomes.contains(_Outcome.result),
-                    () => onToggleOutcome(_Outcome.result),
-                    enabled: outcomeEnabled),
-                _chip(l.filterLost, outcomes.contains(_Outcome.lost),
-                    () => onToggleOutcome(_Outcome.lost),
-                    enabled: outcomeEnabled),
-              ],
-            );
-          }),
-        ],
-      ),
     );
   }
 }

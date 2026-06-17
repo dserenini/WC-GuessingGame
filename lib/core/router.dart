@@ -8,6 +8,7 @@ import 'package:copa2026/features/auth/screens/login_screen.dart';
 import 'package:copa2026/features/groups/screens/group_screen.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
+import 'package:copa2026/features/knockout/screens/knockout_screen.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
@@ -101,6 +102,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/leagues',
         name: 'leagues',
         builder: (_, __) => const LeaguesScreen(),
+      ),
+      GoRoute(
+        path: '/knockout',
+        name: 'knockout',
+        builder: (_, __) => const KnockoutScreen(),
       ),
       GoRoute(
         path: '/settings',

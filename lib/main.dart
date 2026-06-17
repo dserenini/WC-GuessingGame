@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:copa2026/core/app_env.dart';
 import 'package:copa2026/core/supabase_config.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 import 'package:copa2026/app.dart';
@@ -16,6 +17,9 @@ void main() async {
   } catch (e) {
     debugPrint("Failed to load .env file: $e");
   }
+
+  // Diagnóstico: confirma se a flag de staging chegou via --dart-define.
+  debugPrint('[ENV] isStaging=$isStaging url=$supabaseUrl');
 
   try {
     await Supabase.initialize(

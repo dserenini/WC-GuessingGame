@@ -8,6 +8,7 @@ import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/features/leagues/screens/league_ranking_export_screen.dart';
 import 'package:copa2026/features/leagues/screens/league_match_bets_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
@@ -21,6 +22,9 @@ class LeaguesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final leaguesAsync = ref.watch(myLeaguesProvider);
+
+    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
+    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
 
     return Scaffold(
       appBar: AppBar(
@@ -44,17 +48,37 @@ class LeaguesScreen extends ConsumerWidget {
         label: Text(l.joinOrCreate),
         icon: const Icon(Icons.add),
       ),
-      body: leaguesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-        data: (leagues) => leagues.isEmpty
-            ? _EmptyState(onAdd: () => _showJoinOrCreateSheet(context, ref))
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                itemCount: leagues.length,
-                itemBuilder: (_, i) =>
-                    _LeagueCard(league: leagues[i]),
+      body: Column(
+        children: [
+          if (knockoutOn)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: SegmentedButton<bool>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Mata-Mata')),
+                  ButtonSegment(value: false, label: Text('Fase de Grupos')),
+                ],
+                selected: {showKo},
+                onSelectionChanged: (s) => ref
+                    .read(rankingViewKnockoutProvider.notifier)
+                    .state = s.first,
               ),
+            ),
+          Expanded(
+            child: leaguesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text(e.toString())),
+              data: (leagues) => leagues.isEmpty
+                  ? _EmptyState(onAdd: () => _showJoinOrCreateSheet(context, ref))
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                      itemCount: leagues.length,
+                      itemBuilder: (_, i) => _LeagueCard(league: leagues[i]),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -119,8 +143,13 @@ class _LeagueCard extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextButton.icon(
               onPressed: () {
-                final entries =
-                    ref.read(myLeaguesRankingProvider(league.id)).valueOrNull;
+                final showKo =
+                    (ref.read(knockoutEnabledProvider).valueOrNull ?? false) &&
+                        (ref.read(rankingViewKnockoutProvider) ?? true);
+                final entries = (showKo
+                        ? ref.read(koLeagueRankingProvider(league.id))
+                        : ref.read(myLeaguesRankingProvider(league.id)))
+                    .valueOrNull;
                 if (entries == null || entries.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(l.waitDataLoad)),
@@ -199,10 +228,16 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final rankAsync = ref.watch(myLeaguesRankingProvider(widget.leagueId));
+    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
+    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
+    final rankAsync = showKo
+        ? ref.watch(koLeagueRankingProvider(widget.leagueId))
+        : ref.watch(myLeaguesRankingProvider(widget.leagueId));
     final currentUid = ref.watch(currentUserProvider)?.id;
     // Overall-ranking position per user, to show under each name in the league.
-    final generalRanks = ref.watch(rankingProvider).valueOrNull;
+    final generalRanks =
+        (showKo ? ref.watch(koUserRankingProvider) : ref.watch(rankingProvider))
+            .valueOrNull;
     final generalRankByUser = <String, int>{
       if (generalRanks != null)
         for (final e in generalRanks) e.userId: e.rank,

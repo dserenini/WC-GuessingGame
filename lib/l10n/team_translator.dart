@@ -335,7 +335,8 @@ String getTeamAbbreviation(BuildContext context, String dbTeamName) {
       return abbr('ARG', 'ARG', 'ARG');
     case 'algeria':
     case 'argélia':
-      return abbr('ARG', 'ALG', 'ALG');
+      // PT era 'ARG', colidindo com a Argentina no Grupo J → 'ALG'.
+      return abbr('ALG', 'ALG', 'ALG');
     case 'austria':
     case 'áustria':
       return abbr('AUT', 'AUT', 'AUT');

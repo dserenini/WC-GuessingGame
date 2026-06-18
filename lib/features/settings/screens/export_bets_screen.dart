@@ -70,12 +70,12 @@ class _ExportBetsScreenState extends State<ExportBetsScreen> {
     final image = await _captureImage();
     if (image == null || !mounted) return;
 
-    const text = '🏆 Minhas apostas para o Make Bolão Great Again! #MakeBolaoGreatAgain';
-
+    // Compartilhamento sem legenda: a mensagem (WhatsApp etc.) vai vazia, só a
+    // imagem das apostas é anexada.
     final shared = await downloader.shareImageNative(
       image,
       'apostas_${widget.userName}.png',
-      text,
+      '',
     );
 
     if (!mounted) return;

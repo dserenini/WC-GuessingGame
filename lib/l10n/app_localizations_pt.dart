@@ -594,6 +594,40 @@ class AppLocalizationsPt extends AppLocalizations {
       'Crie ou participe de ligas privadas usando um código de convite para competir com seus amigos.';
 
   @override
+  String get helpTiebreakTitle => 'Critérios de Desempate ⚖️';
+
+  @override
+  String get helpTiebreakDesc =>
+      'Em caso de empate em pontos, a posição no ranking é decidida nesta ordem: 1º) quem tiver mais acertos de placar exato (apostas que valeram 3 pontos); 2º) quem somar mais pontos nos jogos do Brasil. Se ainda assim o empate persistir, os jogadores dividem a mesma posição na tabela.';
+
+  @override
+  String get prizesTitle => 'Premiação';
+
+  @override
+  String get prizesCardDesc =>
+      'Veja como o prêmio total é distribuído entre o ranking geral e cada rodada.';
+
+  @override
+  String get prizesTotalLabel => 'Premiação total';
+
+  @override
+  String get prizesGeneralTitle => 'Ranking Geral';
+
+  @override
+  String get prizesGeneralNote =>
+      'Considerando todos os jogos da fase de grupos.';
+
+  @override
+  String get prizesLastPlace => 'Último colocado';
+
+  @override
+  String get prizesPerRoundTitle => 'Por Rodada';
+
+  @override
+  String get prizesPerRoundNote =>
+      'Os 3 primeiros de cada rodada (1ª, 2ª e 3ª) são premiados.';
+
+  @override
   String get appTitle => 'Make Bolão Great Again';
 
   @override
@@ -1071,6 +1105,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get filterRound3 => 'Rodada 3';
+
+  @override
+  String get rankingScopeGeneral => 'Geral';
 
   @override
   String get filterDay => 'Do dia';

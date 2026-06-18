@@ -289,6 +289,14 @@ CREATE POLICY "Users can leave leagues"
 -- ─────────────────────────────────────────────
 -- RANKING VIEW
 -- Aggregates total points per user across all bets
+--
+-- DESEMPATE (RANK com ORDER BY de múltiplas colunas — só compartilha posição
+-- quando TODOS os critérios empatam):
+--   1) total de pontos (desc)
+--   2) vitórias em placar exato — nº de palpites com points = 3 (desc)
+--   3) pontos somados nos jogos do Brasil (desc)
+-- Os joins matches/teams existem só para o critério 3; como bet→match→team é
+-- N:1, não há fan-out: SUM(b.points) e COUNT(b.id) seguem corretos.
 -- ─────────────────────────────────────────────
 CREATE OR REPLACE VIEW user_rankings
 WITH (security_invoker = on) AS
@@ -300,14 +308,24 @@ SELECT
   p.avatar_url,
   COALESCE(SUM(b.points), 0) AS total_points,
   COUNT(b.id) AS total_bets,
-  RANK() OVER (ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank
+  RANK() OVER (
+    ORDER BY
+      COALESCE(SUM(b.points), 0) DESC,
+      COUNT(*) FILTER (WHERE b.points = 3) DESC,
+      COALESCE(SUM(b.points) FILTER (WHERE th.name = 'Brasil' OR ta.name = 'Brasil'), 0) DESC
+  ) AS rank
 FROM profiles p
-LEFT JOIN bets b ON b.user_id = p.id
+LEFT JOIN bets b    ON b.user_id = p.id
+LEFT JOIN matches m ON m.id = b.match_id
+LEFT JOIN teams th  ON th.id = m.home_team_id
+LEFT JOIN teams ta  ON ta.id = m.away_team_id
 WHERE p.participate_in_ranking = true
 GROUP BY p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
 
 -- ─────────────────────────────────────────────
 -- LEAGUE RANKING VIEW
+-- Mesmo desempate do user_rankings (pontos → placar exato → pontos do Brasil),
+-- particionado por liga.
 -- ─────────────────────────────────────────────
 CREATE OR REPLACE VIEW league_rankings
 WITH (security_invoker = on) AS
@@ -320,13 +338,72 @@ SELECT
   p.display_preference,
   p.avatar_url,
   COALESCE(SUM(b.points), 0) AS total_points,
-  RANK() OVER (PARTITION BY lm.league_id ORDER BY COALESCE(SUM(b.points), 0) DESC) AS rank,
+  RANK() OVER (
+    PARTITION BY lm.league_id
+    ORDER BY
+      COALESCE(SUM(b.points), 0) DESC,
+      COUNT(*) FILTER (WHERE b.points = 3) DESC,
+      COALESCE(SUM(b.points) FILTER (WHERE th.name = 'Brasil' OR ta.name = 'Brasil'), 0) DESC
+  ) AS rank,
   COUNT(b.id) AS total_bets
 FROM league_members lm
 JOIN leagues l ON l.id = lm.league_id
 JOIN profiles p ON p.id = lm.user_id
-LEFT JOIN bets b ON b.user_id = lm.user_id
+LEFT JOIN bets b    ON b.user_id = lm.user_id
+LEFT JOIN matches m ON m.id = b.match_id
+LEFT JOIN teams th  ON th.id = m.home_team_id
+LEFT JOIN teams ta  ON ta.id = m.away_team_id
 GROUP BY lm.league_id, l.name, p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
+
+-- ─────────────────────────────────────────────
+-- RANKING GERAL POR RODADA (fase de grupos: 1, 2, 3)
+-- Mesmo shape de user_rankings, com uma coluna `round`. O frontend filtra por
+-- `round` (eq) e reusa RankingEntry. A rodada vem do api_match_id sequencial
+-- (1-24 = R1, 25-48 = R2, 49-72 = R3), MESMA regra do filtro de apostas
+-- (betRoundOf): round = ((api_match_id - 1) / 24) + 1.
+-- Mesmos critérios de desempate do user_rankings, mas escopados à rodada
+-- (pontos da rodada → placares exatos na rodada → pontos do Brasil na rodada).
+-- O CROSS JOIN com rounds(1,2,3) garante que todo participante aparece em toda
+-- rodada (mesmo com 0 ponto), para o RANK() ficar completo.
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE VIEW user_round_rankings
+WITH (security_invoker = on) AS
+WITH bet_rounds AS (
+  SELECT
+    b.user_id,
+    b.id     AS bet_id,
+    b.points,
+    ((m.api_match_id)::int - 1) / 24 + 1        AS round,
+    (th.name = 'Brasil' OR ta.name = 'Brasil')  AS is_brazil
+  FROM bets b
+  JOIN matches m     ON m.id = b.match_id
+  LEFT JOIN teams th ON th.id = m.home_team_id
+  LEFT JOIN teams ta ON ta.id = m.away_team_id
+  WHERE m.api_match_id ~ '^[0-9]+$'
+    AND (m.api_match_id)::int BETWEEN 1 AND 72
+),
+rounds AS (SELECT generate_series(1, 3) AS round)
+SELECT
+  p.id AS user_id,
+  p.username,
+  p.full_name,
+  p.display_preference,
+  p.avatar_url,
+  r.round,
+  COALESCE(SUM(br.points), 0) AS total_points,
+  COUNT(br.bet_id)            AS total_bets,
+  RANK() OVER (
+    PARTITION BY r.round
+    ORDER BY
+      COALESCE(SUM(br.points), 0) DESC,
+      COUNT(*) FILTER (WHERE br.points = 3) DESC,
+      COALESCE(SUM(br.points) FILTER (WHERE br.is_brazil), 0) DESC
+  ) AS rank
+FROM profiles p
+CROSS JOIN rounds r
+LEFT JOIN bet_rounds br ON br.user_id = p.id AND br.round = r.round
+WHERE p.participate_in_ranking = true
+GROUP BY p.id, p.username, p.full_name, p.display_preference, p.avatar_url, r.round;
 
 -- ─────────────────────────────────────────────
 -- ADVANCED STATS — RANKING VIEWS (família A)

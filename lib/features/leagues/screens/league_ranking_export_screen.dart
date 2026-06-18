@@ -66,10 +66,9 @@ class _LeagueRankingExportScreenState extends State<LeagueRankingExportScreen> {
     final image = await _captureImage();
     if (image == null || !mounted) return;
 
-    final text = '🏆 ${widget.leagueName} — Make Bolão Great Again! '
-        '#MakeBolaoGreatAgain';
-
-    final shared = await downloader.shareImageNative(image, _fileName, text);
+    // Compartilhamento sem legenda: a mensagem (WhatsApp etc.) vai vazia, só a
+    // imagem do ranking é anexada.
+    final shared = await downloader.shareImageNative(image, _fileName, '');
     if (!mounted) return;
 
     if (!shared) {

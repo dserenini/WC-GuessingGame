@@ -12,6 +12,20 @@ import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
+/// Escopo do Ranking Geral: tabela acumulada ("Geral") ou recortada por rodada
+/// da fase de grupos (1, 2, 3). Cada rodada tem sua própria view/RANK no banco.
+enum RankScope { general, round1, round2, round3 }
+
+extension RankScopeX on RankScope {
+  /// Número da rodada para a view `user_round_rankings`; null para "Geral".
+  int? get round => switch (this) {
+        RankScope.general => null,
+        RankScope.round1 => 1,
+        RankScope.round2 => 2,
+        RankScope.round3 => 3,
+      };
+}
+
 class RankingScreen extends ConsumerStatefulWidget {
   const RankingScreen({super.key});
 
@@ -22,6 +36,7 @@ class RankingScreen extends ConsumerStatefulWidget {
 class _RankingScreenState extends ConsumerState<RankingScreen> {
   final _searchCtrl = TextEditingController();
   String _query = '';
+  RankScope _scope = RankScope.general;
 
   final ItemScrollController _itemScrollController = ItemScrollController();
   final ItemPositionsListener _positionsListener =
@@ -47,7 +62,11 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final rankingAsync = ref.watch(rankingProvider);
+    // "Geral" usa a view acumulada (user_rankings); rodadas usam a view
+    // recortada por rodada (user_round_rankings) via roundRankingProvider.
+    final rankingAsync = _scope == RankScope.general
+        ? ref.watch(rankingProvider)
+        : ref.watch(roundRankingProvider(_scope.round!));
     final currentUid = ref.watch(currentUserProvider)?.id;
 
     return Scaffold(
@@ -68,15 +87,25 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(rankingProvider),
+            onPressed: () => _scope == RankScope.general
+                ? ref.invalidate(rankingProvider)
+                : ref.invalidate(roundRankingProvider(_scope.round!)),
           ),
         ],
       ),
       drawer: const AppDrawer(),
-      body: rankingAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-        data: (entries) {
+      body: Column(
+        children: [
+          _RankScopeBar(
+            scope: _scope,
+            l: l,
+            onChanged: (s) => setState(() => _scope = s),
+          ),
+          Expanded(
+            child: rankingAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text(e.toString())),
+              data: (entries) {
           final q = _query.trim().toLowerCase();
           final filtered = q.isEmpty
               ? entries
@@ -93,6 +122,19 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           }
           final myIndexInList =
               filtered.indexWhere((e) => e.userId == currentUid);
+
+          // Realce de premiação — SOMENTE no Ranking Geral: os 11 primeiros
+          // colocados (rank 1..11) e o último colocado (maior rank) recebem um
+          // destaque âmbar no card. No ranking por rodada não há realce: as
+          // medalhas já marcam o top 3 premiado. `lastRank` é calculado sobre a
+          // lista completa (não a filtrada pela busca).
+          final isGeneralScope = _scope == RankScope.general;
+          final lastRank =
+              entries.fold<int>(0, (m, e) => e.rank > m ? e.rank : m);
+          bool isPrizeEntry(RankingEntry e) =>
+              isGeneralScope &&
+              e.rank >= 1 &&
+              (e.rank <= 11 || e.rank == lastRank);
 
           return Column(
             children: [
@@ -128,6 +170,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         itemBuilder: (_, i) => RankingTile(
                           entry: filtered[i],
                           isMe: filtered[i].userId == currentUid,
+                          isPrize: isPrizeEntry(filtered[i]),
                           l: l,
                         ),
                       ),
@@ -137,6 +180,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         entry: myEntry,
                         myIndexInList: myIndexInList,
                         positionsListener: _positionsListener,
+                        isPrize: isPrizeEntry(myEntry),
                         l: l,
                         onTap: () {
                           if (_query.isNotEmpty) {
@@ -158,7 +202,61 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
               ),
             ],
           );
-        },
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// SCOPE FILTER BAR (Geral / Rodada 1 / 2 / 3)
+// ─────────────────────────────────────────────
+// Linha de chips que troca a fonte de dados do ranking: "Geral" (acumulado) ou
+// uma rodada específica da fase de grupos. Sempre visível (acima da busca),
+// mesmo durante o carregamento.
+class _RankScopeBar extends StatelessWidget {
+  final RankScope scope;
+  final AppLocalizations l;
+  final ValueChanged<RankScope> onChanged;
+
+  const _RankScopeBar({
+    required this.scope,
+    required this.l,
+    required this.onChanged,
+  });
+
+  Widget _chip(String label, RankScope value) {
+    return ChoiceChip(
+      label: Text(label, style: const TextStyle(fontSize: 12.5)),
+      selected: scope == value,
+      onSelected: (_) => onChanged(value),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _chip(l.rankingScopeGeneral, RankScope.general),
+            const SizedBox(width: 6),
+            _chip(l.filterRound1, RankScope.round1),
+            const SizedBox(width: 6),
+            _chip(l.filterRound2, RankScope.round2),
+            const SizedBox(width: 6),
+            _chip(l.filterRound3, RankScope.round3),
+          ],
+        ),
       ),
     );
   }
@@ -225,6 +323,7 @@ class _StickyYouBar extends StatelessWidget {
   final RankingEntry entry;
   final int myIndexInList;
   final ItemPositionsListener positionsListener;
+  final bool isPrize;
   final AppLocalizations l;
   final VoidCallback onTap;
 
@@ -232,6 +331,7 @@ class _StickyYouBar extends StatelessWidget {
     required this.entry,
     required this.myIndexInList,
     required this.positionsListener,
+    required this.isPrize,
     required this.l,
     required this.onTap,
   });
@@ -273,6 +373,7 @@ class _StickyYouBar extends StatelessWidget {
           child: _YouBarCard(
             entry: entry,
             l: l,
+            isPrize: isPrize,
             dockedTop: dock == _Dock.top,
             onTap: onTap,
           ),
@@ -288,12 +389,14 @@ class _StickyYouBar extends StatelessWidget {
 class _YouBarCard extends StatelessWidget {
   final RankingEntry entry;
   final AppLocalizations l;
+  final bool isPrize;
   final bool dockedTop;
   final VoidCallback onTap;
 
   const _YouBarCard({
     required this.entry,
     required this.l,
+    required this.isPrize,
     required this.dockedTop,
     required this.onTap,
   });
@@ -316,17 +419,21 @@ class _YouBarCard extends StatelessWidget {
       _ => '${entry.rank}',
     };
 
-    // Fundo opaco (some o conteúdo da lista por trás) com o mesmo leve tom do
-    // realce "isMe" das demais linhas.
+    // Fundo opaco (some o conteúdo da lista por trás) com o leve tom primário do
+    // "você". O realce de premiação é discreto: só a BORDA fica âmbar quando o
+    // usuário está na zona de premiação; o fundo segue primário.
     final cardColor = Theme.of(context).cardColor;
     final tinted = Color.alphaBlend(cs.primary.withOpacity(0.10), cardColor);
+    final borderColor = isPrize
+        ? kPrizeHighlight.withOpacity(0.45)
+        : cs.primary.withOpacity(0.4);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: tinted,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.primary.withOpacity(0.4), width: 1.5),
+        border: Border.all(color: borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.10),
@@ -442,12 +549,17 @@ class RankingTile extends StatelessWidget {
   /// (general ranking). Leagues pass the user's overall-ranking position here.
   final String? subtitle;
 
+  /// Quando true, destaca o card com a cor de premiação (âmbar) — usado só no
+  /// Ranking Geral para os 11 primeiros colocados + o último. Puramente visual.
+  final bool isPrize;
+
   const RankingTile(
       {super.key,
       required this.entry,
       required this.isMe,
       required this.l,
-      this.subtitle});
+      this.subtitle,
+      this.isPrize = false});
 
   @override
   Widget build(BuildContext context) {
@@ -473,18 +585,27 @@ class RankingTile extends StatelessWidget {
     // always tappable, since reviewing your own bets carries no copy risk.
     final tappable = isMe || isBettingLocked;
 
+    // Realce discreto de premiação: APENAS a borda fica âmbar (sem preencher o
+    // fundo). O fundo continua marcando só o "você" (tom primário). Os dois
+    // sinais ficam ortogonais: fundo = você, borda âmbar = premiado. Se for as
+    // duas coisas, o card tem fundo primário + borda âmbar.
+    final Color bgColor = isMe
+        ? cs.primary.withOpacity(0.08)
+        : cs.surfaceContainerHighest.withOpacity(0.5);
+    final Color borderColor = isPrize
+        ? kPrizeHighlight.withOpacity(0.45)
+        : isMe
+            ? cs.primary.withOpacity(0.3)
+            : Colors.transparent;
+    final double borderWidth = (isPrize || isMe) ? 1.5 : 0;
+
     final tile = AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: isMe
-            ? cs.primary.withOpacity(0.08)
-            : cs.surfaceContainerHighest.withOpacity(0.5),
-        border: Border.all(
-          color: isMe ? cs.primary.withOpacity(0.3) : Colors.transparent,
-          width: isMe ? 1.5 : 0,
-        ),
+        color: bgColor,
+        border: Border.all(color: borderColor, width: borderWidth),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

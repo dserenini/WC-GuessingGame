@@ -6,10 +6,15 @@ import 'package:copa2026/shared/models/bet.dart';
 /// (mesmos pontos) compartilha a posição e o próximo grupo recebe sempre a
 /// posição seguinte, independentemente de quantas pessoas estão empatadas.
 ///
-/// As views do Supabase (`user_rankings` / `league_rankings`) usam `RANK()`,
-/// que deixa buracos após empates (1, 1, ... , 8, ...). Aqui reescrevemos para
-/// `DENSE_RANK` no cliente. Assume a lista já ordenada por pontos desc (que é
-/// como as views entregam, via `ORDER BY rank`).
+/// As views do Supabase usam `RANK()`, que deixa buracos após empates
+/// (1, 2, 2, 2, 5, ...). Esta função reescreve para `DENSE_RANK` no cliente.
+/// Assume a lista já ordenada por pontos desc (que é como as views entregam,
+/// via `ORDER BY rank`).
+///
+/// NOTA: o Ranking Geral e o de Ligas NÃO usam mais esta função — eles exibem
+/// o `RANK()` cru da view (ranking de competição, com buracos), que é o
+/// comportamento desejado. Mantida apenas para os rankings de Estatísticas
+/// Avançadas (`stat_rankings_provider`).
 List<RankingEntry> applyDenseRank(List<RankingEntry> entries) {
   final result = <RankingEntry>[];
   var dense = 0;
@@ -39,9 +44,35 @@ final rankingProvider = StreamProvider.autoDispose<List<RankingEntry>>((ref) {
             .from('user_rankings')
             .select()
             .order('rank', ascending: true);
-        return applyDenseRank((data as List)
+        return (data as List)
             .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
-            .toList());
+            .toList();
+      });
+
+  return stream;
+});
+
+// Ranking geral filtrado por rodada da fase de grupos (1, 2 ou 3). Vem da view
+// `user_round_rankings`, que já calcula o RANK() com os mesmos critérios de
+// desempate do ranking geral, porém escopados à rodada. Mesmo shape de
+// RankingEntry (a coluna extra `round` é ignorada no fromJson). autoDispose +
+// stream de `bets` para refletir mudanças, igual ao rankingProvider.
+final roundRankingProvider =
+    StreamProvider.autoDispose.family<List<RankingEntry>, int>((ref, round) {
+  final client = Supabase.instance.client;
+
+  final stream = client
+      .from('bets')
+      .stream(primaryKey: ['id'])
+      .asyncMap((_) async {
+        final data = await client
+            .from('user_round_rankings')
+            .select()
+            .eq('round', round)
+            .order('rank', ascending: true);
+        return (data as List)
+            .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
+            .toList();
       });
 
   return stream;
@@ -55,7 +86,7 @@ final myLeaguesRankingProvider =
       .eq('league_id', leagueId)
       .order('rank', ascending: true);
 
-  return applyDenseRank((data as List)
+  return (data as List)
       .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
-      .toList());
+      .toList();
 });

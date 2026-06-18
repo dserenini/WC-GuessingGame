@@ -598,6 +598,40 @@ class AppLocalizationsIt extends AppLocalizations {
       'Crea o unisciti a leghe private utilizzando un codice di invito per competere contro i tuoi amici.';
 
   @override
+  String get helpTiebreakTitle => 'Criteri di Spareggio ⚖️';
+
+  @override
+  String get helpTiebreakDesc =>
+      'In caso di parità di punti, la posizione in classifica è decisa in questo ordine: 1) chi ha indovinato più risultati esatti (scommesse da 3 punti); 2) chi ha totalizzato più punti nelle partite del Brasile. Se la parità persiste, i giocatori condividono la stessa posizione in classifica.';
+
+  @override
+  String get prizesTitle => 'Premi';
+
+  @override
+  String get prizesCardDesc =>
+      'Scopri come il montepremi totale è suddiviso tra la classifica generale e ogni giornata.';
+
+  @override
+  String get prizesTotalLabel => 'Montepremi totale';
+
+  @override
+  String get prizesGeneralTitle => 'Classifica Generale';
+
+  @override
+  String get prizesGeneralNote =>
+      'Considerando tutte le partite della fase a gironi.';
+
+  @override
+  String get prizesLastPlace => 'Ultimo classificato';
+
+  @override
+  String get prizesPerRoundTitle => 'Per Giornata';
+
+  @override
+  String get prizesPerRoundNote =>
+      'I primi 3 di ogni giornata (1ª, 2ª e 3ª) vengono premiati.';
+
+  @override
   String get appTitle => 'Make Bolão Great Again';
 
   @override
@@ -1078,6 +1112,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get filterRound3 => 'Giornata 3';
+
+  @override
+  String get rankingScopeGeneral => 'Generale';
 
   @override
   String get filterDay => 'Di oggi';

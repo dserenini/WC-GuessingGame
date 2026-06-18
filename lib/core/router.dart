@@ -16,6 +16,7 @@ import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
 import 'package:copa2026/features/profile/screens/achievements_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
+import 'package:copa2026/features/prizes/screens/prizes_screen.dart';
 import 'package:copa2026/features/auth/screens/update_password_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -123,6 +124,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/help',
         name: 'help',
         builder: (_, __) => const HelpScreen(),
+      ),
+      GoRoute(
+        path: '/prizes',
+        name: 'prizes',
+        builder: (_, __) => const PrizesScreen(),
       ),
     ],
   );

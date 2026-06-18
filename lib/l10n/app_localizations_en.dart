@@ -590,6 +590,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create or join private leagues using an invite code to compete against your friends.';
 
   @override
+  String get helpTiebreakTitle => 'Tie-Breakers ⚖️';
+
+  @override
+  String get helpTiebreakDesc =>
+      'When two or more players are tied on points, the ranking position is decided in this order: 1) most exact-score hits (bets worth 3 points); 2) most points earned in Brazil\'s matches. If they are still tied, the players share the same position in the table.';
+
+  @override
+  String get prizesTitle => 'Prizes';
+
+  @override
+  String get prizesCardDesc =>
+      'See how the total prize pool is split across the overall ranking and each round.';
+
+  @override
+  String get prizesTotalLabel => 'Total prize pool';
+
+  @override
+  String get prizesGeneralTitle => 'Overall Ranking';
+
+  @override
+  String get prizesGeneralNote => 'Based on all group-stage matches.';
+
+  @override
+  String get prizesLastPlace => 'Last place';
+
+  @override
+  String get prizesPerRoundTitle => 'Per Round';
+
+  @override
+  String get prizesPerRoundNote =>
+      'The top 3 of each round (1st, 2nd and 3rd) are rewarded.';
+
+  @override
   String get appTitle => 'Make Bolão Great Again';
 
   @override
@@ -1066,6 +1099,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterRound3 => 'Round 3';
+
+  @override
+  String get rankingScopeGeneral => 'Overall';
 
   @override
   String get filterDay => 'Today';

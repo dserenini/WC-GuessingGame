@@ -1228,6 +1228,66 @@ abstract class AppLocalizations {
   /// **'Crie ou participe de ligas privadas usando um código de convite para competir com seus amigos.'**
   String get helpLeaguesDesc;
 
+  /// No description provided for @helpTiebreakTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Critérios de Desempate ⚖️'**
+  String get helpTiebreakTitle;
+
+  /// No description provided for @helpTiebreakDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em caso de empate em pontos, a posição no ranking é decidida nesta ordem: 1º) quem tiver mais acertos de placar exato (apostas que valeram 3 pontos); 2º) quem somar mais pontos nos jogos do Brasil. Se ainda assim o empate persistir, os jogadores dividem a mesma posição na tabela.'**
+  String get helpTiebreakDesc;
+
+  /// No description provided for @prizesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Premiação'**
+  String get prizesTitle;
+
+  /// No description provided for @prizesCardDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja como o prêmio total é distribuído entre o ranking geral e cada rodada.'**
+  String get prizesCardDesc;
+
+  /// No description provided for @prizesTotalLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Premiação total'**
+  String get prizesTotalLabel;
+
+  /// No description provided for @prizesGeneralTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking Geral'**
+  String get prizesGeneralTitle;
+
+  /// No description provided for @prizesGeneralNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Considerando todos os jogos da fase de grupos.'**
+  String get prizesGeneralNote;
+
+  /// No description provided for @prizesLastPlace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último colocado'**
+  String get prizesLastPlace;
+
+  /// No description provided for @prizesPerRoundTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por Rodada'**
+  String get prizesPerRoundTitle;
+
+  /// No description provided for @prizesPerRoundNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os 3 primeiros de cada rodada (1ª, 2ª e 3ª) são premiados.'**
+  String get prizesPerRoundNote;
+
   /// No description provided for @appTitle.
   ///
   /// In pt, this message translates to:
@@ -2121,6 +2181,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Rodada 3'**
   String get filterRound3;
+
+  /// No description provided for @rankingScopeGeneral.
+  ///
+  /// In pt, this message translates to:
+  /// **'Geral'**
+  String get rankingScopeGeneral;
 
   /// No description provided for @filterDay.
   ///

@@ -76,6 +76,9 @@ const Color kGold = Color(0xFFFFD700);
 const Color kSilver = Color(0xFFC0C0C0);
 const Color kBronze = Color(0xFFCD7F32);
 
+// Realce âmbar dos cards premiados no Ranking Geral (11 primeiros + último).
+const Color kPrizeHighlight = Color(0xFFFFB300);
+
 // ─────────────────────────────────────────────
 // WIKIPEDIA FLAG BASE URL
 // Usage: '$kFlagBaseUrl/Flag_of_Brazil.svg'

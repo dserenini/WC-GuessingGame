@@ -132,13 +132,35 @@ Deno.serve(async () => {
     });
   }
 
-  // 3. Fonte (worldcup26.ir) — só jogos da fase de grupos.
-  const res = await fetch(SOURCE_URL, {
-    headers: { "Accept": "application/json", "User-Agent": "bolaocopa-sync/1.0" },
-  });
-  if (!res.ok) return json(502, { error: `source ${res.status}` });
-  const body = await res.json();
-  const games: any[] = (body?.games ?? []).filter((g: any) => g.type === "group");
+  // 3. Fonte (worldcup26.ir) — só jogos da fase de grupos. NÃO-FATAL: a fonte é
+  //    gratuita e instável (SSL/timeout/erro). Se cair, LOGA e SEGUE em vez de
+  //    estourar 500/502 — o sync de placares é pulado neste ciclo (o admin
+  //    mantém manualmente), mas o fillKnockout ainda roda (lê o banco, não a
+  //    fonte), e o cron para de acumular invocações com erro.
+  let games: any[] = [];
+  let sourceError: string | null = null;
+  // Timeout DURO de 8s: a fonte às vezes PENDURA (TLS/rede) e, sem cortar, a
+  // função levava ~28s por ciclo (caro, roda a cada 3min). O AbortController
+  // aborta o fetch travado → invocação curta; o ciclo é pulado e segue.
+  const ctrl = new AbortController();
+  const killFetch = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(SOURCE_URL, {
+      headers: { "Accept": "application/json", "User-Agent": "bolaocopa-sync/1.0" },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) {
+      sourceError = `source HTTP ${res.status}`;
+    } else {
+      const body = await res.json();
+      games = (body?.games ?? []).filter((g: any) => g.type === "group");
+    }
+  } catch (e) {
+    sourceError = `source fetch failed: ${(e as Error).message}`;
+  } finally {
+    clearTimeout(killFetch);
+  }
+  if (sourceError) console.error(sourceError);
 
   const unmatchedNames: string[] = [];
   const unmatchedFixtures: string[] = [];
@@ -252,6 +274,7 @@ Deno.serve(async () => {
 
   return json(200, {
     mode,
+    sourceError, // null quando a fonte respondeu; string quando caiu (sync pulado)
     groupGames: games.length,
     matched,
     unmatchedNames,

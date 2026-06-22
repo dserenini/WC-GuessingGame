@@ -346,19 +346,33 @@ class _ConnectorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final s in segments) {
-      final r = (pf - (s.col - 1)).clamp(0.0, 1.0); // acende durante a fase col
-      if (r <= 0) continue;
-      final p = Paint()
-        ..color = (s.live ? live : base).withOpacity((s.live ? 1.0 : 0.35) * r)
-        ..strokeWidth = s.live ? 2.0 : 1.2
-        ..style = PaintingStyle.stroke;
       final midX = s.x1 + (s.x2 - s.x1) / 2;
       final path = Path()
         ..moveTo(s.x1, s.y1)
         ..lineTo(midX, s.y1)
         ..lineTo(midX, s.y2)
         ..lineTo(s.x2, s.y2);
-      canvas.drawPath(path, p);
+
+      // Estrutura do chaveamento: SEMPRE visível (mesmo sem nada decidido).
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = base.withOpacity(0.4)
+          ..strokeWidth = 1.2
+          ..style = PaintingStyle.stroke,
+      );
+
+      // Destaque do vencedor: acende durante a animação da fase.
+      final r = (pf - (s.col - 1)).clamp(0.0, 1.0);
+      if (s.live && r > 0) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = live.withOpacity(r)
+            ..strokeWidth = 2.0
+            ..style = PaintingStyle.stroke,
+        );
+      }
     }
   }
 
@@ -412,9 +426,9 @@ class _BracketCard extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: cs.surface,
+              color: cs.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: cs.outline.withOpacity(0.25)),
+              border: Border.all(color: cs.outline.withOpacity(0.5)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Column(
@@ -424,7 +438,7 @@ class _BracketCard extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(topLabel,
-                        style: TextStyle(fontSize: 8, color: cs.onSurface.withOpacity(0.5))),
+                        style: TextStyle(fontSize: 8, color: cs.onSurface.withOpacity(0.65))),
                   ),
                 _teamRow(context, m?.home, homeShown, advId, finished, scoreIsBet, m?.homeSlotLabel),
                 Divider(height: 4, color: cs.outline.withOpacity(0.15)),
@@ -476,7 +490,9 @@ class _BracketCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isAdv ? FontWeight.w800 : FontWeight.w500,
-                color: show ? cs.onSurface : cs.onSurface.withOpacity(0.4),
+                color: show
+                    ? cs.onSurface
+                    : cs.onSurface.withOpacity(fallbackLabel != null ? 0.75 : 0.4),
               ),
             ),
           ),

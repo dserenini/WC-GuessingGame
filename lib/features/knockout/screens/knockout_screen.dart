@@ -256,7 +256,7 @@ class _GameCard extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45))),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
               ),
               const SizedBox(height: 4),
               Row(
@@ -393,7 +393,7 @@ class _GameCard extends StatelessWidget {
             fontSize: 13,
             fontWeight: isAdv ? FontWeight.w800 : FontWeight.w500,
             color: team == null
-                ? cs.onSurface.withOpacity(0.4)
+                ? cs.onSurface.withOpacity(fallbackLabel != null ? 0.75 : 0.4)
                 : isAdv
                     ? cs.primary
                     : cs.onSurface,

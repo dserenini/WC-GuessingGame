@@ -65,10 +65,15 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
     final l = AppLocalizations.of(context)!;
     final currentUid = ref.watch(currentUserProvider)?.id;
 
-    // Depois que o mata-mata começa (flag), o ranking do mata-mata vira o
-    // default; o usuário pode alternar para a fase de grupos pelo toggle.
-    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
-    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
+    // O Mata-Mata no Ranking (toggle + view) só existe para quem PARTICIPA
+    // (knockoutVisibleProvider = master ligado E knockout_unlocked OU admin).
+    // Vira o PADRÃO a partir de kKoRankingDefaultFrom (29/06 15:00 GMT+0); antes
+    // disso, o participante abre na fase de grupos. Não-participante nunca vê.
+    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    final koIsDefault =
+        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
+    final showKo =
+        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
 
     // Mata-Mata: ranking zerado (koUserRankingProvider). Fase de grupos: "Geral"
     // usa a view acumulada (user_rankings); rodadas usam user_round_rankings.
@@ -108,7 +113,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
       drawer: const AppDrawer(),
       body: Column(
         children: [
-          if (knockoutOn)
+          if (iParticipate)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: SegmentedButton<bool>(

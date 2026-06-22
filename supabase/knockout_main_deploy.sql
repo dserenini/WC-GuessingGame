@@ -267,11 +267,42 @@ END;
 $$;
 GRANT EXECUTE ON FUNCTION get_knockout_unlocked_ids() TO authenticated;
 
+-- 4) RANKINGS DO MATA-MATA só contam participantes PAGOS (knockout_unlocked).
+--    Recria as views de knockout_schema.sql agora que a coluna existe (a coluna
+--    é criada acima, na PARTE 2; por isso o filtro entra aqui, não no schema).
+--    • ko_user_rankings (geral): exige "aparecer no ranking" (participate_in_
+--      ranking) E "mata-mata pago" (knockout_unlocked).
+--    • ko_league_rankings (liga): exige knockout_unlocked; segue a convenção da
+--      league_rankings regular de NÃO filtrar participate_in_ranking.
+CREATE OR REPLACE VIEW ko_user_rankings AS
+  SELECT p.id AS user_id, p.username, p.full_name, p.display_preference, p.avatar_url,
+         COALESCE(sum(b.points), 0) AS total_points,
+         count(b.id) AS total_bets,
+         rank() OVER (ORDER BY COALESCE(sum(b.points), 0) DESC) AS rank
+  FROM profiles p
+  LEFT JOIN ko_bet b ON b.user_id = p.id
+  WHERE p.participate_in_ranking = true
+    AND p.knockout_unlocked = true
+  GROUP BY p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
+
+CREATE OR REPLACE VIEW ko_league_rankings AS
+  SELECT lm.league_id, l.name AS league_name, p.id AS user_id, p.username, p.full_name,
+         p.display_preference, p.avatar_url,
+         COALESCE(sum(b.points), 0) AS total_points,
+         rank() OVER (PARTITION BY lm.league_id ORDER BY COALESCE(sum(b.points), 0) DESC) AS rank,
+         count(b.id) AS total_bets
+  FROM league_members lm
+  JOIN leagues l ON l.id = lm.league_id
+  JOIN profiles p ON p.id = lm.user_id
+  LEFT JOIN ko_bet b ON b.user_id = lm.user_id
+  WHERE p.knockout_unlocked = true
+  GROUP BY lm.league_id, l.name, p.id, p.username, p.full_name, p.display_preference, p.avatar_url;
+
 -- Observações:
 --  • Leitura do bracket (ko_match) continua pública; o app esconde a tela.
 --  • O scoring (trigger score_ko_match) roda SECURITY DEFINER e não é afetado.
 
--- 4) ATIVAÇÃO (master switch) — rode SÓ no cutover, quando for liberar.
+-- 5) ATIVAÇÃO (master switch) — rode SÓ no cutover, quando for liberar.
 --    Enquanto 'enabled' = false, NINGUÉM vê (nem quem já tem knockout_unlocked).
 --    Depois de ligar, cada usuário passa a ver assim que knockout_unlocked=true.
 -- UPDATE app_config

@@ -58,6 +58,12 @@ final knockoutVisibleProvider = FutureProvider<bool>((ref) async {
   }
 });
 
+/// A partir de quando o Ranking passa a abrir em "Mata-Mata" POR PADRÃO (UTC).
+/// Vale só para participantes (ver [knockoutVisibleProvider]); antes disso, e
+/// para não-participantes, o default continua sendo a fase de grupos. O toggle
+/// segue disponível para todos. 29/06/2026 15:00 GMT+0 = início dos 16-avos.
+final DateTime kKoRankingDefaultFrom = DateTime.utc(2026, 6, 29, 15, 0);
+
 /// Todos os jogos do mata-mata, com as seleções (casa/visitante/quem avançou).
 /// autoDispose: rebusca dados frescos toda vez que a tela é reaberta.
 final koMatchesProvider = FutureProvider.autoDispose<List<KoMatch>>((ref) async {

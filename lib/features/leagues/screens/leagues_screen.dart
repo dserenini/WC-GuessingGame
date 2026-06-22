@@ -23,8 +23,14 @@ class LeaguesScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final leaguesAsync = ref.watch(myLeaguesProvider);
 
-    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
-    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
+    // Mata-Mata nas Ligas segue o MESMO critério do Ranking: só p/ participantes
+    // (knockoutVisibleProvider = master ligado E knockout_unlocked OU admin),
+    // default a partir de kKoRankingDefaultFrom (29/06 15:00 GMT+0).
+    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    final koIsDefault =
+        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
+    final showKo =
+        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +56,7 @@ class LeaguesScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (knockoutOn)
+          if (iParticipate)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: SegmentedButton<bool>(
@@ -143,9 +149,12 @@ class _LeagueCard extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextButton.icon(
               onPressed: () {
-                final showKo =
-                    (ref.read(knockoutEnabledProvider).valueOrNull ?? false) &&
-                        (ref.read(rankingViewKnockoutProvider) ?? true);
+                final iParticipate =
+                    ref.read(knockoutVisibleProvider).valueOrNull ?? false;
+                final koIsDefault = iParticipate &&
+                    DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
+                final showKo = iParticipate &&
+                    (ref.read(rankingViewKnockoutProvider) ?? koIsDefault);
                 final entries = (showKo
                         ? ref.read(koLeagueRankingProvider(league.id))
                         : ref.read(myLeaguesRankingProvider(league.id)))
@@ -228,8 +237,11 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
-    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
+    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    final koIsDefault =
+        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
+    final showKo =
+        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
     final rankAsync = showKo
         ? ref.watch(koLeagueRankingProvider(widget.leagueId))
         : ref.watch(myLeaguesRankingProvider(widget.leagueId));

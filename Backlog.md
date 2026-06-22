@@ -5,8 +5,6 @@
 
 
 # Ideias Futuras de Implementação
-
-* **Curiosidades da Copa (Loading Screen/Login):** Exibir fatos curiosos e históricos das Copas do Mundo, ou da Copa de 2026 especificamente, para o usuário toda vez que ele logar no sistema ou quando o aplicativo precisar realizar processamentos ligeiramente mais pesados (ex: Agente do Caos rodando dezenas de simulações).
 * **Mapa de Classificação**: Criar um mapa de classificação com a chave dos classificados para a próxima fase para análise dos confrontos.
 
 * **Estatísticas Avançadas** — tela dedicada com abas (Rankings · Pessoal · Conquistas · Bolão), entregue por família, uma de cada vez.

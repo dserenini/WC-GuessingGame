@@ -20,7 +20,7 @@ class AppDrawer extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isAdmin = kAdminUids.contains(currentUser?.id);
-    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
+    final knockoutOn = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
 
     final allMatches = ref.watch(allMatchesProvider).valueOrNull ?? [];
     final allBets = ref.watch(allBetsProvider).valueOrNull ?? {};

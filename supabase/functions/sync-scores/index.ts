@@ -239,15 +239,186 @@ Deno.serve(async () => {
     await supabase.from("api_sync_runs").insert({ ...logRow, applied: true });
   }
 
+  // 4. Preenche os 16-avos com as seleções já classificadas MATEMATICAMENTE
+  //    (1º/2º de cada grupo; rigoroso FIFA). Só em modo live; idempotente.
+  let koFilled = 0;
+  if (mode === "live") {
+    try {
+      koFilled = await fillKnockout(supabase);
+    } catch (e) {
+      console.error("fillKnockout: " + (e as Error).message);
+    }
+  }
+
   return json(200, {
     mode,
     groupGames: games.length,
     matched,
     unmatchedNames,
     unmatchedFixtures,
-    ...(mode === "shadow" ? { logged } : { changed }),
+    ...(mode === "shadow" ? { logged } : { changed, koFilled }),
   });
 });
+
+// =============================================================================
+// AUTO-PREENCHIMENTO DO MATA-MATA
+//   Recalcula a classificação REAL dos grupos (só jogos encerrados) e preenche
+//   os slots dos 16-avos cujo 1º/2º já está MATEMATICAMENTE garantido.
+//   Rigoroso/seguro: só preenche quando é impossível mudar. Desempate FIFA
+//   (pontos→saldo→gols→confronto direto) só é aplicado com o grupo encerrado;
+//   com jogos a disputar, usa cota de pontos (empate possível = ainda não trava).
+// =============================================================================
+
+type GMatch = {
+  group: string;
+  home: string;
+  away: string;
+  hs: number | null;
+  as: number | null;
+  finished: boolean;
+};
+
+// deno-lint-ignore no-explicit-any
+async function fillKnockout(supabase: any): Promise<number> {
+  // Partidas de grupo FRESCAS (após as gravações deste ciclo).
+  const { data: rows, error } = await supabase
+    .from("matches")
+    .select(
+      "group_letter, home_score, away_score, status, " +
+        "home_team:teams!matches_home_team_id_fkey(name), " +
+        "away_team:teams!matches_away_team_id_fkey(name)",
+    );
+  if (error) throw new Error("matches: " + error.message);
+
+  const byGroup = new Map<string, GMatch[]>();
+  for (const m of rows ?? []) {
+    const home = (m as any).home_team?.name;
+    const away = (m as any).away_team?.name;
+    if (!home || !away || !m.group_letter) continue;
+    const g = String(m.group_letter).toUpperCase();
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g)!.push({
+      group: g, home, away,
+      hs: m.home_score, as: m.away_score,
+      finished: m.status === "finished",
+    });
+  }
+
+  const winner = new Map<string, string>();
+  const runnerUp = new Map<string, string>();
+  for (const [g, ms] of byGroup) {
+    const c = clinchedPositions(ms);
+    if (c.winner) winner.set(g, c.winner);
+    if (c.runnerUp) runnerUp.set(g, c.runnerUp);
+  }
+  if (winner.size === 0 && runnerUp.size === 0) return 0;
+
+  const { data: teams } = await supabase.from("teams").select("id, name");
+  const idByName = new Map<string, string>();
+  for (const t of teams ?? []) idByName.set(t.name, t.id);
+
+  const { data: ko } = await supabase
+    .from("ko_match")
+    .select(
+      "id, home_team_id, away_team_id, " +
+        "home_src_kind, home_src_group, away_src_kind, away_src_group",
+    )
+    .eq("round", "16avos");
+
+  const wantId = (kind: string | null, grp: string | null): string | null => {
+    if (!grp) return null;
+    const g = grp.toUpperCase();
+    const name = kind === "winner"
+      ? winner.get(g)
+      : kind === "runnerup"
+      ? runnerUp.get(g)
+      : undefined; // 'third' não é preenchido por ora
+    return name ? idByName.get(name) ?? null : null;
+  };
+
+  let filled = 0;
+  for (const row of ko ?? []) {
+    const patch: Record<string, unknown> = {};
+    const wh = wantId(row.home_src_kind, row.home_src_group);
+    const wa = wantId(row.away_src_kind, row.away_src_group);
+    if (wh && wh !== row.home_team_id) patch.home_team_id = wh;
+    if (wa && wa !== row.away_team_id) patch.away_team_id = wa;
+    if (Object.keys(patch).length > 0) {
+      const { error: uErr } = await supabase
+        .from("ko_match").update(patch).eq("id", row.id);
+      if (!uErr) filled++;
+    }
+  }
+  return filled;
+}
+
+/// 1º/2º colocado já garantidos do grupo (ou undefined se ainda em aberto).
+function clinchedPositions(
+  matches: GMatch[],
+): { winner?: string; runnerUp?: string } {
+  const teams = [...new Set(matches.flatMap((m) => [m.home, m.away]))];
+  const pts: Record<string, number> = {};
+  const gf: Record<string, number> = {};
+  const ga: Record<string, number> = {};
+  const remaining: Record<string, number> = {};
+  for (const t of teams) { pts[t] = 0; gf[t] = 0; ga[t] = 0; remaining[t] = 0; }
+
+  let allFinished = true;
+  for (const m of matches) {
+    if (m.finished && m.hs != null && m.as != null) {
+      gf[m.home] += m.hs; ga[m.home] += m.as;
+      gf[m.away] += m.as; ga[m.away] += m.hs;
+      if (m.hs > m.as) pts[m.home] += 3;
+      else if (m.hs < m.as) pts[m.away] += 3;
+      else { pts[m.home] += 1; pts[m.away] += 1; }
+    } else {
+      allFinished = false;
+      remaining[m.home]++; remaining[m.away]++;
+    }
+  }
+
+  // Grupo encerrado: classificação final com desempate FIFA completo.
+  if (allFinished) {
+    const sorted = [...teams].sort((a, b) => {
+      if (pts[b] !== pts[a]) return pts[b] - pts[a];
+      const gdA = gf[a] - ga[a], gdB = gf[b] - ga[b];
+      if (gdB !== gdA) return gdB - gdA;
+      if (gf[b] !== gf[a]) return gf[b] - gf[a];
+      const h2h = matches.find((x) =>
+        x.finished && x.hs != null && x.as != null &&
+        ((x.home === a && x.away === b) || (x.home === b && x.away === a))
+      );
+      if (h2h) {
+        const sa = h2h.home === a ? h2h.hs! : h2h.as!;
+        const sb = h2h.home === b ? h2h.hs! : h2h.as!;
+        if (sb !== sa) return sb - sa;
+      }
+      return a.localeCompare(b);
+    });
+    return { winner: sorted[0], runnerUp: sorted[1] };
+  }
+
+  // Grupo em andamento: cota de pontos (seguro). Empate possível = não trava.
+  const maxPts: Record<string, number> = {};
+  for (const t of teams) maxPts[t] = pts[t] + 3 * remaining[t];
+
+  // 1º: piso de pontos do time supera o teto de TODOS os outros (sem empate).
+  const winner = teams.find((t) =>
+    teams.every((u) => u === t || maxPts[u] < pts[t])
+  );
+
+  // 2º: só com o 1º cravado; no máx. 1 outro time pode alcançar o piso de t
+  //     (esse 1 é justamente o 1º) → t é o 2º garantido.
+  let runnerUp: string | undefined;
+  if (winner) {
+    runnerUp = teams.find((t) =>
+      t !== winner &&
+      teams.filter((u) => u !== t && maxPts[u] >= pts[t]).length <= 1
+    );
+  }
+
+  return { winner, runnerUp };
+}
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {

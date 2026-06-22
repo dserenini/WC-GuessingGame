@@ -45,6 +45,14 @@ class KoMatch {
   final MatchStatus status;
   final int? apiFixtureId;
 
+  /// Nº oficial do jogo na tabela da FIFA (73–104).
+  final int? matchNo;
+
+  /// Rótulo do confronto quando o time ainda não está definido
+  /// (ex.: "1º E", "3º A/B/C/D/F", "Venc. Jogo 74").
+  final String? homeSlotLabel;
+  final String? awaySlotLabel;
+
   const KoMatch({
     required this.id,
     required this.round,
@@ -59,10 +67,22 @@ class KoMatch {
     this.awayPens,
     required this.status,
     this.apiFixtureId,
+    this.matchNo,
+    this.homeSlotLabel,
+    this.awaySlotLabel,
   });
 
   /// Identificador curto para exibição (#ID), igual ao padrão da fase de grupos.
   String get shortId => apiFixtureId?.toString() ?? id.substring(0, 4);
+
+  /// Nº do jogo para exibir no card ("Jogo 73"); cai no #ID se não houver.
+  String get gameNoLabel => matchNo != null ? 'Jogo $matchNo' : '#$shortId';
+
+  /// Texto do lado da casa/visitante: time real ou, se indefinido, o rótulo
+  /// do confronto ("1º E", "Venc. Jogo 74"). Usado fora da árvore (lista/folha),
+  /// onde não há animação de revelação.
+  String get homeText => home?.name ?? homeSlotLabel ?? 'A definir';
+  String get awayText => away?.name ?? awaySlotLabel ?? 'A definir';
 
   bool get teamsKnown => home != null && away != null;
   bool get isFinished => status == MatchStatus.finished;
@@ -89,5 +109,8 @@ class KoMatch {
           orElse: () => MatchStatus.scheduled,
         ),
         apiFixtureId: (j['api_fixture_id'] as num?)?.toInt(),
+        matchNo: (j['match_no'] as num?)?.toInt(),
+        homeSlotLabel: j['home_slot_label'] as String?,
+        awaySlotLabel: j['away_slot_label'] as String?,
       );
 }

@@ -41,6 +41,15 @@ final adminUsersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asyn
   return List<Map<String, dynamic>>.from(response);
 });
 
+// IDs dos usuários com o mata-mata liberado (inscrição separada do bolão
+// principal). Vem de uma RPC SECURITY DEFINER (profiles é restrito) — ver
+// supabase/knockout_access.sql.
+final adminKnockoutUnlockedProvider = FutureProvider<Set<String>>((ref) async {
+  final response =
+      await Supabase.instance.client.rpc('get_knockout_unlocked_ids');
+  return (response as List).map((e) => e.toString()).toSet();
+});
+
 // Todas as ligas (id + nome). RLS de `leagues` é SELECT USING (true), então o
 // admin pode listar todas. Usado na aba de adicionar usuários a ligas.
 final adminAllLeaguesProvider =
@@ -556,10 +565,30 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
     }
   }
 
+  // Libera/bloqueia o mata-mata para um usuário (inscrição separada).
+  Future<void> _toggleKnockout(Map<String, dynamic> u, bool currentlyOn) async {
+    final newVal = !currentlyOn;
+    try {
+      await Supabase.instance.client.from('profiles').update({
+        'knockout_unlocked': newVal,
+        'knockout_unlocked_at': newVal ? DateTime.now().toIso8601String() : null,
+      }).eq('id', u['id']);
+      ref.invalidate(adminKnockoutUnlockedProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final usersAsync = ref.watch(adminUsersProvider);
+    final koUnlockedIds =
+        ref.watch(adminKnockoutUnlockedProvider).valueOrNull ?? const <String>{};
 
     return usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -647,6 +676,8 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
                       itemBuilder: (context, index) {
                         final u = filtered[index];
                         final bool isPaid = u['paid'] == true;
+                        final bool koOn =
+                            koUnlockedIds.contains(u['id']?.toString());
                         final cs = Theme.of(context).colorScheme;
                         final Color statusColor =
                             isPaid ? Colors.green : Colors.grey;
@@ -674,6 +705,47 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
                                       if ((u['phone'] ?? '').toString().isNotEmpty)
                                         Text(u['phone'] ?? ''),
                                     ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Badge clicável: libera/bloqueia o mata-mata
+                                // (inscrição separada do bolão principal).
+                                Tooltip(
+                                  message: koOn
+                                      ? 'Mata-Mata liberado — clique para bloquear'
+                                      : 'Mata-Mata bloqueado — clique para liberar',
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: () => _toggleKnockout(u, koOn),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: (koOn ? Colors.deepPurple : Colors.grey)
+                                            .withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                            color: koOn ? Colors.deepPurple : Colors.grey),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            koOn ? Icons.sports_mma : Icons.lock_outline,
+                                            size: 16,
+                                            color: koOn ? Colors.deepPurple : Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Mata-Mata',
+                                            style: TextStyle(
+                                              color: koOn ? Colors.deepPurple : Colors.grey,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),

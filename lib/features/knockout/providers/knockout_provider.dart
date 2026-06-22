@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
@@ -29,11 +30,39 @@ final knockoutEnabledProvider = FutureProvider<bool>((ref) async {
   }
 });
 
+/// Acesso do USUÁRIO ATUAL ao mata-mata = master global ligado E
+/// (inscrição paga OU admin). Controla menu, rota e tela.
+///   • Enquanto o master (`app_config.knockout.enabled`) estiver false, ninguém
+///     vê — é o rollout "às escondidas".
+///   • Com o master ligado, cada usuário só passa a ver depois que o admin
+///     libera a inscrição do mata-mata (`profiles.knockout_unlocked` — separada
+///     da do bolão principal), então vai aparecendo aos poucos. Admins veem
+///     sempre (para testes).
+/// O gate de verdade (impedir apostar via API sem pagar) é o RLS de `ko_bet`;
+/// este provider é a camada de UX (esconder).
+final knockoutVisibleProvider = FutureProvider<bool>((ref) async {
+  final enabled = await ref.watch(knockoutEnabledProvider.future);
+  if (!enabled) return false;
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) return false;
+  if (kAdminUids.contains(user.id)) return true;
+  try {
+    final row = await Supabase.instance.client
+        .from('profiles')
+        .select('knockout_unlocked')
+        .eq('id', user.id)
+        .maybeSingle();
+    return row?['knockout_unlocked'] == true;
+  } catch (_) {
+    return false;
+  }
+});
+
 /// Todos os jogos do mata-mata, com as seleções (casa/visitante/quem avançou).
 /// autoDispose: rebusca dados frescos toda vez que a tela é reaberta.
 final koMatchesProvider = FutureProvider.autoDispose<List<KoMatch>>((ref) async {
   final response = await Supabase.instance.client.from('ko_match').select('''
-        id, round, slot, match_date, home_score, away_score, home_pens, away_pens, status, api_fixture_id,
+        id, round, slot, match_no, home_slot_label, away_slot_label, match_date, home_score, away_score, home_pens, away_pens, status, api_fixture_id,
         home:teams!ko_match_home_team_id_fkey(id, name, flag_url, group_letter),
         away:teams!ko_match_away_team_id_fkey(id, name, flag_url, group_letter),
         advancing:teams!ko_match_advancing_team_id_fkey(id, name, flag_url, group_letter)

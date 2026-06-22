@@ -9,14 +9,11 @@ import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/features/knockout/widgets/bracket_tree.dart';
 import 'package:copa2026/features/knockout/widgets/knockout_bet_sheet.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 
-/// Abre o popup de detalhes do confronto (resultado/ao vivo + seu palpite).
+/// Abre o popup de detalhes do confronto. Mesmo sem os times definidos, abre
+/// em modo somente-leitura mostrando as infos prévias (nº, data, hora, status).
 void openKnockoutMatch(BuildContext context, WidgetRef ref, KoMatch m) {
-  if (!m.teamsKnown) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Confronto ainda não definido.')));
-    return;
-  }
   final cur = (ref.read(koMyBetsProvider).valueOrNull ?? {})[m.id];
   showModalBottomSheet(
     context: context,
@@ -35,10 +32,51 @@ class KnockoutScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Mesmo com a rota acessível, só quem tem acesso (master ligado + inscrição
+    // paga, ou admin) vê o conteúdo. Protege deep-link / URL direta.
+    final visible = ref.watch(knockoutVisibleProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('⚔️ Mata-Mata')),
       drawer: const AppDrawer(),
-      body: const _BracketTab(),
+      body: visible.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => const _KnockoutLocked(),
+        data: (ok) => ok ? const _BracketTab() : const _KnockoutLocked(),
+      ),
+    );
+  }
+}
+
+/// Aviso para quem ainda não liberou o mata-mata (inscrição não confirmada).
+class _KnockoutLocked extends StatelessWidget {
+  const _KnockoutLocked();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline, size: 56, color: cs.onSurface.withOpacity(0.4)),
+            const SizedBox(height: 16),
+            Text(
+              'Mata-Mata bloqueado',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O bolão de mata-mata tem inscrição própria. Assim que ela for '
+              'confirmada, ele aparece aqui automaticamente.',
+              style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -54,6 +92,7 @@ class _BracketTab extends ConsumerWidget {
     final isBracket = ref.watch(koBracketViewProvider);
     final matchesAsync = ref.watch(koMatchesProvider);
     final myBets = ref.watch(koMyBetsProvider).valueOrNull ?? const {};
+    final tzOffset = ref.watch(timezoneProvider);
 
     return Column(
       children: [
@@ -70,7 +109,11 @@ class _BracketTab extends ConsumerWidget {
               return isBracket
                   ? BracketTree(matches: matches, myBets: myBets, onTap: onTap)
                   : _BracketListView(
-                      matches: matches, ref: ref, myBets: myBets, onTap: onTap);
+                      matches: matches,
+                      ref: ref,
+                      myBets: myBets,
+                      onTap: onTap,
+                      tzOffset: tzOffset);
             },
           ),
         ),
@@ -106,18 +149,23 @@ class _BracketListView extends StatelessWidget {
   final WidgetRef ref;
   final Map<String, (int, int)> myBets;
   final void Function(KoMatch) onTap;
+  final Duration tzOffset;
   const _BracketListView(
       {required this.matches,
       required this.ref,
       required this.myBets,
-      required this.onTap});
+      required this.onTap,
+      required this.tzOffset});
 
   @override
   Widget build(BuildContext context) {
     final rounds = <String, List<KoMatch>>{};
     for (final r in kKoRounds) {
+      // Na lista, ordena pelo nº oficial do jogo (73, 74, 75…); cai no slot
+      // (ordem da árvore) se algum jogo não tiver número.
       final list = matches.where((m) => m.round == r).toList()
-        ..sort((a, b) => a.slot.compareTo(b.slot));
+        ..sort((a, b) =>
+            (a.matchNo ?? a.slot).compareTo(b.matchNo ?? b.slot));
       if (list.isNotEmpty) rounds[r] = list;
     }
 
@@ -130,7 +178,11 @@ class _BracketListView extends StatelessWidget {
             if (rounds[round] != null) ...[
               _RoundHeader(label: koRoundLabel(round), count: rounds[round]!.length),
               for (final m in rounds[round]!)
-                _GameCard(match: m, myBet: myBets[m.id], onTap: () => onTap(m)),
+                _GameCard(
+                    match: m,
+                    myBet: myBets[m.id],
+                    onTap: () => onTap(m),
+                    tzOffset: tzOffset),
               const SizedBox(height: 8),
             ],
         ],
@@ -171,7 +223,9 @@ class _GameCard extends StatelessWidget {
   final KoMatch match;
   final (int, int)? myBet;
   final VoidCallback? onTap;
-  const _GameCard({required this.match, this.myBet, this.onTap});
+  final Duration tzOffset;
+  const _GameCard(
+      {required this.match, this.myBet, this.onTap, required this.tzOffset});
 
   int? get _points {
     if (!match.isFinished || myBet == null || match.homeScore == null || match.awayScore == null) {
@@ -196,11 +250,20 @@ class _GameCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
             children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(match.gameNoLabel,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.45))),
+              ),
+              const SizedBox(height: 4),
               Row(
                 children: [
-                  Expanded(child: _side(context, match.home, advId, alignEnd: true)),
+                  Expanded(child: _side(context, match.home, match.homeSlotLabel, advId, alignEnd: true)),
                   _scoreBox(context),
-                  Expanded(child: _side(context, match.away, advId, alignEnd: false)),
+                  Expanded(child: _side(context, match.away, match.awaySlotLabel, advId, alignEnd: false)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -298,23 +361,25 @@ class _GameCard extends StatelessWidget {
                 fontWeight: FontWeight.w800, fontSize: 14, color: cs.primary)),
       );
     }
-    // Agendado sem palpite → horário.
-    final d = match.matchDate?.toLocal();
+    // Agendado sem palpite → data/hora no fuso escolhido pelo usuário.
+    final d = match.matchDate?.toUtc().add(tzOffset);
     final time = d == null
-        ? 'x'
-        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+        ? '—'
+        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}\n${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(time,
+          textAlign: TextAlign.center,
           style: TextStyle(fontSize: 11, color: cs.onSurface.withOpacity(0.5))),
     );
   }
 
-  Widget _side(BuildContext context, TeamModel? team, String? advId,
+  Widget _side(BuildContext context, TeamModel? team, String? fallbackLabel,
+      String? advId,
       {required bool alignEnd}) {
     final cs = Theme.of(context).colorScheme;
     final isAdv = team != null && advId != null && team.id == advId;
-    final name = team?.name ?? 'A definir';
+    final name = team?.name ?? fallbackLabel ?? 'A definir';
 
     final children = <Widget>[
       FlagAvatar(flagUrl: team?.flagUrl, radius: 14),

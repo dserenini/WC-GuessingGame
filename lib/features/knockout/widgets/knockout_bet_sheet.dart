@@ -7,6 +7,7 @@ import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 
 /// Popup de detalhes de um confronto do mata-mata:
 /// status + placar real/ao vivo, seu palpite (editável até 1h antes) e pontos.
@@ -35,6 +36,10 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
 
   KoMatch get m => widget.match;
 
+  /// Data/hora do jogo no fuso escolhido pelo usuário (match_date é UTC).
+  DateTime? get _localDate =>
+      m.matchDate?.toUtc().add(ref.read(timezoneProvider));
+
   /// Apostas abertas: times definidos, ainda agendado e faltando >1h pro jogo.
   bool get _open =>
       m.teamsKnown &&
@@ -43,6 +48,15 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
       DateTime.now()
           .toUtc()
           .isBefore(m.matchDate!.toUtc().subtract(const Duration(hours: 1)));
+
+  /// Motivo de a edição estar bloqueada (null quando aberta ou já encerrada com
+  /// palpite registrado num jogo passado — aí o read-only fala por si).
+  String? get _lockReason {
+    if (_open) return null;
+    if (!m.teamsKnown) return 'As apostas abrem quando o confronto for definido.';
+    if (m.status != MatchStatus.scheduled) return 'Jogo já iniciado — apostas encerradas.';
+    return 'Apostas encerradas (fecham 1h antes do jogo).';
+  }
 
   int? get _points {
     if (!m.isFinished || !widget.hasBet || m.homeScore == null || m.awayScore == null) {
@@ -74,7 +88,8 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l = AppLocalizations.of(context)!;
-    final d = m.matchDate?.toLocal();
+    ref.watch(timezoneProvider); // reconstrói se o fuso mudar
+    final d = _localDate;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -95,7 +110,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               // Cabeçalho: #ID · Status · (data) — igual à fase de grupos
               Row(
                 children: [
-                  Text('#${m.shortId}',
+                  Text(m.gameNoLabel,
                       style: TextStyle(
                           fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary)),
                   const SizedBox(width: 8),
@@ -121,9 +136,9 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               // Confronto + placar real/ao vivo (ou horário)
               Row(
                 children: [
-                  Expanded(child: _teamHeader(m.home)),
+                  Expanded(child: _teamHeader(m.home, m.homeSlotLabel)),
                   _resultCenter(cs),
-                  Expanded(child: _teamHeader(m.away)),
+                  Expanded(child: _teamHeader(m.away, m.awaySlotLabel)),
                 ],
               ),
 
@@ -139,8 +154,27 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               const SizedBox(height: 8),
               if (_open)
                 _editor(cs)
-              else
+              else ...[
                 _readonlyBet(cs),
+                if (_lockReason != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.lock_outline,
+                          size: 13, color: cs.onSurface.withOpacity(0.5)),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(_lockReason!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                color: cs.onSurface.withOpacity(0.6))),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ],
           ),
         ),
@@ -151,7 +185,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
   // Centro: resultado/ao vivo, ou horário se ainda não começou.
   Widget _resultCenter(ColorScheme cs) {
     if (m.status == MatchStatus.scheduled) {
-      final d = m.matchDate?.toLocal();
+      final d = _localDate;
       final txt = d == null
           ? '—'
           : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}\n${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
@@ -206,12 +240,12 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
     );
   }
 
-  Widget _teamHeader(TeamModel? team) {
+  Widget _teamHeader(TeamModel? team, String? fallbackLabel) {
     return Column(
       children: [
         FlagAvatar(flagUrl: team?.flagUrl, radius: 18),
         const SizedBox(height: 4),
-        Text(team?.name ?? 'A definir',
+        Text(team?.name ?? fallbackLabel ?? 'A definir',
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,

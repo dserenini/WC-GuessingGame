@@ -29,8 +29,8 @@ class _BracketTreeState extends State<BracketTree>
 
   static const _cols = ['16avos', 'oitavas', 'quartas', 'semis', 'final'];
   static const double _cardW = 150;
-  static const double _cardH = 50;
-  static const double _vGap = 16;
+  static const double _cardH = 62; // +nº do jogo no topo → precisa de mais altura
+  static const double _vGap = 14;
   static const double _colW = 190;
   static const double _unit = _cardH + _vGap;
   static const double _rowDy = 10; // distância do centro do card até cada linha
@@ -389,6 +389,9 @@ class _BracketCard extends StatelessWidget {
     final m = match;
     final advId = m?.advancing?.id;
     final finished = m?.isFinished ?? false;
+    // Rótulo do topo: o explícito (ex.: "3º lugar") ou o nº oficial do jogo.
+    final topLabel =
+        label ?? (m?.matchNo != null ? 'Jogo ${m!.matchNo}' : null);
 
     // Tem placar real/ao vivo? (live ou finished com placar)
     final hasReal = m != null &&
@@ -417,15 +420,15 @@ class _BracketCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (label != null)
+                if (topLabel != null)
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(label!,
+                    child: Text(topLabel,
                         style: TextStyle(fontSize: 8, color: cs.onSurface.withOpacity(0.5))),
                   ),
-                _teamRow(context, m?.home, homeShown, advId, finished, scoreIsBet),
+                _teamRow(context, m?.home, homeShown, advId, finished, scoreIsBet, m?.homeSlotLabel),
                 Divider(height: 4, color: cs.outline.withOpacity(0.15)),
-                _teamRow(context, m?.away, awayShown, advId, finished, scoreIsBet),
+                _teamRow(context, m?.away, awayShown, advId, finished, scoreIsBet, m?.awaySlotLabel),
               ],
             ),
           ),
@@ -454,7 +457,7 @@ class _BracketCard extends StatelessWidget {
   }
 
   Widget _teamRow(BuildContext context, TeamModel? team, int? score,
-      String? advId, bool finished, bool scoreIsBet) {
+      String? advId, bool finished, bool scoreIsBet, String? fallbackLabel) {
     final cs = Theme.of(context).colorScheme;
     final show = reveal && team != null;
     final isAdv = show && advId != null && team.id == advId;
@@ -468,7 +471,7 @@ class _BracketCard extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              show ? team.name : 'A definir',
+              show ? team.name : (fallbackLabel ?? 'A definir'),
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,

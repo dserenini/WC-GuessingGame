@@ -79,6 +79,11 @@ const Color kBronze = Color(0xFFCD7F32);
 // Realce âmbar dos cards premiados no Ranking Geral (11 primeiros + último).
 const Color kPrizeHighlight = Color(0xFFFFB300);
 
+// Quantos primeiros colocados do Ranking Geral entram na zona de premiação.
+// Fonte única para o realce dos cards e para o filtro "Top N" na comparação
+// de palpites.
+const int kPrizeTopN = 11;
+
 // ─────────────────────────────────────────────
 // WIKIPEDIA FLAG BASE URL
 // Usage: '$kFlagBaseUrl/Flag_of_Brazil.svg'

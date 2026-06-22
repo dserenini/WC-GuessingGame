@@ -1159,6 +1159,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get searchScore => 'Cerca risultato (es. 2-1)';
 
   @override
+  String get searchScoreOrPlayer => 'Cerca risultato (2-1) o giocatore';
+
+  @override
+  String get filterAdd => 'Aggiungi';
+
+  @override
+  String get filterClear => 'Pulisci';
+
+  @override
+  String topNFilter(int count) {
+    return 'Primi $count';
+  }
+
+  @override
   String generalRankPosition(int rank) {
     return '$rankº in classifica generale';
   }

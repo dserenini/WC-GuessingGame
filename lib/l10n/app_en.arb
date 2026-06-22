@@ -424,6 +424,15 @@
   "leagueBetsLockedUntilDeadline": "Available after betting closes",
   "filterLosing": "Losing",
   "searchScore": "Search score (e.g. 2-1)",
+  "searchScoreOrPlayer": "Search score (2-1) or player",
+  "filterAdd": "Add",
+  "filterClear": "Clear",
+  "topNFilter": "Top {count}",
+  "@topNFilter": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "generalRankPosition": "{rank}th overall",
   "@generalRankPosition": {
     "placeholders": {

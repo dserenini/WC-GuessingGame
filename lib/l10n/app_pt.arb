@@ -424,6 +424,15 @@
   "leagueBetsLockedUntilDeadline": "Disponível após o encerramento das apostas",
   "filterLosing": "Perdendo",
   "searchScore": "Buscar placar (ex.: 2-1)",
+  "searchScoreOrPlayer": "Buscar placar (2-1) ou jogador",
+  "filterAdd": "Adicionar",
+  "filterClear": "Limpar",
+  "topNFilter": "Top {count}",
+  "@topNFilter": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "generalRankPosition": "{rank}º no Ranking Geral",
   "@generalRankPosition": {
     "placeholders": {

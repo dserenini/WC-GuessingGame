@@ -1143,6 +1143,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchScore => 'Search score (e.g. 2-1)';
 
   @override
+  String get searchScoreOrPlayer => 'Search score (2-1) or player';
+
+  @override
+  String get filterAdd => 'Add';
+
+  @override
+  String get filterClear => 'Clear';
+
+  @override
+  String topNFilter(int count) {
+    return 'Top $count';
+  }
+
+  @override
   String generalRankPosition(int rank) {
     return '${rank}th overall';
   }

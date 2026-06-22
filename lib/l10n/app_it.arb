@@ -424,6 +424,15 @@
   "leagueBetsLockedUntilDeadline": "Disponibile dopo la chiusura dei pronostici",
   "filterLosing": "In perdita",
   "searchScore": "Cerca risultato (es. 2-1)",
+  "searchScoreOrPlayer": "Cerca risultato (2-1) o giocatore",
+  "filterAdd": "Aggiungi",
+  "filterClear": "Pulisci",
+  "topNFilter": "Primi {count}",
+  "@topNFilter": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "generalRankPosition": "{rank}º in classifica generale",
   "@generalRankPosition": {
     "placeholders": {

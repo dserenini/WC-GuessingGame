@@ -9,6 +9,7 @@ import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/leagues/screens/league_match_bets_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -65,6 +66,11 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
     final l = AppLocalizations.of(context)!;
     final currentUid = ref.watch(currentUserProvider)?.id;
 
+    // Lista completa de participantes (Ranking Geral acumulado), usada pelo
+    // botão "Ver apostas" para comparar palpites por jogo entre TODOS. Mantida
+    // assinada mesmo fora do escopo Geral para o botão responder de primeira.
+    final allParticipants = ref.watch(rankingProvider).valueOrNull;
+
     // O Mata-Mata no Ranking (toggle + view) só existe para quem PARTICIPA
     // (knockoutVisibleProvider = master ligado E knockout_unlocked OU admin).
     // Vira o PADRÃO a partir de kKoRankingDefaultFrom (29/06 15:00 GMT+0); antes
@@ -99,6 +105,39 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           ],
         ),
         actions: [
+          // "Ver apostas": comparativo de palpites por jogo entre TODOS os
+          // participantes. Só após o prazo global (ninguém espia antes do fim
+          // das apostas), igual às ligas privadas. Destacado em verde para
+          // chamar atenção (ícone preenchido + fundo tonal).
+          if (isBettingLocked)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: IconButton(
+                icon: const Icon(Icons.scoreboard),
+                tooltip: l.viewBets,
+                style: IconButton.styleFrom(
+                  backgroundColor: kPrimaryGreen,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  if (allParticipants == null || allParticipants.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l.waitDataLoad)),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LeagueMatchBetsScreen(
+                        leagueName: l.ranking,
+                        members: allParticipants,
+                        prizeTopN: kPrizeTopN,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(
@@ -169,7 +208,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           bool isPrizeEntry(RankingEntry e) =>
               isGeneralScope &&
               e.rank >= 1 &&
-              (e.rank <= 11 || e.rank == lastRank);
+              (e.rank <= kPrizeTopN || e.rank == lastRank);
 
           return Column(
             children: [

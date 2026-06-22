@@ -2266,6 +2266,30 @@ abstract class AppLocalizations {
   /// **'Buscar placar (ex.: 2-1)'**
   String get searchScore;
 
+  /// No description provided for @searchScoreOrPlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar placar (2-1) ou jogador'**
+  String get searchScoreOrPlayer;
+
+  /// No description provided for @filterAdd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar'**
+  String get filterAdd;
+
+  /// No description provided for @filterClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar'**
+  String get filterClear;
+
+  /// No description provided for @topNFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Top {count}'**
+  String topNFilter(int count);
+
   /// No description provided for @generalRankPosition.
   ///
   /// In pt, this message translates to:

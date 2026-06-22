@@ -14,22 +14,40 @@ import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/shared/providers/reveal_config_provider.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/shared/utils/bet_points.dart';
+import 'package:copa2026/shared/utils/bet_filter.dart';
 import 'package:copa2026/shared/widgets/bet_filter_bar.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 
-/// League "view bets": pick a game (with the two-level quick filter) and see
-/// every league member's prediction for it, grouped by scoreline. Reached from
-/// the "Ver apostas" button on a league card.
+/// "View bets": pick a game (with the two-level quick filter) and see every
+/// member of a cohort's prediction for it, grouped by scoreline. Reached from
+/// the "Ver apostas" button on a league card (cohort = league members) or from
+/// the Ranking Geral (cohort = every participant, passed via [members]).
 class LeagueMatchBetsScreen extends ConsumerStatefulWidget {
-  final String leagueId;
+  /// League whose members form the cohort. Null when [members] is supplied
+  /// directly (e.g. the whole pool, opened from the Ranking Geral).
+  final String? leagueId;
+
+  /// Title shown in the app bar (league name, or "Ranking" for the pool).
   final String leagueName;
+
+  /// Pre-supplied cohort, used instead of fetching by [leagueId]. When set, the
+  /// screen compares exactly this set of users.
+  final List<RankingEntry>? members;
+
+  /// When set, enables the "primeiros colocados" feature: a filter that keeps
+  /// only the bets of users ranked 1..[prizeTopN], and a prize border on those
+  /// users' chips. Null disables it (e.g. inside a private league).
+  final int? prizeTopN;
 
   const LeagueMatchBetsScreen({
     super.key,
-    required this.leagueId,
+    this.leagueId,
     required this.leagueName,
-  });
+    this.members,
+    this.prizeTopN,
+  }) : assert(leagueId != null || members != null,
+            'Provide a leagueId or an explicit members list');
 
   @override
   ConsumerState<LeagueMatchBetsScreen> createState() =>
@@ -43,7 +61,11 @@ class _LeagueMatchBetsScreenState extends ConsumerState<LeagueMatchBetsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final membersAsync = ref.watch(myLeaguesRankingProvider(widget.leagueId));
+    // Cohort whose bets we compare: a pre-supplied list (e.g. the whole pool,
+    // from the Ranking Geral) or a league's members fetched by id.
+    final membersAsync = widget.members != null
+        ? AsyncValue<List<RankingEntry>>.data(widget.members!)
+        : ref.watch(myLeaguesRankingProvider(widget.leagueId!));
     final matchesAsync = ref.watch(allMatchesProvider);
     final myStatsAsync = ref.watch(profileStatsProvider);
 
@@ -121,9 +143,9 @@ class _LeagueMatchBetsScreenState extends ConsumerState<LeagueMatchBetsScreen> {
                       itemBuilder: (_, i) => _MatchSelectTile(
                         match: visible[i],
                         allMatches: matches,
-                        leagueId: widget.leagueId,
                         leagueName: widget.leagueName,
                         members: members,
+                        prizeTopN: widget.prizeTopN,
                       ),
                     ),
             ),
@@ -140,16 +162,16 @@ class _LeagueMatchBetsScreenState extends ConsumerState<LeagueMatchBetsScreen> {
 class _MatchSelectTile extends ConsumerWidget {
   final MatchModel match;
   final List<MatchModel> allMatches;
-  final String leagueId;
   final String leagueName;
   final List<RankingEntry> members;
+  final int? prizeTopN;
 
   const _MatchSelectTile({
     required this.match,
     required this.allMatches,
-    required this.leagueId,
     required this.leagueName,
     required this.members,
+    required this.prizeTopN,
   });
 
   @override
@@ -228,6 +250,7 @@ class _MatchSelectTile extends ConsumerWidget {
             leagueName: leagueName,
             matchId: match.id,
             members: members,
+            prizeTopN: prizeTopN,
           ),
         ),
       ),
@@ -268,11 +291,16 @@ class LeagueScorelinesScreen extends ConsumerStatefulWidget {
   final String matchId;
   final List<RankingEntry> members;
 
+  /// When set, enables the top-[prizeTopN] filter + prize border on those
+  /// users' chips (Ranking Geral only). Null disables it (private leagues).
+  final int? prizeTopN;
+
   const LeagueScorelinesScreen({
     super.key,
     required this.leagueName,
     required this.matchId,
     required this.members,
+    this.prizeTopN,
   });
 
   @override
@@ -284,12 +312,147 @@ class _LeagueScorelinesScreenState
     extends ConsumerState<LeagueScorelinesScreen> {
   int? _bucketFilter; // null = all; 0/1/2 (finished & live only)
   final _searchCtrl = TextEditingController();
-  String _query = '';
+
+  // Busca aditiva: acumula tokens de placar ("1-0") e/ou trechos de nome de
+  // usuário. Um placar é exibido se casar com QUALQUER token ativo (união), de
+  // modo que "1-0", "2-0" e "ana" juntos revelam os três de uma vez.
+  final List<String> _scoreFilters = [];
+  final List<String> _userFilters = [];
+
+  // Override de expansão por placar ("h-a"): presente = estado escolhido pelo
+  // toque (true aberto / false recolhido); ausente = usa o padrão (recolhido,
+  // ou auto-aberto quando um filtro de "quem" trouxe o grupo). Assim até os
+  // grupos auto-abertos (nome/Top N) podem ser recolhidos no toque.
+  final Map<String, bool> _expandOverride = {};
+
+  // Cache dos grupos do build atual, para que ao adicionar um filtro novo se
+  // saiba quais placares ele afeta (e expandi-los) sem reprocessar os bets.
+  List<_ScoreGroup> _groupsCache = const [];
+
+  // Filtro "primeiros colocados": quando ligado, exibe só os palpites dos
+  // usuários no top [prizeTopN] do Ranking Geral. Só existe quando prizeTopN
+  // está definido (Ranking Geral) e o grupo tem mais gente que o próprio top.
+  bool _onlyTop = false;
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  bool get _hasFilters => _scoreFilters.isNotEmpty || _userFilters.isNotEmpty;
+
+  /// Usuário na zona de premiação (rank 1..prizeTopN do Ranking Geral).
+  bool _isPrize(RankingEntry u) =>
+      widget.prizeTopN != null && u.rank >= 1 && u.rank <= widget.prizeTopN!;
+
+  /// Existe gente suficiente para o filtro "Top N" fazer sentido?
+  bool get _topFilterAvailable =>
+      widget.prizeTopN != null && widget.members.length > widget.prizeTopN!;
+
+  bool get _anyFilter => _hasFilters || _onlyTop;
+
+  /// Aplica os filtros como UNIÃO no nível do apostador e devolve a "visão" do
+  /// grupo (placar + apostadores visíveis), ou null se nenhum casar.
+  ///
+  /// Regras (qualquer uma inclui o chip):
+  /// • token de placar  → o placar inteiro qualifica (todos os apostadores);
+  /// • token de nome    → só os apostadores cujo nome casa;
+  /// • "Top N" ligado   → só os apostadores premiados.
+  ///
+  /// Assim "Danilo" + "2-1" + Top N mostra: todo o 2-1, os palpites do Danilo e
+  /// os palpites do top N — somados (cumulativo), com a contagem recalculada.
+  _ScoreGroup? _viewGroup(_ScoreGroup g) {
+    if (!_anyFilter) return g; // sem filtro: grupo cheio
+    if (_scoreFilters.contains('${g.home}-${g.away}')) return g;
+    final users = g.users
+        .where((u) =>
+            (_userFilters.isNotEmpty && _userHit(u)) ||
+            (_onlyTop && _isPrize(u)))
+        .toList();
+    if (users.isEmpty) return null;
+    return _ScoreGroup(
+      home: g.home,
+      away: g.away,
+      users: users,
+      bucket: g.bucket,
+      reachable: g.reachable,
+      distance: g.distance,
+    );
+  }
+
+  /// Classifica um termo enviado como placar ("2-1", "2x1") ou trecho de nome
+  /// e o adiciona à lista de filtros correspondente (sem duplicar).
+  void _addToken(String raw) {
+    if (raw.trim().isEmpty) return;
+    final token = classifyFilterToken(raw);
+    setState(() {
+      if (token.isScore) {
+        if (!_scoreFilters.contains(token.value)) {
+          _scoreFilters.add(token.value);
+          _expandAffectedBy(scoreToken: token.value);
+        }
+      } else if (!_userFilters
+          .any((u) => u.toLowerCase() == token.value.toLowerCase())) {
+        _userFilters.add(token.value);
+        _expandAffectedBy(userToken: token.value);
+      }
+      _searchCtrl.clear();
+    });
+  }
+
+  /// Ao adicionar um filtro novo, marca como EXPANDIDOS os placares que ele
+  /// afeta (sobrepondo um recolhimento anterior). Os demais ficam como estão.
+  void _expandAffectedBy(
+      {String? scoreToken, String? userToken, bool top = false}) {
+    final uq = userToken?.toLowerCase();
+    for (final g in _groupsCache) {
+      final key = '${g.home}-${g.away}';
+      final affected = (scoreToken != null && key == scoreToken) ||
+          (uq != null &&
+              g.users.any((u) => u.displayName.toLowerCase().contains(uq))) ||
+          (top && g.users.any(_isPrize));
+      if (affected) _expandOverride[key] = true;
+    }
+  }
+
+  bool _userHit(RankingEntry u) {
+    final n = u.displayName.toLowerCase();
+    return _userFilters.any((f) => n.contains(f.toLowerCase()));
+  }
+
+  /// Estado padrão (sem override de toque): grupos trazidos por um filtro de
+  /// "quem" (nome ou Top N) começam abertos para os chips casados aparecerem;
+  /// os demais começam recolhidos (mostram a contagem; expandem ao toque).
+  bool _defaultExpanded(String key) {
+    final scoreOnly = _scoreFilters.contains(key);
+    return !scoreOnly && (_userFilters.isNotEmpty || _onlyTop);
+  }
+
+  bool _isExpanded(_ScoreGroup g) {
+    final key = '${g.home}-${g.away}';
+    return _expandOverride[key] ?? _defaultExpanded(key);
+  }
+
+  /// O toque inverte o estado ATUAL e grava o override — assim um grupo
+  /// auto-aberto (Top N/nome) pode ser recolhido, e reaberto no toque seguinte.
+  void _toggle(_ScoreGroup g) {
+    final key = '${g.home}-${g.away}';
+    setState(() => _expandOverride[key] = !_isExpanded(g));
+  }
+
+  Widget _scoreCard(_ScoreGroup g, MatchModel match, String? currentUid,
+      AppLocalizations l) {
+    return _ScoreCard(
+      group: g,
+      match: match,
+      currentUid: currentUid,
+      l: l,
+      expanded: _isExpanded(g),
+      onToggle: () => _toggle(g),
+      isHit: _userHit,
+      isPrize: _isPrize,
+    );
   }
 
   String _bucketLabel(int b, bool finished, AppLocalizations l) {
@@ -337,35 +500,37 @@ class _LeagueScorelinesScreenState
     final scheduled = match.status == MatchStatus.scheduled;
     final finished = match.status == MatchStatus.finished;
     final groups = _buildGroups(match, bets);
+    _groupsCache = groups; // p/ _expandAffectedBy ao adicionar filtro novo
 
-    // Filtered + section-grouped list of scoreline cards.
+    // Lista recolhida e agrupada por seção, estreitada pelo chip de bucket
+    // (encerrado/ao vivo) e pelos tokens de busca aditiva (placar/jogador).
     final List<Widget> items = [
       _MatchHeader(match: match, l: l),
       const SizedBox(height: 12),
     ];
-    if (scheduled) {
-      final shown = _query.isEmpty
-          ? groups
-          : groups.where((g) => '${g.home}-${g.away}'.contains(_query)).toList();
+    final shown = <_ScoreGroup>[];
+    for (final g in groups) {
+      final bucketOk =
+          scheduled || _bucketFilter == null || g.bucket == _bucketFilter;
+      if (!bucketOk) continue;
+      final v = _viewGroup(g);
+      if (v != null) shown.add(v);
+    }
+    if (shown.isEmpty) {
+      items.add(_Centered(text: l.leagueBetsNobody));
+    } else if (scheduled) {
       for (final g in shown) {
-        items.add(_ScoreCard(
-            group: g, match: match, currentUid: currentUid, l: l));
+        items.add(_scoreCard(g, match, currentUid, l));
       }
-      if (shown.isEmpty) items.add(_Centered(text: l.leagueBetsNobody));
     } else {
-      final shown = _bucketFilter == null
-          ? groups
-          : groups.where((g) => g.bucket == _bucketFilter).toList();
       int? lastBucket;
       for (final g in shown) {
         if (_bucketFilter == null && g.bucket != lastBucket) {
           items.add(_SectionHeader(label: _bucketLabel(g.bucket, finished, l)));
           lastBucket = g.bucket;
         }
-        items.add(_ScoreCard(
-            group: g, match: match, currentUid: currentUid, l: l));
+        items.add(_scoreCard(g, match, currentUid, l));
       }
-      if (shown.isEmpty) items.add(_Centered(text: l.leagueBetsNobody));
     }
 
     return Scaffold(
@@ -379,21 +544,65 @@ class _LeagueScorelinesScreenState
       ),
       body: Column(
         children: [
-          // Top filter: bucket chips (finished/live) or a scoreline search
-          // (scheduled — no buckets, just ascending goals + lookup).
-          if (groups.isNotEmpty)
-            scheduled
-                ? _ScoreSearchField(
-                    controller: _searchCtrl,
-                    hint: l.searchScore,
-                    onChanged: (v) => setState(() => _query = v.trim()),
-                  )
-                : _BucketChips(
-                    selected: _bucketFilter,
-                    finished: finished,
-                    l: l,
-                    onSelect: (b) => setState(() => _bucketFilter = b),
+          // Busca aditiva (placar OU jogador) + chips dos filtros ativos +
+          // chips de bucket (só encerrado/ao vivo, que têm placar real).
+          if (groups.isNotEmpty) ...[
+            _SearchTokenField(
+              controller: _searchCtrl,
+              hint: l.searchScoreOrPlayer,
+              onSubmit: _addToken,
+            ),
+            // Filtro "primeiros colocados": mostra só os palpites do top N do
+            // Ranking Geral (só no Ranking Geral, com gente suficiente).
+            if (_topFilterAvailable)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilterChip(
+                    avatar: Icon(
+                      Icons.emoji_events_outlined,
+                      size: 16,
+                      color: _onlyTop ? kPrizeHighlight : null,
+                    ),
+                    label: Text(l.topNFilter(widget.prizeTopN!)),
+                    selected: _onlyTop,
+                    onSelected: (v) => setState(() {
+                      _onlyTop = v;
+                      if (v) _expandAffectedBy(top: true);
+                    }),
+                    selectedColor: kPrizeHighlight.withOpacity(0.18),
+                    checkmarkColor: kPrizeHighlight,
+                    side: BorderSide(
+                      color: _onlyTop
+                          ? kPrizeHighlight.withOpacity(0.6)
+                          : Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.4),
+                    ),
                   ),
+                ),
+              ),
+            if (_hasFilters)
+              _ActiveFilters(
+                scores: _scoreFilters,
+                users: _userFilters,
+                onRemoveScore: (s) => setState(() => _scoreFilters.remove(s)),
+                onRemoveUser: (u) => setState(() => _userFilters.remove(u)),
+                onClear: () => setState(() {
+                  _scoreFilters.clear();
+                  _userFilters.clear();
+                }),
+              ),
+            if (!scheduled)
+              _BucketChips(
+                selected: _bucketFilter,
+                finished: finished,
+                l: l,
+                onSelect: (b) => setState(() => _bucketFilter = b),
+              ),
+          ],
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
@@ -445,7 +654,7 @@ class _LeagueScorelinesScreenState
       if (!scheduled) {
         final pts = computeBetPoints(
             homeBet: h, awayBet: a, homeReal: ch, awayReal: ca);
-        bucket = pts == 3 ? 0 : (pts == 1 ? 1 : 2);
+        bucket = bucketForPoints(pts);
       }
       // Live: a scoreline can still happen only if neither side must "un-score".
       final reachable = canScoreMore && h >= ch && a >= ca;
@@ -523,36 +732,59 @@ class _BucketChips extends StatelessWidget {
   }
 }
 
-class _ScoreSearchField extends StatelessWidget {
+/// Search box that turns each submitted term into a filter token. Typing a
+/// scoreline ("2-1") or a name and pressing enter (or the + button) calls
+/// [onSubmit]; the parent classifies and accumulates it.
+class _SearchTokenField extends StatefulWidget {
   final TextEditingController controller;
   final String hint;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmit;
 
-  const _ScoreSearchField({
+  const _SearchTokenField({
     required this.controller,
     required this.hint,
-    required this.onChanged,
+    required this.onSubmit,
   });
 
   @override
+  State<_SearchTokenField> createState() => _SearchTokenFieldState();
+}
+
+class _SearchTokenFieldState extends State<_SearchTokenField> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChange);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChange);
+    super.dispose();
+  }
+
+  void _onChange() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final hasText = widget.controller.text.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: TextField(
-        controller: controller,
-        onChanged: onChanged,
+        controller: widget.controller,
+        textInputAction: TextInputAction.search,
+        onSubmitted: widget.onSubmit,
         decoration: InputDecoration(
           isDense: true,
-          hintText: hint,
+          hintText: widget.hint,
           prefixIcon: const Icon(Icons.search, size: 20),
-          suffixIcon: controller.text.isNotEmpty
+          suffixIcon: hasText
               ? IconButton(
-                  icon: const Icon(Icons.clear, size: 20),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
+                  icon: const Icon(Icons.add_circle, size: 22),
+                  tooltip: l.filterAdd,
+                  onPressed: () => widget.onSubmit(widget.controller.text),
                 )
               : null,
           filled: true,
@@ -563,6 +795,82 @@ class _ScoreSearchField extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Removable chips for the active search tokens (scorelines + usernames), plus
+/// a "limpar" action. Scoreline chips carry a scoreboard icon, name chips a
+/// person icon, so the two kinds read apart at a glance.
+class _ActiveFilters extends StatelessWidget {
+  final List<String> scores;
+  final List<String> users;
+  final ValueChanged<String> onRemoveScore;
+  final ValueChanged<String> onRemoveUser;
+  final VoidCallback onClear;
+
+  const _ActiveFilters({
+    required this.scores,
+    required this.users,
+    required this.onRemoveScore,
+    required this.onRemoveUser,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final s in scores)
+            _filterChip(
+              context,
+              icon: Icons.scoreboard_outlined,
+              label: s,
+              onDeleted: () => onRemoveScore(s),
+            ),
+          for (final u in users)
+            _filterChip(
+              context,
+              icon: Icons.person_outline,
+              label: u,
+              onDeleted: () => onRemoveUser(u),
+            ),
+          if (scores.length + users.length > 1)
+            TextButton(
+              onPressed: onClear,
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: cs.onSurface.withOpacity(0.6),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: Text(l.filterClear, style: const TextStyle(fontSize: 12)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip(BuildContext context,
+      {required IconData icon,
+      required String label,
+      required VoidCallback onDeleted}) {
+    final cs = Theme.of(context).colorScheme;
+    return InputChip(
+      avatar: Icon(icon, size: 16, color: cs.primary),
+      label: Text(label, style: const TextStyle(fontSize: 12.5)),
+      onDeleted: onDeleted,
+      deleteIconColor: cs.onSurface.withOpacity(0.5),
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      backgroundColor: cs.primary.withOpacity(0.08),
+      side: BorderSide(color: cs.primary.withOpacity(0.25)),
     );
   }
 }
@@ -659,7 +967,7 @@ class _Team extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// One scoreline card (score + its bettors)
+// One scoreline card (collapsed: score + bettor count; expands to the bettors)
 // ─────────────────────────────────────────────
 class _ScoreCard extends StatelessWidget {
   final _ScoreGroup group;
@@ -667,11 +975,26 @@ class _ScoreCard extends StatelessWidget {
   final String? currentUid;
   final AppLocalizations l;
 
+  /// Whether the bettor list is shown. Collapsed cards show only the scoreline
+  /// and how many people bet it; tapping toggles via [onToggle].
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  /// Marks a bettor matched by an active username filter, to highlight it.
+  final bool Function(RankingEntry) isHit;
+
+  /// Marks a bettor in the prize zone (top N of the Ranking Geral).
+  final bool Function(RankingEntry) isPrize;
+
   const _ScoreCard({
     required this.group,
     required this.match,
     required this.currentUid,
     required this.l,
+    required this.expanded,
+    required this.onToggle,
+    required this.isHit,
+    required this.isPrize,
   });
 
   @override
@@ -696,46 +1019,66 @@ class _ScoreCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(10),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onToggle,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${group.home} - ${group.away}',
+                      style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800, color: cs.primary),
+                    ),
                   ),
-                  child: Text(
-                    '${group.home} - ${group.away}',
-                    style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800, color: cs.primary),
+                  const SizedBox(width: 10),
+                  Icon(Icons.person_outline,
+                      size: 15, color: cs.onSurface.withOpacity(0.45)),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${group.users.length}',
+                    style: tt.labelMedium
+                        ?.copyWith(color: cs.onSurface.withOpacity(0.6)),
                   ),
+                  const Spacer(),
+                  if (points != null) _PointsBadge(points: points),
+                  const SizedBox(width: 6),
+                  Icon(
+                    expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 22,
+                    color: cs.onSurface.withOpacity(0.4),
+                  ),
+                ],
+              ),
+              if (expanded) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final u in group.users)
+                      _UserChip(
+                        name: u.displayName,
+                        isMe: u.userId == currentUid,
+                        isHit: isHit(u),
+                        isPrize: isPrize(u),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  '${group.users.length}',
-                  style: tt.labelMedium
-                      ?.copyWith(color: cs.onSurface.withOpacity(0.6)),
-                ),
-                const Spacer(),
-                if (points != null) _PointsBadge(points: points),
               ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final u in group.users)
-                  _UserChip(name: u.displayName, isMe: u.userId == currentUid),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -745,29 +1088,53 @@ class _ScoreCard extends StatelessWidget {
 class _UserChip extends StatelessWidget {
   final String name;
   final bool isMe;
-  const _UserChip({required this.name, required this.isMe});
+
+  /// Matched by an active username filter (the player the viewer searched for).
+  final bool isHit;
+
+  /// In the prize zone (top N of the Ranking Geral) — keeps an amber border.
+  final bool isPrize;
+  const _UserChip({
+    required this.name,
+    required this.isMe,
+    this.isHit = false,
+    this.isPrize = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Cores ortogonais para não colidirem:
+    // • fundo/texto: "você" = tom primário claro; busca = preenchido sólido
+    //   (pop forte); neutro caso contrário.
+    // • borda: premiação (top N) = âmbar, sobrepondo qualquer um — assim um
+    //   premiado buscado mostra fundo sólido + borda âmbar.
+    final (Color bg, Color fg) = isMe
+        ? (cs.primary.withOpacity(0.15), cs.primary)
+        : isHit
+            ? (cs.primary, cs.onPrimary)
+            : (cs.surfaceContainerHighest.withOpacity(0.6), cs.onSurface);
+    final Color border = isPrize
+        ? kPrizeHighlight.withOpacity(0.75)
+        : isMe
+            ? cs.primary.withOpacity(0.5)
+            : isHit
+                ? cs.primary
+                : Colors.transparent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isMe
-            ? cs.primary.withOpacity(0.15)
-            : cs.surfaceContainerHighest.withOpacity(0.6),
+        color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isMe ? cs.primary.withOpacity(0.5) : Colors.transparent,
-          width: 1,
-        ),
+        border: Border.all(color: border, width: isPrize ? 1.5 : 1),
       ),
       child: Text(
         name,
         style: TextStyle(
           fontSize: 12.5,
-          fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
-          color: isMe ? cs.primary : cs.onSurface,
+          fontWeight:
+              (isMe || isHit || isPrize) ? FontWeight.w700 : FontWeight.w500,
+          color: fg,
         ),
       ),
     );

@@ -1151,6 +1151,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get searchScore => 'Buscar placar (ex.: 2-1)';
 
   @override
+  String get searchScoreOrPlayer => 'Buscar placar (2-1) ou jogador';
+
+  @override
+  String get filterAdd => 'Adicionar';
+
+  @override
+  String get filterClear => 'Limpar';
+
+  @override
+  String topNFilter(int count) {
+    return 'Top $count';
+  }
+
+  @override
   String generalRankPosition(int rank) {
     return '$rankº no Ranking Geral';
   }

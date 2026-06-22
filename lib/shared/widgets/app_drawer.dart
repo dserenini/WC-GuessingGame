@@ -6,6 +6,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 
@@ -19,6 +20,7 @@ class AppDrawer extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isAdmin = kAdminUids.contains(currentUser?.id);
+    final knockoutOn = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
 
     final allMatches = ref.watch(allMatchesProvider).valueOrNull ?? [];
     final allBets = ref.watch(allBetsProvider).valueOrNull ?? {};
@@ -132,6 +134,16 @@ class AppDrawer extends ConsumerWidget {
                       context.go('/leagues');
                     },
                   ),
+                  if (knockoutOn)
+                    _DrawerItem(
+                      icon: '⚔️',
+                      label: 'Mata-Mata',
+                      selected: currentPath == '/knockout',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/knockout');
+                      },
+                    ),
                   // ── Apostas → Grupos A–L (colapsável) ──
                   _BetsGroup(
                     currentPath: currentPath,

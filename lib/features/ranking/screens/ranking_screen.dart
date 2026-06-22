@@ -8,6 +8,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
@@ -62,12 +63,20 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    // "Geral" usa a view acumulada (user_rankings); rodadas usam a view
-    // recortada por rodada (user_round_rankings) via roundRankingProvider.
-    final rankingAsync = _scope == RankScope.general
-        ? ref.watch(rankingProvider)
-        : ref.watch(roundRankingProvider(_scope.round!));
     final currentUid = ref.watch(currentUserProvider)?.id;
+
+    // Depois que o mata-mata começa (flag), o ranking do mata-mata vira o
+    // default; o usuário pode alternar para a fase de grupos pelo toggle.
+    final knockoutOn = ref.watch(knockoutEnabledProvider).valueOrNull ?? false;
+    final showKo = knockoutOn && (ref.watch(rankingViewKnockoutProvider) ?? true);
+
+    // Mata-Mata: ranking zerado (koUserRankingProvider). Fase de grupos: "Geral"
+    // usa a view acumulada (user_rankings); rodadas usam user_round_rankings.
+    final rankingAsync = showKo
+        ? ref.watch(koUserRankingProvider)
+        : (_scope == RankScope.general
+            ? ref.watch(rankingProvider)
+            : ref.watch(roundRankingProvider(_scope.round!)));
 
     return Scaffold(
       appBar: AppBar(
@@ -87,20 +96,41 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _scope == RankScope.general
-                ? ref.invalidate(rankingProvider)
-                : ref.invalidate(roundRankingProvider(_scope.round!)),
+            onPressed: () => ref.invalidate(
+                showKo
+                    ? koUserRankingProvider
+                    : (_scope == RankScope.general
+                        ? rankingProvider
+                        : roundRankingProvider(_scope.round!))),
           ),
         ],
       ),
       drawer: const AppDrawer(),
       body: Column(
         children: [
-          _RankScopeBar(
-            scope: _scope,
-            l: l,
-            onChanged: (s) => setState(() => _scope = s),
-          ),
+          if (knockoutOn)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: SegmentedButton<bool>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Mata-Mata')),
+                  ButtonSegment(value: false, label: Text('Fase de Grupos')),
+                ],
+                selected: {showKo},
+                onSelectionChanged: (s) => ref
+                    .read(rankingViewKnockoutProvider.notifier)
+                    .state = s.first,
+              ),
+            ),
+          // Recorte por rodada só na fase de grupos (o mata-mata zera e não
+          // tem rodadas).
+          if (!showKo)
+            _RankScopeBar(
+              scope: _scope,
+              l: l,
+              onChanged: (s) => setState(() => _scope = s),
+            ),
           Expanded(
             child: rankingAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),

@@ -16,6 +16,8 @@ import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
+import 'package:copa2026/features/knockout/models/knockout_models.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Admin: list of all matches for override
@@ -105,7 +107,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final matchesAsync = ref.watch(allMatchesProvider);
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(' 👑'),
@@ -125,6 +127,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               isScrollable: true,
               tabs: [
               Tab(icon: const Icon(Icons.sports_soccer), text: l.adminTabMatches),
+              Tab(icon: const Icon(Icons.sports_mma), text: 'Mata-Mata'),
               Tab(icon: const Icon(Icons.notifications_active), text: 'Notificar'),
               Tab(icon: const Icon(Icons.people), text: l.adminTabUsers),
               Tab(icon: const Icon(Icons.groups), text: 'Ligas'),
@@ -173,12 +176,236 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
               );
             },
           ),
+          const _AdminKnockoutTab(),
           const _AdminNotificationsTab(),
           const _AdminUsersTab(),
           const _AdminLeaguesTab(),
         ],
       ),
     ));
+  }
+}
+
+// ─────────────────────────────────────────────
+// Admin: Mata-Mata — editar status/placar/quem avança por fase
+// ─────────────────────────────────────────────
+class _AdminKnockoutTab extends ConsumerWidget {
+  const _AdminKnockoutTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchesAsync = ref.watch(koMatchesProvider);
+    return matchesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text(e.toString())),
+      data: (matches) {
+        if (matches.isEmpty) {
+          return const Center(child: Text('Chaveamento ainda não disponível.'));
+        }
+        final byRound = <String, List<KoMatch>>{};
+        for (final m in matches) {
+          byRound.putIfAbsent(m.round, () => []).add(m);
+        }
+        for (final list in byRound.values) {
+          list.sort((a, b) => (a.matchNo ?? a.slot).compareTo(b.matchNo ?? b.slot));
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+          children: [
+            for (final round in kKoRounds)
+              if (byRound[round] != null)
+                _AdminKoRoundSection(
+                    round: round, matches: byRound[round]!, ref: ref),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AdminKoRoundSection extends StatelessWidget {
+  final String round;
+  final List<KoMatch> matches;
+  final WidgetRef ref;
+
+  const _AdminKoRoundSection(
+      {required this.round, required this.matches, required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          title: Text(
+            koRoundLabel(AppLocalizations.of(context)!, round).toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: cs.primary,
+              letterSpacing: 1.2,
+              fontSize: 14,
+            ),
+          ),
+          children:
+              matches.map((m) => _AdminKoMatchTile(match: m, ref: ref)).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminKoMatchTile extends StatelessWidget {
+  final KoMatch match;
+  final WidgetRef ref;
+
+  const _AdminKoMatchTile({required this.match, required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final homeName = match.home?.name ?? match.homeSlotLabel ?? 'A definir';
+    final awayName = match.away?.name ?? match.awaySlotLabel ?? 'A definir';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        title: Text('$homeName  X  $awayName',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: _subtitle(context),
+        trailing: IconButton(
+          icon: Icon(Icons.edit, color: cs.primary),
+          onPressed: () => _showDialog(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _subtitle(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final parts = <String>[];
+    if (match.homeScore != null && match.awayScore != null) {
+      parts.add('${match.homeScore} – ${match.awayScore}');
+    }
+    parts.add('[${match.status.name}]');
+    if (match.advancing != null) parts.add('avança: ${match.advancing!.name}');
+    return Text(parts.join('   '),
+        style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600));
+  }
+
+  void _showDialog(BuildContext context) {
+    final homeCtrl =
+        TextEditingController(text: match.homeScore?.toString() ?? '');
+    final awayCtrl =
+        TextEditingController(text: match.awayScore?.toString() ?? '');
+    MatchStatus status = match.status;
+    // Opções de "quem avança": null, time da casa, visitante (quando definidos).
+    String? advancingId = match.advancing?.id;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final advItems = <DropdownMenuItem<String?>>[
+            const DropdownMenuItem(value: null, child: Text('—')),
+            if (match.home != null)
+              DropdownMenuItem(value: match.home!.id, child: Text(match.home!.name)),
+            if (match.away != null)
+              DropdownMenuItem(value: match.away!.id, child: Text(match.away!.name)),
+          ];
+          // Evita valor inválido se o time selecionado não estiver na lista.
+          final advValue =
+              advItems.any((i) => i.value == advancingId) ? advancingId : null;
+
+          return AlertDialog(
+            title: Text(
+                '${match.home?.name ?? match.homeSlotLabel ?? '?'} X ${match.away?.name ?? match.awaySlotLabel ?? '?'}'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: homeCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Casa'),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('–', style: TextStyle(fontSize: 20)),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: awayCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Visitante'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<MatchStatus>(
+                  initialValue: status,
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: MatchStatus.values
+                      .map((s) =>
+                          DropdownMenuItem(value: s, child: Text(s.name)))
+                      .toList(),
+                  onChanged: (v) => setState(() => status = v!),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String?>(
+                  initialValue: advValue,
+                  decoration: const InputDecoration(labelText: 'Quem avança'),
+                  items: advItems,
+                  onChanged: (v) => setState(() => advancingId = v),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final home = int.tryParse(homeCtrl.text);
+                  final away = int.tryParse(awayCtrl.text);
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await Supabase.instance.client.from('ko_match').update({
+                      'home_score': home,
+                      'away_score': away,
+                      'status': status.name,
+                      'advancing_team_id': advancingId,
+                    }).eq('id', match.id);
+
+                    ref.invalidate(koMatchesProvider);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('Jogo atualizado.')),
+                    );
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            describeError(AppLocalizations.of(context)!, e)),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Salvar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 

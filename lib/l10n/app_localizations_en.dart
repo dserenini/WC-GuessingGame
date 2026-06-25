@@ -1160,4 +1160,269 @@ class AppLocalizationsEn extends AppLocalizations {
   String generalRankPosition(int rank) {
     return '${rank}th overall';
   }
+
+  @override
+  String get koMenu => 'Knockout';
+
+  @override
+  String get koStatsMenu => 'Knockout Stats';
+
+  @override
+  String koSaveError(String error) {
+    return 'Couldn\'t save: $error';
+  }
+
+  @override
+  String koPlusPoints(int points) {
+    return '+$points pts';
+  }
+
+  @override
+  String get koLockTeamsUndefined => 'Betting opens once the matchup is set.';
+
+  @override
+  String get koLockStarted => 'Match already started — betting closed.';
+
+  @override
+  String get koLockClosed30min =>
+      'Betting closed (closes 30 min before kickoff).';
+
+  @override
+  String get koFinalsScoringNote =>
+      'Semifinal and Final: exact score is worth 5 pts · correct result 3 pts.';
+
+  @override
+  String get koChampionTitle => 'Champion Pick';
+
+  @override
+  String get koChampionSubtitle =>
+      'Who lifts the trophy? A correct pick is worth +3 pts.';
+
+  @override
+  String get koChampionCta => 'Pick champion';
+
+  @override
+  String get koChampionChange => 'Change';
+
+  @override
+  String get koChampionEmptyLocked => 'You didn\'t pick a champion.';
+
+  @override
+  String get koChampionSheetTitle => 'Pick the World Cup champion';
+
+  @override
+  String get koChampionSearchHint => 'Search team';
+
+  @override
+  String get koChampionNoResults => 'No team found';
+
+  @override
+  String get helpKoSection => 'Knockout';
+
+  @override
+  String get helpKoScoringTitle => 'Knockout Scoring';
+
+  @override
+  String get helpKoScoringDesc =>
+      'Each match is worth 3 points for the exact score and 1 point for the correct result only. In the Semifinal and Final, the exact score is worth 5 points and the result 3.';
+
+  @override
+  String get helpKoChampionTitle => 'Champion Pick';
+
+  @override
+  String get helpKoChampionDesc =>
+      'Before the first knockout match, pick who will be the World Cup champion. If you\'re right, you earn 3 bonus points in the knockout ranking.';
+
+  @override
+  String get helpKoDeadlineTitle => 'Knockout Deadline';
+
+  @override
+  String get helpKoDeadlineDesc =>
+      'Bets for each knockout match can be placed or changed up to 30 minutes before kickoff.';
+
+  @override
+  String get helpKoRankingTitle => 'Knockout Ranking';
+
+  @override
+  String get helpKoRankingDesc =>
+      'The knockout stage has its own ranking, separate from the group stage (starts from zero).';
+
+  @override
+  String get koStatsTitle => 'Knockout Stats';
+
+  @override
+  String get koStatsTabRankings => 'Rankings';
+
+  @override
+  String get koStatsTabPersonal => 'Personal';
+
+  @override
+  String get koStatPointsTitle => 'Knockout Points';
+
+  @override
+  String get koStatPointsSub => 'Top scorers in the knockout';
+
+  @override
+  String get koStatPointsUnit => 'pts';
+
+  @override
+  String get koStatExactTitle => 'Exact-Score King';
+
+  @override
+  String get koStatExactSub => 'Who nailed the most scores';
+
+  @override
+  String get koStatExactUnit => 'exact';
+
+  @override
+  String get koChampionDistTitle => 'Champion Pick';
+
+  @override
+  String get koChampionDistSub => 'The most picked teams';
+
+  @override
+  String get koChampionDistEmpty =>
+      'The breakdown appears once the knockout starts.';
+
+  @override
+  String get koPersonalTotalPoints => 'Knockout points';
+
+  @override
+  String get koPersonalExacts => 'Exact scores';
+
+  @override
+  String get koPersonalDirs => 'Correct results';
+
+  @override
+  String get koPersonalZeros => 'Misses';
+
+  @override
+  String get koPersonalAccuracy => 'Efficiency';
+
+  @override
+  String get koPersonalPlayed => 'Scored games';
+
+  @override
+  String get koPersonalChampionBonus => 'Champion bonus';
+
+  @override
+  String get koPersonalEmpty => 'You don\'t have knockout stats yet.';
+
+  @override
+  String get koChampionStatusNone => 'You didn\'t pick a champion.';
+
+  @override
+  String get koChampionStatusPending => 'Waiting for the final.';
+
+  @override
+  String get koChampionStatusHit => 'You picked the champion! 🎉';
+
+  @override
+  String get koChampionStatusMiss => 'You didn\'t pick the champion.';
+
+  @override
+  String get statsScopeGroups => 'Group Stage';
+
+  @override
+  String get statsScopeKnockout => 'Knockout';
+
+  @override
+  String get koStatsTabPool => 'Pool';
+
+  @override
+  String get koPoolPopularTitle => 'Most-bet scores';
+
+  @override
+  String get koPoolPopularSub =>
+      'Scorelines the pool picked most in the knockout';
+
+  @override
+  String get koPoolUnpredictableTitle => 'Most unpredictable games';
+
+  @override
+  String get koPoolUnpredictableSub => 'Few nailed the exact score';
+
+  @override
+  String get koPoolEveryoneKnewTitle => 'Everyone knew';
+
+  @override
+  String get koPoolEveryoneKnewSub => 'Many nailed the exact score';
+
+  @override
+  String get koPoolEmpty => 'Not enough data yet.';
+
+  @override
+  String koPoolExactOf(int exact, int total) {
+    return '$exact of $total nailed it';
+  }
+
+  @override
+  String get koTbd => 'TBD';
+
+  @override
+  String get koLiveBadge => 'LIVE';
+
+  @override
+  String get koNoBet => 'No bet';
+
+  @override
+  String get koYourBet => 'Your bet';
+
+  @override
+  String get koUpdateBet => 'Update bet';
+
+  @override
+  String get koConfirmBet => 'Confirm bet';
+
+  @override
+  String koBetValue(int home, int away) {
+    return 'Bet $home × $away';
+  }
+
+  @override
+  String get koBracketUnavailable => 'Bracket not available yet.';
+
+  @override
+  String get koViewBracket => 'Bracket';
+
+  @override
+  String get koViewList => 'List';
+
+  @override
+  String koRoundGamesCount(int count) {
+    return '· $count games';
+  }
+
+  @override
+  String koLoadError(String message) {
+    return 'Failed to load: $message';
+  }
+
+  @override
+  String get koLockedTitle => 'Knockout locked';
+
+  @override
+  String get koLockedDesc =>
+      'The knockout pool has its own entry. As soon as it\'s confirmed, it shows up here automatically.';
+
+  @override
+  String get koThirdPlaceShort => '3rd place';
+
+  @override
+  String get koRound16avos => 'Round of 32';
+
+  @override
+  String get koRoundOitavas => 'Round of 16';
+
+  @override
+  String get koRoundQuartas => 'Quarterfinals';
+
+  @override
+  String get koRoundSemis => 'Semifinals';
+
+  @override
+  String get koRoundFinal => 'Final';
+
+  @override
+  String get koRound3lugar => 'Third place';
 }

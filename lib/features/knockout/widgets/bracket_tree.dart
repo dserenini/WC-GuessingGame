@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/team.dart';
 import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
@@ -12,9 +14,14 @@ import 'package:copa2026/features/knockout/models/knockout_models.dart';
 class BracketTree extends StatefulWidget {
   final List<KoMatch> matches;
   final Map<String, (int, int)> myBets; // ko_match_id → (home, away)
+  final String? championTeamId; // seleção-campeã escolhida pelo usuário (realce)
   final void Function(KoMatch match)? onTap;
   const BracketTree(
-      {super.key, required this.matches, this.myBets = const {}, this.onTap});
+      {super.key,
+      required this.matches,
+      this.myBets = const {},
+      this.championTeamId,
+      this.onTap});
 
   @override
   State<BracketTree> createState() => _BracketTreeState();
@@ -221,6 +228,7 @@ class _BracketTreeState extends State<BracketTree>
                               reveal: _revealed(c),
                               loserOpacity: _loserOpacity(c),
                               bet: _betFor(byKey['${_cols[c]}:$s']),
+                              championTeamId: widget.championTeamId,
                               onTap: _tapFor(byKey['${_cols[c]}:$s']),
                             ),
                           ),
@@ -235,8 +243,9 @@ class _BracketTreeState extends State<BracketTree>
                           match: byKey['3lugar:1'],
                           reveal: _animPhases > 0 ? _pf >= _animPhases - 0.5 : false,
                           loserOpacity: 0.4,
-                          label: '3º lugar',
+                          label: AppLocalizations.of(context)!.koThirdPlaceShort,
                           bet: _betFor(byKey['3lugar:1']),
+                          championTeamId: widget.championTeamId,
                           onTap: _tapFor(byKey['3lugar:1']),
                         ),
                       ),
@@ -388,6 +397,7 @@ class _BracketCard extends StatelessWidget {
   final bool reveal; // mostra as seleções? (false = "A definir")
   final double loserOpacity;
   final (int, int)? bet; // palpite do usuário (home, away)
+  final String? championTeamId; // realce dourado da seleção-campeã
   const _BracketCard({
     this.match,
     this.label,
@@ -395,6 +405,7 @@ class _BracketCard extends StatelessWidget {
     this.reveal = true,
     this.loserOpacity = 0.4,
     this.bet,
+    this.championTeamId,
   });
 
   @override
@@ -403,6 +414,9 @@ class _BracketCard extends StatelessWidget {
     final m = match;
     final advId = m?.advancing?.id;
     final finished = m?.isFinished ?? false;
+    // A seleção-campeã do usuário aparece neste confronto? (borda dourada)
+    final hasChampion = championTeamId != null &&
+        (m?.home?.id == championTeamId || m?.away?.id == championTeamId);
     // Rótulo do topo: o explícito (ex.: "3º lugar") ou o nº oficial do jogo.
     final topLabel =
         label ?? (m?.matchNo != null ? 'Jogo ${m!.matchNo}' : null);
@@ -428,7 +442,10 @@ class _BracketCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: cs.outline.withOpacity(0.5)),
+              border: Border.all(
+                color: hasChampion ? kGold : cs.outline.withOpacity(0.5),
+                width: hasChampion ? 2 : 1,
+              ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Column(
@@ -475,6 +492,7 @@ class _BracketCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final show = reveal && team != null;
     final isAdv = show && advId != null && team.id == advId;
+    final isChampion = show && championTeamId != null && team.id == championTeamId;
     final opacity = (finished && show && !isAdv) ? loserOpacity : 1.0;
 
     return Opacity(
@@ -485,14 +503,20 @@ class _BracketCard extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              show ? team.name : (fallbackLabel ?? 'A definir'),
+              show
+                  ? team.name
+                  : (fallbackLabel ?? AppLocalizations.of(context)!.koTbd),
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: isAdv ? FontWeight.w800 : FontWeight.w500,
-                color: show
-                    ? cs.onSurface
-                    : cs.onSurface.withOpacity(fallbackLabel != null ? 0.75 : 0.4),
+                fontWeight:
+                    (isAdv || isChampion) ? FontWeight.w800 : FontWeight.w500,
+                color: isChampion
+                    ? kGold
+                    : show
+                        ? cs.onSurface
+                        : cs.onSurface
+                            .withOpacity(fallbackLabel != null ? 0.75 : 0.4),
               ),
             ),
           ),

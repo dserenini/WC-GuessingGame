@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/team.dart';
 import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/providers/champion_pick_provider.dart';
 import 'package:copa2026/features/knockout/widgets/bracket_tree.dart';
 import 'package:copa2026/features/knockout/widgets/knockout_bet_sheet.dart';
+import 'package:copa2026/features/knockout/widgets/champion_pick_sheet.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
 
 /// Abre o popup de detalhes do confronto. Mesmo sem os times definidos, abre
@@ -34,9 +38,10 @@ class KnockoutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Mesmo com a rota acessível, só quem tem acesso (master ligado + inscrição
     // paga, ou admin) vê o conteúdo. Protege deep-link / URL direta.
+    final l = AppLocalizations.of(context)!;
     final visible = ref.watch(knockoutVisibleProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('⚔️ Mata-Mata')),
+      appBar: AppBar(title: Text('⚔️ ${l.koMenu}')),
       drawer: const AppDrawer(),
       body: visible.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -54,6 +59,7 @@ class _KnockoutLocked extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -63,14 +69,13 @@ class _KnockoutLocked extends StatelessWidget {
             Icon(Icons.lock_outline, size: 56, color: cs.onSurface.withOpacity(0.4)),
             const SizedBox(height: 16),
             Text(
-              'Mata-Mata bloqueado',
+              l.koLockedTitle,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'O bolão de mata-mata tem inscrição própria. Assim que ela for '
-              'confirmada, ele aparece aqui automaticamente.',
+              l.koLockedDesc,
               style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
               textAlign: TextAlign.center,
             ),
@@ -92,10 +97,12 @@ class _BracketTab extends ConsumerWidget {
     final isBracket = ref.watch(koBracketViewProvider);
     final matchesAsync = ref.watch(koMatchesProvider);
     final myBets = ref.watch(koMyBetsProvider).valueOrNull ?? const {};
+    final championTeamId = ref.watch(koChampionPickProvider).valueOrNull?.teamId;
     final tzOffset = ref.watch(timezoneProvider);
 
     return Column(
       children: [
+        const _ChampionCard(),
         _ViewToggle(isBracket: isBracket),
         Expanded(
           child: matchesAsync.when(
@@ -103,15 +110,21 @@ class _BracketTab extends ConsumerWidget {
             error: (e, _) => _ErrorBox(message: '$e'),
             data: (matches) {
               if (matches.isEmpty) {
-                return const Center(child: Text('Chaveamento ainda não disponível.'));
+                return Center(
+                    child: Text(AppLocalizations.of(context)!.koBracketUnavailable));
               }
               void onTap(KoMatch m) => openKnockoutMatch(context, ref, m);
               return isBracket
-                  ? BracketTree(matches: matches, myBets: myBets, onTap: onTap)
+                  ? BracketTree(
+                      matches: matches,
+                      myBets: myBets,
+                      championTeamId: championTeamId,
+                      onTap: onTap)
                   : _BracketListView(
                       matches: matches,
                       ref: ref,
                       myBets: myBets,
+                      championTeamId: championTeamId,
                       onTap: onTap,
                       tzOffset: tzOffset);
             },
@@ -128,13 +141,14 @@ class _ViewToggle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
       child: SegmentedButton<bool>(
         showSelectedIcon: false,
-        segments: const [
-          ButtonSegment(value: true, label: Text('Bracket'), icon: Icon(Icons.account_tree_outlined, size: 18)),
-          ButtonSegment(value: false, label: Text('Lista'), icon: Icon(Icons.view_list_outlined, size: 18)),
+        segments: [
+          ButtonSegment(value: true, label: Text(l.koViewBracket), icon: const Icon(Icons.account_tree_outlined, size: 18)),
+          ButtonSegment(value: false, label: Text(l.koViewList), icon: const Icon(Icons.view_list_outlined, size: 18)),
         ],
         selected: {isBracket},
         onSelectionChanged: (s) =>
@@ -144,21 +158,137 @@ class _ViewToggle extends ConsumerWidget {
   }
 }
 
+/// Card do palpite de CAMPEÃO no topo do mata-mata. Antes do 1º jogo: CTA para
+/// escolher/trocar. Depois: somente leitura (com bônus se acertou).
+class _ChampionCard extends ConsumerWidget {
+  const _ChampionCard();
+
+  void _openSheet(BuildContext context, String? currentTeamId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ChampionPickSheet(currentTeamId: currentTeamId),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
+    final pick = ref.watch(koChampionPickProvider).valueOrNull;
+    final teams = ref.watch(koAllTeamsProvider).valueOrNull ?? const <TeamModel>[];
+    final firstDate = ref.watch(koFirstMatchDateProvider).valueOrNull;
+
+    // Aberto enquanto não começou o mata-mata (ou ainda sem data definida).
+    final open =
+        firstDate == null || DateTime.now().toUtc().isBefore(firstDate.toUtc());
+
+    TeamModel? team;
+    if (pick != null) {
+      for (final t in teams) {
+        if (t.id == pick.teamId) {
+          team = t;
+          break;
+        }
+      }
+    }
+    final earnedBonus = pick != null && pick.points > 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: open ? () => _openSheet(context, pick?.teamId) : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                const Text('🏆', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l.koChampionTitle,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 3),
+                      if (team != null)
+                        Row(
+                          children: [
+                            FlagAvatar(flagUrl: team.flagUrl, radius: 11),
+                            const SizedBox(width: 7),
+                            Flexible(
+                              child: Text(team.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: cs.primary)),
+                            ),
+                            if (earnedBonus) ...[
+                              const SizedBox(width: 8),
+                              _bonusBadge(cs, l.koPlusPoints(pick.points)),
+                            ],
+                          ],
+                        )
+                      else
+                        Text(open ? l.koChampionSubtitle : l.koChampionEmptyLocked,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: cs.onSurface.withOpacity(0.6))),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (open)
+                  FilledButton.tonal(
+                    onPressed: () => _openSheet(context, pick?.teamId),
+                    child: Text(pick == null ? l.koChampionCta : l.koChampionChange),
+                  )
+                else
+                  Icon(Icons.lock_outline,
+                      size: 18, color: cs.onSurface.withOpacity(0.4)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bonusBadge(ColorScheme cs, String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(
+            color: cs.primary.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(6)),
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w800, color: cs.primary)),
+      );
+}
+
 class _BracketListView extends StatelessWidget {
   final List<KoMatch> matches;
   final WidgetRef ref;
   final Map<String, (int, int)> myBets;
+  final String? championTeamId;
   final void Function(KoMatch) onTap;
   final Duration tzOffset;
   const _BracketListView(
       {required this.matches,
       required this.ref,
       required this.myBets,
+      required this.championTeamId,
       required this.onTap,
       required this.tzOffset});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final rounds = <String, List<KoMatch>>{};
     for (final r in kKoRounds) {
       // Na lista, ordena pelo nº oficial do jogo (73, 74, 75…); cai no slot
@@ -176,11 +306,12 @@ class _BracketListView extends StatelessWidget {
         children: [
           for (final round in kKoRounds)
             if (rounds[round] != null) ...[
-              _RoundHeader(label: koRoundLabel(round), count: rounds[round]!.length),
+              _RoundHeader(label: koRoundLabel(l, round), count: rounds[round]!.length),
               for (final m in rounds[round]!)
                 _GameCard(
                     match: m,
                     myBet: myBets[m.id],
+                    championTeamId: championTeamId,
                     onTap: () => onTap(m),
                     tzOffset: tzOffset),
               const SizedBox(height: 8),
@@ -199,6 +330,7 @@ class _RoundHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
       child: Row(
@@ -210,7 +342,7 @@ class _RoundHeader extends StatelessWidget {
                   color: cs.primary,
                   letterSpacing: 0.3)),
           const SizedBox(width: 8),
-          Text('· $count jogos',
+          Text(l.koRoundGamesCount(count),
               style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.5))),
           const Expanded(child: Divider(indent: 12)),
         ],
@@ -222,19 +354,27 @@ class _RoundHeader extends StatelessWidget {
 class _GameCard extends StatelessWidget {
   final KoMatch match;
   final (int, int)? myBet;
+  final String? championTeamId;
   final VoidCallback? onTap;
   final Duration tzOffset;
   const _GameCard(
-      {required this.match, this.myBet, this.onTap, required this.tzOffset});
+      {required this.match,
+      this.myBet,
+      this.championTeamId,
+      this.onTap,
+      required this.tzOffset});
+
+  /// A seleção escolhida como campeã está neste confronto? (realce dourado)
+  bool get _hasChampion =>
+      championTeamId != null &&
+      (match.home?.id == championTeamId || match.away?.id == championTeamId);
 
   int? get _points {
     if (!match.isFinished || myBet == null || match.homeScore == null || match.awayScore == null) {
       return null;
     }
-    if (myBet!.$1 == match.homeScore && myBet!.$2 == match.awayScore) return 3;
-    final bd = myBet!.$1.compareTo(myBet!.$2);
-    final rd = match.homeScore!.compareTo(match.awayScore!);
-    return bd == rd ? 1 : 0;
+    return koBetPoints(
+        match.round, myBet!.$1, myBet!.$2, match.homeScore!, match.awayScore!);
   }
 
   @override
@@ -244,6 +384,13 @@ class _GameCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       clipBehavior: Clip.antiAlias,
+      // Realce dourado quando a seleção-campeã do usuário joga neste confronto.
+      shape: _hasChampion
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: kGold, width: 2),
+            )
+          : null,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -277,6 +424,7 @@ class _GameCard extends StatelessWidget {
 
   Widget _betStrip(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context)!;
     final hasReal = match.status != MatchStatus.scheduled &&
         match.homeScore != null &&
         match.awayScore != null;
@@ -289,7 +437,7 @@ class _GameCard extends StatelessWidget {
         Icon(Icons.edit_note, size: 14, color: cs.onSurface.withOpacity(0.5)),
         const SizedBox(width: 4),
         Text(
-          myBet == null ? 'Sem palpite' : 'Palpite ${myBet!.$1} × ${myBet!.$2}',
+          myBet == null ? l.koNoBet : l.koBetValue(myBet!.$1, myBet!.$2),
           style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -338,8 +486,8 @@ class _GameCard extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 2),
                 decoration: BoxDecoration(
                     color: Colors.red, borderRadius: BorderRadius.circular(4)),
-                child: const Text('AO VIVO',
-                    style: TextStyle(
+                child: Text(AppLocalizations.of(context)!.koLiveBadge,
+                    style: const TextStyle(
                         fontSize: 7.5,
                         color: Colors.white,
                         fontWeight: FontWeight.w700)),
@@ -379,10 +527,25 @@ class _GameCard extends StatelessWidget {
       {required bool alignEnd}) {
     final cs = Theme.of(context).colorScheme;
     final isAdv = team != null && advId != null && team.id == advId;
-    final name = team?.name ?? fallbackLabel ?? 'A definir';
+    final isChampion =
+        team != null && championTeamId != null && team.id == championTeamId;
+    final name =
+        team?.name ?? fallbackLabel ?? AppLocalizations.of(context)!.koTbd;
+
+    Widget flag = FlagAvatar(flagUrl: team?.flagUrl, radius: 14);
+    if (isChampion) {
+      flag = Container(
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: kGold, width: 2),
+        ),
+        child: flag,
+      );
+    }
 
     final children = <Widget>[
-      FlagAvatar(flagUrl: team?.flagUrl, radius: 14),
+      flag,
       const SizedBox(width: 8),
       Flexible(
         child: Text(
@@ -391,12 +554,14 @@ class _GameCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: isAdv ? FontWeight.w800 : FontWeight.w500,
+            fontWeight: (isAdv || isChampion) ? FontWeight.w800 : FontWeight.w500,
             color: team == null
                 ? cs.onSurface.withOpacity(fallbackLabel != null ? 0.75 : 0.4)
-                : isAdv
-                    ? cs.primary
-                    : cs.onSurface,
+                : isChampion
+                    ? kGold
+                    : isAdv
+                        ? cs.primary
+                        : cs.onSurface,
           ),
         ),
       ),
@@ -418,7 +583,7 @@ class _ErrorBox extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Text('Erro ao carregar: $message',
+        child: Text(AppLocalizations.of(context)!.koLoadError(message),
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).colorScheme.error)),
       ),

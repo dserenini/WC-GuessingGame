@@ -2295,6 +2295,492 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{rank}º no Ranking Geral'**
   String generalRankPosition(int rank);
+
+  /// No description provided for @koMenu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mata-Mata'**
+  String get koMenu;
+
+  /// No description provided for @koStatsMenu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estatísticas Mata-Mata'**
+  String get koStatsMenu;
+
+  /// No description provided for @koSaveError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível salvar: {error}'**
+  String koSaveError(String error);
+
+  /// No description provided for @koPlusPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'+{points} pts'**
+  String koPlusPoints(int points);
+
+  /// No description provided for @koLockTeamsUndefined.
+  ///
+  /// In pt, this message translates to:
+  /// **'As apostas abrem quando o confronto for definido.'**
+  String get koLockTeamsUndefined;
+
+  /// No description provided for @koLockStarted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogo já iniciado — apostas encerradas.'**
+  String get koLockStarted;
+
+  /// No description provided for @koLockClosed30min.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apostas encerradas (fecham 30 min antes do jogo).'**
+  String get koLockClosed30min;
+
+  /// No description provided for @koFinalsScoringNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semifinal e Final: cravar vale 5 pts · acertar o resultado vale 3 pts.'**
+  String get koFinalsScoringNote;
+
+  /// No description provided for @koChampionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpite de Campeão'**
+  String get koChampionTitle;
+
+  /// No description provided for @koChampionSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem levanta a taça? Acertar vale +3 pts.'**
+  String get koChampionSubtitle;
+
+  /// No description provided for @koChampionCta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher campeão'**
+  String get koChampionCta;
+
+  /// No description provided for @koChampionChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar'**
+  String get koChampionChange;
+
+  /// No description provided for @koChampionEmptyLocked.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você não palpitou o campeão.'**
+  String get koChampionEmptyLocked;
+
+  /// No description provided for @koChampionSheetTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha o campeão da Copa'**
+  String get koChampionSheetTitle;
+
+  /// No description provided for @koChampionSearchHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar seleção'**
+  String get koChampionSearchHint;
+
+  /// No description provided for @koChampionNoResults.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma seleção encontrada'**
+  String get koChampionNoResults;
+
+  /// No description provided for @helpKoSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mata-Mata'**
+  String get helpKoSection;
+
+  /// No description provided for @helpKoScoringTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontuação do Mata-Mata'**
+  String get helpKoScoringTitle;
+
+  /// No description provided for @helpKoScoringDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3.'**
+  String get helpKoScoringDesc;
+
+  /// No description provided for @helpKoChampionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpite de Campeão'**
+  String get helpKoChampionTitle;
+
+  /// No description provided for @helpKoChampionDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Antes do primeiro jogo do mata-mata, escolha quem será o campeão da Copa. Se acertar, você ganha 3 pontos extras no ranking do mata-mata.'**
+  String get helpKoChampionDesc;
+
+  /// No description provided for @helpKoDeadlineTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prazo do Mata-Mata'**
+  String get helpKoDeadlineTitle;
+
+  /// No description provided for @helpKoDeadlineDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'As apostas de cada jogo do mata-mata podem ser feitas ou alteradas até 30 minutos antes do início da partida.'**
+  String get helpKoDeadlineDesc;
+
+  /// No description provided for @helpKoRankingTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking do Mata-Mata'**
+  String get helpKoRankingTitle;
+
+  /// No description provided for @helpKoRankingDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'O mata-mata tem ranking próprio, separado da fase de grupos (começa do zero).'**
+  String get helpKoRankingDesc;
+
+  /// No description provided for @koStatsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estatísticas Mata-Mata'**
+  String get koStatsTitle;
+
+  /// No description provided for @koStatsTabRankings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rankings'**
+  String get koStatsTabRankings;
+
+  /// No description provided for @koStatsTabPersonal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pessoal'**
+  String get koStatsTabPersonal;
+
+  /// No description provided for @koStatPointsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontos no Mata-Mata'**
+  String get koStatPointsTitle;
+
+  /// No description provided for @koStatPointsSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem mais pontuou no mata-mata'**
+  String get koStatPointsSub;
+
+  /// No description provided for @koStatPointsUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'pts'**
+  String get koStatPointsUnit;
+
+  /// No description provided for @koStatExactTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rei das Cravadas'**
+  String get koStatExactTitle;
+
+  /// No description provided for @koStatExactSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem mais cravou o placar'**
+  String get koStatExactSub;
+
+  /// No description provided for @koStatExactUnit.
+  ///
+  /// In pt, this message translates to:
+  /// **'cravadas'**
+  String get koStatExactUnit;
+
+  /// No description provided for @koChampionDistTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpite de Campeão'**
+  String get koChampionDistTitle;
+
+  /// No description provided for @koChampionDistSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'As seleções mais escolhidas'**
+  String get koChampionDistSub;
+
+  /// No description provided for @koChampionDistEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'A distribuição aparece quando o mata-mata começar.'**
+  String get koChampionDistEmpty;
+
+  /// No description provided for @koPersonalTotalPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontos no mata-mata'**
+  String get koPersonalTotalPoints;
+
+  /// No description provided for @koPersonalExacts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cravadas'**
+  String get koPersonalExacts;
+
+  /// No description provided for @koPersonalDirs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acertos de resultado'**
+  String get koPersonalDirs;
+
+  /// No description provided for @koPersonalZeros.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erros'**
+  String get koPersonalZeros;
+
+  /// No description provided for @koPersonalAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aproveitamento'**
+  String get koPersonalAccuracy;
+
+  /// No description provided for @koPersonalPlayed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogos pontuados'**
+  String get koPersonalPlayed;
+
+  /// No description provided for @koPersonalChampionBonus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bônus de campeão'**
+  String get koPersonalChampionBonus;
+
+  /// No description provided for @koPersonalEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ainda não tem estatísticas no mata-mata.'**
+  String get koPersonalEmpty;
+
+  /// No description provided for @koChampionStatusNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você não palpitou o campeão.'**
+  String get koChampionStatusNone;
+
+  /// No description provided for @koChampionStatusPending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aguardando a final.'**
+  String get koChampionStatusPending;
+
+  /// No description provided for @koChampionStatusHit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você acertou o campeão! 🎉'**
+  String get koChampionStatusHit;
+
+  /// No description provided for @koChampionStatusMiss.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você não acertou o campeão.'**
+  String get koChampionStatusMiss;
+
+  /// No description provided for @statsScopeGroups.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fase de Grupos'**
+  String get statsScopeGroups;
+
+  /// No description provided for @statsScopeKnockout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mata-Mata'**
+  String get statsScopeKnockout;
+
+  /// No description provided for @koStatsTabPool.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bolão'**
+  String get koStatsTabPool;
+
+  /// No description provided for @koPoolPopularTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Placares mais apostados'**
+  String get koPoolPopularTitle;
+
+  /// No description provided for @koPoolPopularSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os placares que o bolão mais escolheu no mata-mata'**
+  String get koPoolPopularSub;
+
+  /// No description provided for @koPoolUnpredictableTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogos mais imprevisíveis'**
+  String get koPoolUnpredictableTitle;
+
+  /// No description provided for @koPoolUnpredictableSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Poucos cravaram o placar'**
+  String get koPoolUnpredictableSub;
+
+  /// No description provided for @koPoolEveryoneKnewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todo mundo sabia'**
+  String get koPoolEveryoneKnewTitle;
+
+  /// No description provided for @koPoolEveryoneKnewSub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Muitos cravaram o placar'**
+  String get koPoolEveryoneKnewSub;
+
+  /// No description provided for @koPoolEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem dados suficientes ainda.'**
+  String get koPoolEmpty;
+
+  /// No description provided for @koPoolExactOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'{exact} de {total} cravaram'**
+  String koPoolExactOf(int exact, int total);
+
+  /// No description provided for @koTbd.
+  ///
+  /// In pt, this message translates to:
+  /// **'A definir'**
+  String get koTbd;
+
+  /// No description provided for @koLiveBadge.
+  ///
+  /// In pt, this message translates to:
+  /// **'AO VIVO'**
+  String get koLiveBadge;
+
+  /// No description provided for @koNoBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem palpite'**
+  String get koNoBet;
+
+  /// No description provided for @koYourBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu palpite'**
+  String get koYourBet;
+
+  /// No description provided for @koUpdateBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizar palpite'**
+  String get koUpdateBet;
+
+  /// No description provided for @koConfirmBet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar palpite'**
+  String get koConfirmBet;
+
+  /// No description provided for @koBetValue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palpite {home} × {away}'**
+  String koBetValue(int home, int away);
+
+  /// No description provided for @koBracketUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chaveamento ainda não disponível.'**
+  String get koBracketUnavailable;
+
+  /// No description provided for @koViewBracket.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chave'**
+  String get koViewBracket;
+
+  /// No description provided for @koViewList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista'**
+  String get koViewList;
+
+  /// No description provided for @koRoundGamesCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'· {count} jogos'**
+  String koRoundGamesCount(int count);
+
+  /// No description provided for @koLoadError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao carregar: {message}'**
+  String koLoadError(String message);
+
+  /// No description provided for @koLockedTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mata-Mata bloqueado'**
+  String get koLockedTitle;
+
+  /// No description provided for @koLockedDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'O bolão de mata-mata tem inscrição própria. Assim que ela for confirmada, ele aparece aqui automaticamente.'**
+  String get koLockedDesc;
+
+  /// No description provided for @koThirdPlaceShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'3º lugar'**
+  String get koThirdPlaceShort;
+
+  /// No description provided for @koRound16avos.
+  ///
+  /// In pt, this message translates to:
+  /// **'16-avos'**
+  String get koRound16avos;
+
+  /// No description provided for @koRoundOitavas.
+  ///
+  /// In pt, this message translates to:
+  /// **'Oitavas'**
+  String get koRoundOitavas;
+
+  /// No description provided for @koRoundQuartas.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quartas'**
+  String get koRoundQuartas;
+
+  /// No description provided for @koRoundSemis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semifinais'**
+  String get koRoundSemis;
+
+  /// No description provided for @koRoundFinal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Final'**
+  String get koRoundFinal;
+
+  /// No description provided for @koRound3lugar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disputa de 3º'**
+  String get koRound3lugar;
 }
 
 class _AppLocalizationsDelegate

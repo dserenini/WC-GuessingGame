@@ -1168,4 +1168,269 @@ class AppLocalizationsPt extends AppLocalizations {
   String generalRankPosition(int rank) {
     return '$rankº no Ranking Geral';
   }
+
+  @override
+  String get koMenu => 'Mata-Mata';
+
+  @override
+  String get koStatsMenu => 'Estatísticas Mata-Mata';
+
+  @override
+  String koSaveError(String error) {
+    return 'Não foi possível salvar: $error';
+  }
+
+  @override
+  String koPlusPoints(int points) {
+    return '+$points pts';
+  }
+
+  @override
+  String get koLockTeamsUndefined =>
+      'As apostas abrem quando o confronto for definido.';
+
+  @override
+  String get koLockStarted => 'Jogo já iniciado — apostas encerradas.';
+
+  @override
+  String get koLockClosed30min =>
+      'Apostas encerradas (fecham 30 min antes do jogo).';
+
+  @override
+  String get koFinalsScoringNote =>
+      'Semifinal e Final: cravar vale 5 pts · acertar o resultado vale 3 pts.';
+
+  @override
+  String get koChampionTitle => 'Palpite de Campeão';
+
+  @override
+  String get koChampionSubtitle => 'Quem levanta a taça? Acertar vale +3 pts.';
+
+  @override
+  String get koChampionCta => 'Escolher campeão';
+
+  @override
+  String get koChampionChange => 'Trocar';
+
+  @override
+  String get koChampionEmptyLocked => 'Você não palpitou o campeão.';
+
+  @override
+  String get koChampionSheetTitle => 'Escolha o campeão da Copa';
+
+  @override
+  String get koChampionSearchHint => 'Buscar seleção';
+
+  @override
+  String get koChampionNoResults => 'Nenhuma seleção encontrada';
+
+  @override
+  String get helpKoSection => 'Mata-Mata';
+
+  @override
+  String get helpKoScoringTitle => 'Pontuação do Mata-Mata';
+
+  @override
+  String get helpKoScoringDesc =>
+      'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3.';
+
+  @override
+  String get helpKoChampionTitle => 'Palpite de Campeão';
+
+  @override
+  String get helpKoChampionDesc =>
+      'Antes do primeiro jogo do mata-mata, escolha quem será o campeão da Copa. Se acertar, você ganha 3 pontos extras no ranking do mata-mata.';
+
+  @override
+  String get helpKoDeadlineTitle => 'Prazo do Mata-Mata';
+
+  @override
+  String get helpKoDeadlineDesc =>
+      'As apostas de cada jogo do mata-mata podem ser feitas ou alteradas até 30 minutos antes do início da partida.';
+
+  @override
+  String get helpKoRankingTitle => 'Ranking do Mata-Mata';
+
+  @override
+  String get helpKoRankingDesc =>
+      'O mata-mata tem ranking próprio, separado da fase de grupos (começa do zero).';
+
+  @override
+  String get koStatsTitle => 'Estatísticas Mata-Mata';
+
+  @override
+  String get koStatsTabRankings => 'Rankings';
+
+  @override
+  String get koStatsTabPersonal => 'Pessoal';
+
+  @override
+  String get koStatPointsTitle => 'Pontos no Mata-Mata';
+
+  @override
+  String get koStatPointsSub => 'Quem mais pontuou no mata-mata';
+
+  @override
+  String get koStatPointsUnit => 'pts';
+
+  @override
+  String get koStatExactTitle => 'Rei das Cravadas';
+
+  @override
+  String get koStatExactSub => 'Quem mais cravou o placar';
+
+  @override
+  String get koStatExactUnit => 'cravadas';
+
+  @override
+  String get koChampionDistTitle => 'Palpite de Campeão';
+
+  @override
+  String get koChampionDistSub => 'As seleções mais escolhidas';
+
+  @override
+  String get koChampionDistEmpty =>
+      'A distribuição aparece quando o mata-mata começar.';
+
+  @override
+  String get koPersonalTotalPoints => 'Pontos no mata-mata';
+
+  @override
+  String get koPersonalExacts => 'Cravadas';
+
+  @override
+  String get koPersonalDirs => 'Acertos de resultado';
+
+  @override
+  String get koPersonalZeros => 'Erros';
+
+  @override
+  String get koPersonalAccuracy => 'Aproveitamento';
+
+  @override
+  String get koPersonalPlayed => 'Jogos pontuados';
+
+  @override
+  String get koPersonalChampionBonus => 'Bônus de campeão';
+
+  @override
+  String get koPersonalEmpty => 'Você ainda não tem estatísticas no mata-mata.';
+
+  @override
+  String get koChampionStatusNone => 'Você não palpitou o campeão.';
+
+  @override
+  String get koChampionStatusPending => 'Aguardando a final.';
+
+  @override
+  String get koChampionStatusHit => 'Você acertou o campeão! 🎉';
+
+  @override
+  String get koChampionStatusMiss => 'Você não acertou o campeão.';
+
+  @override
+  String get statsScopeGroups => 'Fase de Grupos';
+
+  @override
+  String get statsScopeKnockout => 'Mata-Mata';
+
+  @override
+  String get koStatsTabPool => 'Bolão';
+
+  @override
+  String get koPoolPopularTitle => 'Placares mais apostados';
+
+  @override
+  String get koPoolPopularSub =>
+      'Os placares que o bolão mais escolheu no mata-mata';
+
+  @override
+  String get koPoolUnpredictableTitle => 'Jogos mais imprevisíveis';
+
+  @override
+  String get koPoolUnpredictableSub => 'Poucos cravaram o placar';
+
+  @override
+  String get koPoolEveryoneKnewTitle => 'Todo mundo sabia';
+
+  @override
+  String get koPoolEveryoneKnewSub => 'Muitos cravaram o placar';
+
+  @override
+  String get koPoolEmpty => 'Sem dados suficientes ainda.';
+
+  @override
+  String koPoolExactOf(int exact, int total) {
+    return '$exact de $total cravaram';
+  }
+
+  @override
+  String get koTbd => 'A definir';
+
+  @override
+  String get koLiveBadge => 'AO VIVO';
+
+  @override
+  String get koNoBet => 'Sem palpite';
+
+  @override
+  String get koYourBet => 'Seu palpite';
+
+  @override
+  String get koUpdateBet => 'Atualizar palpite';
+
+  @override
+  String get koConfirmBet => 'Confirmar palpite';
+
+  @override
+  String koBetValue(int home, int away) {
+    return 'Palpite $home × $away';
+  }
+
+  @override
+  String get koBracketUnavailable => 'Chaveamento ainda não disponível.';
+
+  @override
+  String get koViewBracket => 'Chave';
+
+  @override
+  String get koViewList => 'Lista';
+
+  @override
+  String koRoundGamesCount(int count) {
+    return '· $count jogos';
+  }
+
+  @override
+  String koLoadError(String message) {
+    return 'Erro ao carregar: $message';
+  }
+
+  @override
+  String get koLockedTitle => 'Mata-Mata bloqueado';
+
+  @override
+  String get koLockedDesc =>
+      'O bolão de mata-mata tem inscrição própria. Assim que ela for confirmada, ele aparece aqui automaticamente.';
+
+  @override
+  String get koThirdPlaceShort => '3º lugar';
+
+  @override
+  String get koRound16avos => '16-avos';
+
+  @override
+  String get koRoundOitavas => 'Oitavas';
+
+  @override
+  String get koRoundQuartas => 'Quartas';
+
+  @override
+  String get koRoundSemis => 'Semifinais';
+
+  @override
+  String get koRoundFinal => 'Final';
+
+  @override
+  String get koRound3lugar => 'Disputa de 3º';
 }

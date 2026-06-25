@@ -9,6 +9,7 @@ import 'package:copa2026/features/groups/screens/group_screen.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
 import 'package:copa2026/features/knockout/screens/knockout_screen.dart';
+import 'package:copa2026/features/knockout/screens/knockout_stats_screen.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
@@ -113,6 +114,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           // Bloqueia deep-link de quem não tem acesso. Enquanto o provider
           // ainda carrega (valueOrNull == null), deixa passar — a própria
           // KnockoutScreen mostra o aviso de bloqueio.
+          final visible = ref.read(knockoutVisibleProvider).valueOrNull;
+          if (visible == false) return '/profile';
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/knockout-stats',
+        name: 'knockout-stats',
+        builder: (_, __) => const KnockoutStatsScreen(),
+        redirect: (context, state) {
+          // Mesmo gating do /knockout: só inscritos veem as estatísticas do KO.
           final visible = ref.read(knockoutVisibleProvider).valueOrNull;
           if (visible == false) return '/profile';
           return null;

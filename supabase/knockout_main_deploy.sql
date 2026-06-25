@@ -130,7 +130,9 @@ CREATE TRIGGER trg_score_ko_match
   FOR EACH ROW EXECUTE FUNCTION score_ko_match();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4) PRAZO (1h antes; precisa dos 2 times definidos) — bypass admin
+-- 4) PRAZO (30 min antes; precisa dos 2 times definidos) — bypass admin
+--    NOTA: as regras v4 (pontuação 5/3 na semi/final, palpite de campeão e este
+--    prazo de 30 min) são aplicadas por supabase/knockout_rules_v4.sql.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION ko_bet_deadline()
 RETURNS trigger LANGUAGE plpgsql
@@ -149,8 +151,8 @@ BEGIN
   IF m.home_team_id IS NULL OR m.away_team_id IS NULL THEN
     RAISE EXCEPTION 'Confronto ainda não definido para este jogo.';
   END IF;
-  IF now() > m.match_date - interval '1 hour' THEN
-    RAISE EXCEPTION 'Apostas encerradas (até 1h antes do jogo).';
+  IF now() > m.match_date - interval '30 minutes' THEN
+    RAISE EXCEPTION 'Apostas encerradas (até 30 min antes do jogo).';
   END IF;
   RETURN NEW;
 END;

@@ -1,3 +1,4 @@
+import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/shared/models/team.dart';
 import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 
@@ -10,23 +11,38 @@ const List<String> kKoRounds = [
   '16avos', 'oitavas', 'quartas', 'semis', '3lugar', 'final',
 ];
 
-String koRoundLabel(String round) {
+String koRoundLabel(AppLocalizations l, String round) {
   switch (round) {
     case '16avos':
-      return '16-avos';
+      return l.koRound16avos;
     case 'oitavas':
-      return 'Oitavas';
+      return l.koRoundOitavas;
     case 'quartas':
-      return 'Quartas';
+      return l.koRoundQuartas;
     case 'semis':
-      return 'Semifinais';
+      return l.koRoundSemis;
     case 'final':
-      return 'Final';
+      return l.koRoundFinal;
     case '3lugar':
-      return 'Disputa de 3º';
+      return l.koRound3lugar;
     default:
       return round;
   }
+}
+
+/// Semifinal e Final pontuam em dobro? Reforço de pontuação só nessas duas fases
+/// (a disputa de 3º NÃO entra). Fonte única para cliente — espelha `score_ko_match`.
+bool koIsFinalsRound(String round) => round == 'semis' || round == 'final';
+
+/// Pontos de um palpite de placar do mata-mata por fase. Espelha o trigger SQL
+/// `score_ko_match()`: cravada=5 / resultado=3 na Semi/Final; 3 / 1 nas demais.
+int koBetPoints(String round, int betHome, int betAway, int realHome, int realAway) {
+  final finals = koIsFinalsRound(round);
+  if (betHome == realHome && betAway == realAway) return finals ? 5 : 3;
+  final betDir = betHome.compareTo(betAway);
+  final realDir = realHome.compareTo(realAway);
+  if (betDir == realDir) return finals ? 3 : 1;
+  return 0;
 }
 
 /// Um jogo do mata-mata (com a árvore do chaveamento via slot/round).

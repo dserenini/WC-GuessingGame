@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 class HelpScreen extends ConsumerWidget {
   const HelpScreen({super.key});
 
@@ -16,6 +17,8 @@ class HelpScreen extends ConsumerWidget {
     final dt = DateTime.utc(2026, 6, 11, 17, 30).add(offset);
     final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     final gmtStr = 'GMT${offset.inHours >= 0 ? '+' : ''}${offset.inHours}';
+    // Regras do mata-mata só para quem tem acesso (inscrição confirmada).
+    final koVisible = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -84,6 +87,47 @@ class HelpScreen extends ConsumerWidget {
             description: l10n.helpLeaguesDesc,
             color: Colors.blueAccent,
           ),
+          // ── Regras do Mata-Mata (só para inscritos) ──
+          if (koVisible) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 12, left: 4),
+              child: Text(
+                '⚔️ ${l10n.helpKoSection}',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.scoreboard,
+              title: l10n.helpKoScoringTitle,
+              description: l10n.helpKoScoringDesc,
+              color: Colors.green,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.emoji_events,
+              title: l10n.helpKoChampionTitle,
+              description: l10n.helpKoChampionDesc,
+              color: Colors.amber.shade700,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.timer,
+              title: l10n.helpKoDeadlineTitle,
+              description: l10n.helpKoDeadlineDesc,
+              color: Colors.redAccent,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.leaderboard,
+              title: l10n.helpKoRankingTitle,
+              description: l10n.helpKoRankingDesc,
+              color: Colors.indigo,
+            ),
+          ],
           const SizedBox(height: 16),
           _buildPaymentCard(context, l10n),
           const SizedBox(height: 32),

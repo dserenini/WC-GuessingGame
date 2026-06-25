@@ -107,15 +107,20 @@ class AppDrawer extends ConsumerWidget {
                       context.go('/achievements');
                     },
                   ),
-                  _DrawerItem(
-                    icon: '📊',
-                    label: l.advancedStats,
-                    selected: currentPath == '/stats',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go('/stats');
-                    },
-                  ),
+                  // Estatísticas Avançadas: para inscritos no mata-mata vira um
+                  // submenu (Fase de Grupos / Mata-Mata); para os demais, link direto.
+                  if (knockoutOn)
+                    _StatsExpansion(currentPath: currentPath, l: l)
+                  else
+                    _DrawerItem(
+                      icon: '📊',
+                      label: l.advancedStats,
+                      selected: currentPath == '/stats',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/stats');
+                      },
+                    ),
                   _DrawerItem(
                     icon: '🏆',
                     label: l.ranking,
@@ -137,7 +142,7 @@ class AppDrawer extends ConsumerWidget {
                   if (knockoutOn)
                     _DrawerItem(
                       icon: '⚔️',
-                      label: 'Mata-Mata',
+                      label: l.koMenu,
                       selected: currentPath == '/knockout',
                       onTap: () {
                         Navigator.pop(context);
@@ -285,6 +290,66 @@ class _BetsGroup extends StatelessWidget {
                   context.go('/groups/$g');
                 },
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// "Estatísticas Avançadas" — submenu (Fase de Grupos / Mata-Mata) p/ inscritos
+// ─────────────────────────────────────────────
+class _StatsExpansion extends StatelessWidget {
+  final String currentPath;
+  final AppLocalizations l;
+
+  const _StatsExpansion({required this.currentPath, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final onStats =
+        currentPath == '/stats' || currentPath == '/knockout-stats';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: onStats,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.only(left: 16, bottom: 4),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          leading: const Text('📊', style: TextStyle(fontSize: 18)),
+          title: Text(
+            l.advancedStats,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: onStats ? FontWeight.w600 : FontWeight.w400,
+              color: onStats ? cs.primary : null,
+            ),
+          ),
+          children: [
+            _DrawerItem(
+              icon: '🎯',
+              label: l.statsScopeGroups,
+              selected: currentPath == '/stats',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/stats');
+              },
+            ),
+            _DrawerItem(
+              icon: '⚔️',
+              label: l.statsScopeKnockout,
+              selected: currentPath == '/knockout-stats',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/knockout-stats');
+              },
+            ),
           ],
         ),
       ),

@@ -95,6 +95,19 @@ final koUserRankingProvider =
       .toList());
 });
 
+/// Ranking de CRAVADAS do mata-mata (view ko_exact_score_rankings). Mesmo shape
+/// de user_rankings: total_points carrega o nº de placares cravados.
+final koExactRankingProvider =
+    FutureProvider.autoDispose<List<RankingEntry>>((ref) async {
+  final data = await Supabase.instance.client
+      .from('ko_exact_score_rankings')
+      .select()
+      .order('rank', ascending: true);
+  return applyDenseRank((data as List)
+      .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
+      .toList());
+});
+
 /// Ranking do mata-mata de uma liga (mesmo formato de league_rankings).
 final koLeagueRankingProvider = FutureProvider.autoDispose
     .family<List<RankingEntry>, String>((ref, leagueId) async {

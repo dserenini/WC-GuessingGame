@@ -10,7 +10,7 @@ import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
 
 /// Popup de detalhes de um confronto do mata-mata:
-/// status + placar real/ao vivo, seu palpite (editável até 1h antes) e pontos.
+/// status + placar real/ao vivo, seu palpite (editável até 30 min antes) e pontos.
 class KnockoutMatchSheet extends ConsumerStatefulWidget {
   final KoMatch match;
   final int initialHome;
@@ -40,32 +40,29 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
   DateTime? get _localDate =>
       m.matchDate?.toUtc().add(ref.read(timezoneProvider));
 
-  /// Apostas abertas: times definidos, ainda agendado e faltando >1h pro jogo.
+  /// Apostas abertas: times definidos, ainda agendado e faltando >30 min pro jogo.
   bool get _open =>
       m.teamsKnown &&
       m.status == MatchStatus.scheduled &&
       m.matchDate != null &&
       DateTime.now()
           .toUtc()
-          .isBefore(m.matchDate!.toUtc().subtract(const Duration(hours: 1)));
+          .isBefore(m.matchDate!.toUtc().subtract(const Duration(minutes: 30)));
 
   /// Motivo de a edição estar bloqueada (null quando aberta ou já encerrada com
   /// palpite registrado num jogo passado — aí o read-only fala por si).
-  String? get _lockReason {
+  String? _lockReason(AppLocalizations l) {
     if (_open) return null;
-    if (!m.teamsKnown) return 'As apostas abrem quando o confronto for definido.';
-    if (m.status != MatchStatus.scheduled) return 'Jogo já iniciado — apostas encerradas.';
-    return 'Apostas encerradas (fecham 1h antes do jogo).';
+    if (!m.teamsKnown) return l.koLockTeamsUndefined;
+    if (m.status != MatchStatus.scheduled) return l.koLockStarted;
+    return l.koLockClosed30min;
   }
 
   int? get _points {
     if (!m.isFinished || !widget.hasBet || m.homeScore == null || m.awayScore == null) {
       return null;
     }
-    if (_home == m.homeScore && _away == m.awayScore) return 3;
-    final betDir = _home.compareTo(_away);
-    final realDir = m.homeScore!.compareTo(m.awayScore!);
-    return betDir == realDir ? 1 : 0;
+    return koBetPoints(m.round, _home, _away, m.homeScore!, m.awayScore!);
   }
 
   Future<void> _save() async {
@@ -78,8 +75,9 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Não foi possível salvar: $e')));
+            .showSnackBar(SnackBar(content: Text(l.koSaveError(e.toString()))));
       }
     }
   }
@@ -127,7 +125,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               // Fase
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(koRoundLabel(m.round),
+                child: Text(koRoundLabel(l, m.round),
                     style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w800, color: cs.primary)),
               ),
@@ -147,16 +145,16 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               // Seu palpite
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Seu palpite',
+                child: Text(l.koYourBet,
                     style: TextStyle(
                         fontSize: 13, color: cs.onSurface.withOpacity(0.7))),
               ),
               const SizedBox(height: 8),
               if (_open)
-                _editor(cs)
+                _editor(cs, l)
               else ...[
                 _readonlyBet(cs),
-                if (_lockReason != null) ...[
+                if (_lockReason(l) != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -165,7 +163,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
                           size: 13, color: cs.onSurface.withOpacity(0.5)),
                       const SizedBox(width: 5),
                       Flexible(
-                        child: Text(_lockReason!,
+                        child: Text(_lockReason(l)!,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 11.5,
@@ -210,8 +208,8 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                   color: Colors.red, borderRadius: BorderRadius.circular(4)),
-              child: const Text('AO VIVO',
-                  style: TextStyle(
+              child: Text(AppLocalizations.of(context)!.koLiveBadge,
+                  style: const TextStyle(
                       fontSize: 8, color: Colors.white, fontWeight: FontWeight.w700)),
             ),
           Text('${m.homeScore ?? '-'} - ${m.awayScore ?? '-'}',
@@ -245,7 +243,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
       children: [
         FlagAvatar(flagUrl: team?.flagUrl, radius: 18),
         const SizedBox(height: 4),
-        Text(team?.name ?? fallbackLabel ?? 'A definir',
+        Text(team?.name ?? fallbackLabel ?? AppLocalizations.of(context)!.koTbd,
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
@@ -254,7 +252,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
     );
   }
 
-  Widget _editor(ColorScheme cs) {
+  Widget _editor(ColorScheme cs, AppLocalizations l) {
     return Column(
       children: [
         Row(
@@ -266,6 +264,25 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
             _stepper(_away, (v) => setState(() => _away = v)),
           ],
         ),
+        // Semifinal/Final valem mais: avisa o usuário no editor.
+        if (koIsFinalsRound(m.round)) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.star, size: 13, color: cs.primary),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(l.koFinalsScoringNote,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary)),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 18),
         SizedBox(
           width: double.infinity,
@@ -274,7 +291,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
             child: _saving
                 ? const SizedBox(
                     height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(widget.hasBet ? 'Atualizar palpite' : 'Confirmar palpite'),
+                : Text(widget.hasBet ? l.koUpdateBet : l.koConfirmBet),
           ),
         ),
       ],
@@ -282,12 +299,13 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
   }
 
   Widget _readonlyBet(ColorScheme cs) {
+    final l = AppLocalizations.of(context)!;
     final pts = _points;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          widget.hasBet ? '$_home  –  $_away' : 'Sem palpite',
+          widget.hasBet ? '$_home  –  $_away' : l.koNoBet,
           style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -300,7 +318,7 @@ class _KnockoutMatchSheetState extends ConsumerState<KnockoutMatchSheet> {
             decoration: BoxDecoration(
                 color: (pts > 0 ? cs.primary : cs.outline).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6)),
-            child: Text('+$pts pts',
+            child: Text(l.koPlusPoints(pts),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

@@ -1176,4 +1176,269 @@ class AppLocalizationsIt extends AppLocalizations {
   String generalRankPosition(int rank) {
     return '$rankº in classifica generale';
   }
+
+  @override
+  String get koMenu => 'Eliminazione';
+
+  @override
+  String get koStatsMenu => 'Statistiche Eliminazione';
+
+  @override
+  String koSaveError(String error) {
+    return 'Impossibile salvare: $error';
+  }
+
+  @override
+  String koPlusPoints(int points) {
+    return '+$points pt';
+  }
+
+  @override
+  String get koLockTeamsUndefined =>
+      'Le scommesse aprono quando la sfida è definita.';
+
+  @override
+  String get koLockStarted => 'Partita già iniziata — scommesse chiuse.';
+
+  @override
+  String get koLockClosed30min =>
+      'Scommesse chiuse (chiudono 30 min prima della partita).';
+
+  @override
+  String get koFinalsScoringNote =>
+      'Semifinale e Finale: risultato esatto vale 5 pt · esito corretto 3 pt.';
+
+  @override
+  String get koChampionTitle => 'Pronostico Campione';
+
+  @override
+  String get koChampionSubtitle => 'Chi alza la coppa? Indovinare vale +3 pt.';
+
+  @override
+  String get koChampionCta => 'Scegli campione';
+
+  @override
+  String get koChampionChange => 'Cambia';
+
+  @override
+  String get koChampionEmptyLocked => 'Non hai pronosticato il campione.';
+
+  @override
+  String get koChampionSheetTitle => 'Scegli il campione del Mondiale';
+
+  @override
+  String get koChampionSearchHint => 'Cerca nazionale';
+
+  @override
+  String get koChampionNoResults => 'Nessuna nazionale trovata';
+
+  @override
+  String get helpKoSection => 'Eliminazione';
+
+  @override
+  String get helpKoScoringTitle => 'Punteggio Eliminazione';
+
+  @override
+  String get helpKoScoringDesc =>
+      'Ogni partita vale 3 punti per il risultato esatto e 1 punto per il solo esito corretto. In Semifinale e Finale, il risultato esatto vale 5 punti e l\'esito 3.';
+
+  @override
+  String get helpKoChampionTitle => 'Pronostico Campione';
+
+  @override
+  String get helpKoChampionDesc =>
+      'Prima della prima partita a eliminazione, scegli chi sarà il campione del Mondiale. Se indovini, guadagni 3 punti bonus nella classifica a eliminazione.';
+
+  @override
+  String get helpKoDeadlineTitle => 'Scadenza Eliminazione';
+
+  @override
+  String get helpKoDeadlineDesc =>
+      'Le scommesse di ogni partita a eliminazione possono essere fatte o modificate fino a 30 minuti prima del calcio d\'inizio.';
+
+  @override
+  String get helpKoRankingTitle => 'Classifica Eliminazione';
+
+  @override
+  String get helpKoRankingDesc =>
+      'La fase a eliminazione ha una classifica propria, separata dalla fase a gironi (parte da zero).';
+
+  @override
+  String get koStatsTitle => 'Statistiche Eliminazione';
+
+  @override
+  String get koStatsTabRankings => 'Classifiche';
+
+  @override
+  String get koStatsTabPersonal => 'Personale';
+
+  @override
+  String get koStatPointsTitle => 'Punti Eliminazione';
+
+  @override
+  String get koStatPointsSub => 'Chi ha fatto più punti nell\'eliminazione';
+
+  @override
+  String get koStatPointsUnit => 'pt';
+
+  @override
+  String get koStatExactTitle => 'Re del Risultato Esatto';
+
+  @override
+  String get koStatExactSub => 'Chi ha azzeccato più risultati';
+
+  @override
+  String get koStatExactUnit => 'esatti';
+
+  @override
+  String get koChampionDistTitle => 'Pronostico Campione';
+
+  @override
+  String get koChampionDistSub => 'Le nazionali più scelte';
+
+  @override
+  String get koChampionDistEmpty =>
+      'La distribuzione appare quando inizia l\'eliminazione.';
+
+  @override
+  String get koPersonalTotalPoints => 'Punti eliminazione';
+
+  @override
+  String get koPersonalExacts => 'Risultati esatti';
+
+  @override
+  String get koPersonalDirs => 'Esiti corretti';
+
+  @override
+  String get koPersonalZeros => 'Errori';
+
+  @override
+  String get koPersonalAccuracy => 'Rendimento';
+
+  @override
+  String get koPersonalPlayed => 'Partite con punti';
+
+  @override
+  String get koPersonalChampionBonus => 'Bonus campione';
+
+  @override
+  String get koPersonalEmpty =>
+      'Non hai ancora statistiche nell\'eliminazione.';
+
+  @override
+  String get koChampionStatusNone => 'Non hai pronosticato il campione.';
+
+  @override
+  String get koChampionStatusPending => 'In attesa della finale.';
+
+  @override
+  String get koChampionStatusHit => 'Hai indovinato il campione! 🎉';
+
+  @override
+  String get koChampionStatusMiss => 'Non hai indovinato il campione.';
+
+  @override
+  String get statsScopeGroups => 'Fase a Gironi';
+
+  @override
+  String get statsScopeKnockout => 'Eliminazione';
+
+  @override
+  String get koStatsTabPool => 'Lega';
+
+  @override
+  String get koPoolPopularTitle => 'Risultati più giocati';
+
+  @override
+  String get koPoolPopularSub => 'I risultati più scelti nell\'eliminazione';
+
+  @override
+  String get koPoolUnpredictableTitle => 'Partite più imprevedibili';
+
+  @override
+  String get koPoolUnpredictableSub => 'In pochi hanno azzeccato il risultato';
+
+  @override
+  String get koPoolEveryoneKnewTitle => 'Lo sapevano tutti';
+
+  @override
+  String get koPoolEveryoneKnewSub => 'In molti hanno azzeccato il risultato';
+
+  @override
+  String get koPoolEmpty => 'Dati ancora insufficienti.';
+
+  @override
+  String koPoolExactOf(int exact, int total) {
+    return '$exact su $total hanno azzeccato';
+  }
+
+  @override
+  String get koTbd => 'Da definire';
+
+  @override
+  String get koLiveBadge => 'IN CORSO';
+
+  @override
+  String get koNoBet => 'Nessun pronostico';
+
+  @override
+  String get koYourBet => 'Il tuo pronostico';
+
+  @override
+  String get koUpdateBet => 'Aggiorna pronostico';
+
+  @override
+  String get koConfirmBet => 'Conferma pronostico';
+
+  @override
+  String koBetValue(int home, int away) {
+    return 'Pronostico $home × $away';
+  }
+
+  @override
+  String get koBracketUnavailable => 'Tabellone non ancora disponibile.';
+
+  @override
+  String get koViewBracket => 'Tabellone';
+
+  @override
+  String get koViewList => 'Lista';
+
+  @override
+  String koRoundGamesCount(int count) {
+    return '· $count partite';
+  }
+
+  @override
+  String koLoadError(String message) {
+    return 'Errore nel caricamento: $message';
+  }
+
+  @override
+  String get koLockedTitle => 'Eliminazione bloccata';
+
+  @override
+  String get koLockedDesc =>
+      'Il torneo a eliminazione ha un\'iscrizione propria. Appena confermata, apparirà qui automaticamente.';
+
+  @override
+  String get koThirdPlaceShort => '3º posto';
+
+  @override
+  String get koRound16avos => 'Sedicesimi';
+
+  @override
+  String get koRoundOitavas => 'Ottavi';
+
+  @override
+  String get koRoundQuartas => 'Quarti';
+
+  @override
+  String get koRoundSemis => 'Semifinali';
+
+  @override
+  String get koRoundFinal => 'Finale';
+
+  @override
+  String get koRound3lugar => 'Finale 3º posto';
 }

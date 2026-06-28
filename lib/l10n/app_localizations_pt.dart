@@ -1232,7 +1232,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpKoScoringDesc =>
-      'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3.';
+      'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3. Vale apenas o tempo regular (90 min): prorrogação e pênaltis não contam para o palpite.';
 
   @override
   String get helpKoChampionTitle => 'Palpite de Campeão';

@@ -1240,7 +1240,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get helpKoScoringDesc =>
-      'Ogni partita vale 3 punti per il risultato esatto e 1 punto per il solo esito corretto. In Semifinale e Finale, il risultato esatto vale 5 punti e l\'esito 3.';
+      'Ogni partita vale 3 punti per il risultato esatto e 1 punto per il solo esito corretto. In Semifinale e Finale, il risultato esatto vale 5 punti e l\'esito 3. Conta solo i tempi regolamentari (90 min): supplementari e rigori non valgono per il pronostico.';
 
   @override
   String get helpKoChampionTitle => 'Pronostico Campione';

@@ -178,11 +178,9 @@ class _ChampionCard extends ConsumerWidget {
 
     final pick = ref.watch(koChampionPickProvider).valueOrNull;
     final teams = ref.watch(koAllTeamsProvider).valueOrNull ?? const <TeamModel>[];
-    final firstDate = ref.watch(koFirstMatchDateProvider).valueOrNull;
 
-    // Aberto enquanto não começou o mata-mata (ou ainda sem data definida).
-    final open =
-        firstDate == null || DateTime.now().toUtc().isBefore(firstDate.toUtc());
+    // Aberto até o prazo FINAL do palpite de campeão (29/06 12h BRT = 15:00 UTC).
+    final open = DateTime.now().toUtc().isBefore(kKoChampionPickDeadline);
 
     TeamModel? team;
     if (pick != null) {

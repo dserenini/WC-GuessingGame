@@ -464,7 +464,7 @@
 
   "helpKoSection": "Mata-Mata",
   "helpKoScoringTitle": "Pontuação do Mata-Mata",
-  "helpKoScoringDesc": "Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3.",
+  "helpKoScoringDesc": "Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3. Vale apenas o tempo regular (90 min): prorrogação e pênaltis não contam para o palpite.",
   "helpKoChampionTitle": "Palpite de Campeão",
   "helpKoChampionDesc": "Antes do primeiro jogo do mata-mata, escolha quem será o campeão da Copa. Se acertar, você ganha 3 pontos extras no ranking do mata-mata.",
   "helpKoDeadlineTitle": "Prazo do Mata-Mata",

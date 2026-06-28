@@ -60,8 +60,15 @@ final koChampionPickProvider =
   );
 });
 
-/// Início do mata-mata = data do 1º jogo. É o prazo do palpite de campeão.
-/// null quando ainda não há jogos com data (aí o palpite segue liberado).
+/// Prazo FINAL para escolher/trocar o palpite de campeão (UTC).
+/// Inicialmente era dinâmico (início do 1º jogo do mata-mata), mas foi FIXADO
+/// a pedido em 29/06/2026 12:00 (GMT-3) = 15:00 UTC. Mantido em sincronia com a
+/// trigger ko_champion_deadline() no banco (supabase/knockout_champion_deadline_2906.sql).
+final DateTime kKoChampionPickDeadline = DateTime.utc(2026, 6, 29, 15, 0);
+
+/// Início do mata-mata = data do 1º jogo. (Não é mais o prazo do palpite de
+/// campeão — ver kKoChampionPickDeadline — mas segue disponível p/ outros usos.)
+/// null quando ainda não há jogos com data.
 final koFirstMatchDateProvider =
     FutureProvider.autoDispose<DateTime?>((ref) async {
   final matches = await ref.watch(koMatchesProvider.future);

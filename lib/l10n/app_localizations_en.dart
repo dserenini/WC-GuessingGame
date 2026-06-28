@@ -1224,7 +1224,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpKoScoringDesc =>
-      'Each match is worth 3 points for the exact score and 1 point for the correct result only. In the Semifinal and Final, the exact score is worth 5 points and the result 3.';
+      'Each match is worth 3 points for the exact score and 1 point for the correct result only. In the Semifinal and Final, the exact score is worth 5 points and the result 3. Only regular time (90 min) counts: extra time and penalties do not count for your bet.';
 
   @override
   String get helpKoChampionTitle => 'Champion Pick';

@@ -464,7 +464,7 @@
 
   "helpKoSection": "Knockout",
   "helpKoScoringTitle": "Knockout Scoring",
-  "helpKoScoringDesc": "Each match is worth 3 points for the exact score and 1 point for the correct result only. In the Semifinal and Final, the exact score is worth 5 points and the result 3.",
+  "helpKoScoringDesc": "Each match is worth 3 points for the exact score and 1 point for the correct result only. In the Semifinal and Final, the exact score is worth 5 points and the result 3. Only regular time (90 min) counts: extra time and penalties do not count for your bet.",
   "helpKoChampionTitle": "Champion Pick",
   "helpKoChampionDesc": "Before the first knockout match, pick who will be the World Cup champion. If you're right, you earn 3 bonus points in the knockout ranking.",
   "helpKoDeadlineTitle": "Knockout Deadline",

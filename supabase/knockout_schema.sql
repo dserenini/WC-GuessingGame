@@ -176,15 +176,17 @@ CREATE TRIGGER trg_ko_bet_deadline
 CREATE OR REPLACE FUNCTION ko_champion_deadline()
 RETURNS trigger LANGUAGE plpgsql
 SET search_path = public, pg_temp AS $$
-DECLARE first_ko timestamptz;
+DECLARE
+  -- Prazo FIXO: 29/06/2026 12:00 GMT-3 = 15:00 UTC (antes era min(match_date)).
+  -- Espelha kKoChampionPickDeadline no app. Ver knockout_champion_deadline_2906.sql.
+  CHAMPION_DEADLINE timestamptz := '2026-06-29 15:00:00+00';
 BEGIN
   IF is_admin() THEN RETURN NEW; END IF;
   IF TG_OP = 'UPDATE' AND NEW.team_id = OLD.team_id THEN
     RETURN NEW;
   END IF;
-  SELECT min(match_date) INTO first_ko FROM ko_match WHERE match_date IS NOT NULL;
-  IF first_ko IS NOT NULL AND now() >= first_ko THEN
-    RAISE EXCEPTION 'Palpite de campeão encerrado (fecha no início do mata-mata).';
+  IF now() >= CHAMPION_DEADLINE THEN
+    RAISE EXCEPTION 'Palpite de campeão encerrado (fecha 29/06 às 12h, horário de Brasília).';
   END IF;
   RETURN NEW;
 END;

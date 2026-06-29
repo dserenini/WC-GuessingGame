@@ -4,6 +4,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:copa2026/core/constants.dart';
+import 'package:copa2026/core/supabase_config.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/shared/providers/locale_provider.dart';
 import 'package:copa2026/shared/utils/error_messages.dart';
@@ -278,7 +279,10 @@ class _LoginForm extends StatelessWidget {
               if (email.isEmpty || !email.contains('@')) return;
               
               try {
-                await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                await Supabase.instance.client.auth.resetPasswordForEmail(
+                  email,
+                  redirectTo: authRedirectTo('/update-password'),
+                );
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(

@@ -25,6 +25,14 @@ void main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
+      // Fluxo implícito (em vez do PKCE default): os links de confirmação de
+      // e-mail e reset de senha funcionam mesmo quando abertos em um
+      // dispositivo/navegador diferente do que iniciou o cadastro — o PKCE
+      // exige o code_verifier guardado no device de origem, o que causava o
+      // "às vezes não dá pra confirmar". Ver helper authRedirectTo().
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.implicit,
+      ),
       realtimeClientOptions: const RealtimeClientOptions(
         logLevel: RealtimeLogLevel.info,
       ),

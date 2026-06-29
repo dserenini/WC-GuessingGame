@@ -1327,6 +1327,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsScopeKnockout => 'Knockout';
 
   @override
+  String get groupStageClosed => 'Group stage closed';
+
+  @override
   String get koStatsTabPool => 'Pool';
 
   @override

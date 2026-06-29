@@ -9,10 +9,13 @@ import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/ranking/screens/ranking_screen.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/screens/knockout_match_bets_screen.dart';
 import 'package:copa2026/features/leagues/screens/league_ranking_export_screen.dart';
 import 'package:copa2026/features/leagues/screens/league_match_bets_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/widgets/group_stage_closed.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 class LeaguesScreen extends ConsumerWidget {
@@ -23,14 +26,14 @@ class LeaguesScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final leaguesAsync = ref.watch(myLeaguesProvider);
 
-    // Mata-Mata nas Ligas segue o MESMO critério do Ranking: só p/ participantes
-    // (knockoutVisibleProvider = master ligado E knockout_unlocked OU admin),
-    // default a partir de kKoRankingDefaultFrom (29/06 15:00 GMT+0).
-    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
-    final koIsDefault =
-        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
-    final showKo =
-        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
+    // Mata-Mata nas Ligas segue o MESMO critério do Ranking, dirigido pela fase
+    // do torneio (lógica centralizada em knockout_provider).
+    final showToggle = ref.watch(rankingShowToggleProvider);
+    final showKo = ref.watch(rankingShowKoProvider);
+    final groupClosed = ref.watch(groupStageClosedProvider);
+    // Quem não participa da fase de grupos não pode escolher a visão de grupos.
+    final groupParticipant =
+        ref.watch(groupParticipantProvider).valueOrNull ?? true;
 
     return Scaffold(
       appBar: AppBar(
@@ -54,16 +57,22 @@ class LeaguesScreen extends ConsumerWidget {
         label: Text(l.joinOrCreate),
         icon: const Icon(Icons.add),
       ),
-      body: Column(
+      body: groupClosed
+          ? const GroupStageClosed()
+          : Column(
         children: [
-          if (iParticipate)
+          if (showToggle)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: SegmentedButton<bool>(
                 showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: true, label: Text('Mata-Mata')),
-                  ButtonSegment(value: false, label: Text('Fase de Grupos')),
+                segments: [
+                  ButtonSegment(value: true, label: Text(l.statsScopeKnockout)),
+                  ButtonSegment(
+                    value: false,
+                    label: Text(l.statsScopeGroups),
+                    enabled: groupParticipant,
+                  ),
                 ],
                 selected: {showKo},
                 onSelectionChanged: (s) => ref
@@ -149,12 +158,7 @@ class _LeagueCard extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TextButton.icon(
               onPressed: () {
-                final iParticipate =
-                    ref.read(knockoutVisibleProvider).valueOrNull ?? false;
-                final koIsDefault = iParticipate &&
-                    DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
-                final showKo = iParticipate &&
-                    (ref.read(rankingViewKnockoutProvider) ?? koIsDefault);
+                final showKo = ref.read(rankingShowKoProvider);
                 final entries = (showKo
                         ? ref.read(koLeagueRankingProvider(league.id))
                         : ref.read(myLeaguesRankingProvider(league.id)))
@@ -237,11 +241,7 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
-    final koIsDefault =
-        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
-    final showKo =
-        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
+    final showKo = ref.watch(rankingShowKoProvider);
     final rankAsync = showKo
         ? ref.watch(koLeagueRankingProvider(widget.leagueId))
         : ref.watch(myLeaguesRankingProvider(widget.leagueId));
@@ -273,7 +273,8 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
           children: [
             // "Ver apostas": comparativo de palpites por jogo dentro da liga.
             // Só após o prazo global (ninguém espia antes do fim das apostas).
-            if (isBettingLocked)
+            // Mata-mata: sempre (revelação por jogo). Grupos: só após o prazo.
+            if (showKo || isBettingLocked)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                 child: SizedBox(
@@ -281,10 +282,13 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => LeagueMatchBetsScreen(
-                          leagueId: widget.leagueId,
-                          leagueName: widget.leagueName,
-                        ),
+                        builder: (_) => showKo
+                            ? KnockoutMatchBetsScreen(
+                                title: widget.leagueName, members: entries)
+                            : LeagueMatchBetsScreen(
+                                leagueId: widget.leagueId,
+                                leagueName: widget.leagueName,
+                              ),
                       ),
                     ),
                     icon: const Icon(Icons.scoreboard_outlined, size: 18),
@@ -328,6 +332,7 @@ class _LeagueRankingListState extends ConsumerState<_LeagueRankingList> {
               return RankingTile(
                 entry: entry,
                 isMe: entry.userId == currentUid,
+                knockout: showKo,
                 l: l,
                 subtitle: generalRank != null
                     ? l.generalRankPosition(generalRank)

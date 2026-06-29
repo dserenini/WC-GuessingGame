@@ -7,6 +7,7 @@ import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 
@@ -21,6 +22,13 @@ class AppDrawer extends ConsumerWidget {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isAdmin = kAdminUids.contains(currentUser?.id);
     final knockoutOn = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    // Dados de grupos visíveis? (fases groups + mixed). Na fase knockout, some
+    // tudo de grupos: Apostas A–L, Conquistas e o link de stats de grupos.
+    final groupOn = ref.watch(groupStageVisibleProvider).valueOrNull ?? true;
+    // Participa da fase de grupos? Se não (usuário só do mata-mata), os itens de
+    // grupos aparecem INATIVOS (não clicáveis) em vez de sumir.
+    final groupParticipant =
+        ref.watch(groupParticipantProvider).valueOrNull ?? true;
 
     final allMatches = ref.watch(allMatchesProvider).valueOrNull ?? [];
     final allBets = ref.watch(allBetsProvider).valueOrNull ?? {};
@@ -98,24 +106,46 @@ class AppDrawer extends ConsumerWidget {
                       context.go('/profile');
                     },
                   ),
-                  _DrawerItem(
-                    icon: '🏅',
-                    label: l.statsTabAchievements,
-                    selected: currentPath == '/achievements',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go('/achievements');
-                    },
-                  ),
-                  // Estatísticas Avançadas: para inscritos no mata-mata vira um
-                  // submenu (Fase de Grupos / Mata-Mata); para os demais, link direto.
-                  if (knockoutOn)
-                    _StatsExpansion(currentPath: currentPath, l: l)
-                  else
+                  // Conquistas: dados da fase de grupos → some na fase knockout;
+                  // inativo p/ quem não participa dos grupos.
+                  if (groupOn)
+                    _DrawerItem(
+                      icon: '🏅',
+                      label: l.statsTabAchievements,
+                      selected: currentPath == '/achievements',
+                      enabled: groupParticipant,
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/achievements');
+                      },
+                    ),
+                  // Estatísticas Avançadas, dirigido pela fase:
+                  //   • mixed (grupos + KO)   → submenu (Fase de Grupos / Mata-Mata)
+                  //   • knockout (só KO)      → link direto p/ stats do mata-mata
+                  //   • groups (só grupos)    → link direto p/ stats de grupos
+                  //   • sem KO e fora de grupos → oculto (nada a mostrar)
+                  if (knockoutOn && groupOn)
+                    _StatsExpansion(
+                      currentPath: currentPath,
+                      l: l,
+                      groupEnabled: groupParticipant,
+                    )
+                  else if (knockoutOn)
+                    _DrawerItem(
+                      icon: '📊',
+                      label: l.advancedStats,
+                      selected: currentPath == '/knockout-stats',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/knockout-stats');
+                      },
+                    )
+                  else if (groupOn)
                     _DrawerItem(
                       icon: '📊',
                       label: l.advancedStats,
                       selected: currentPath == '/stats',
+                      enabled: groupParticipant,
                       onTap: () {
                         Navigator.pop(context);
                         context.go('/stats');
@@ -150,12 +180,22 @@ class AppDrawer extends ConsumerWidget {
                       },
                     ),
                   // ── Apostas → Grupos A–L (colapsável) ──
-                  _BetsGroup(
-                    currentPath: currentPath,
-                    allMatches: allMatches,
-                    allBets: allBets,
-                    l: l,
-                  ),
+                  // Dados da fase de grupos → some na fase knockout; inativo
+                  // (sem expandir) p/ quem não participa dos grupos.
+                  if (groupOn)
+                    groupParticipant
+                        ? _BetsGroup(
+                            currentPath: currentPath,
+                            allMatches: allMatches,
+                            allBets: allBets,
+                            l: l,
+                          )
+                        : _DrawerItem(
+                            icon: '🎯',
+                            label: l.bets,
+                            enabled: false,
+                            onTap: () {},
+                          ),
                 ],
               ),
             ),
@@ -303,8 +343,13 @@ class _BetsGroup extends StatelessWidget {
 class _StatsExpansion extends StatelessWidget {
   final String currentPath;
   final AppLocalizations l;
+  final bool groupEnabled;
 
-  const _StatsExpansion({required this.currentPath, required this.l});
+  const _StatsExpansion({
+    required this.currentPath,
+    required this.l,
+    this.groupEnabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -336,6 +381,7 @@ class _StatsExpansion extends StatelessWidget {
               icon: '🎯',
               label: l.statsScopeGroups,
               selected: currentPath == '/stats',
+              enabled: groupEnabled,
               onTap: () {
                 Navigator.pop(context);
                 context.go('/stats');
@@ -362,6 +408,7 @@ class _DrawerItem extends StatelessWidget {
   final String label;
   final bool selected;
   final Widget? trailing;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _DrawerItem({
@@ -369,6 +416,7 @@ class _DrawerItem extends StatelessWidget {
     required this.label,
     this.selected = false,
     this.trailing,
+    this.enabled = true,
     required this.onTap,
   });
 
@@ -380,6 +428,8 @@ class _DrawerItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       child: ListTile(
         dense: true,
+        // enabled=false acinzenta o item e ignora o toque (ListTile cuida disso).
+        enabled: enabled,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         selected: selected,
         selectedTileColor: cs.primary.withOpacity(0.1),
@@ -395,7 +445,7 @@ class _DrawerItem extends StatelessWidget {
           ),
         ),
         trailing: trailing,
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
       ),
     );
   }

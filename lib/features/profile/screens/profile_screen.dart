@@ -8,6 +8,9 @@ import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/profile/providers/profile_stats_provider.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/groups/providers/group_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/models/knockout_models.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
@@ -97,6 +100,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(profileStatsProvider);
     final cs = Theme.of(context).colorScheme;
+    // Segregação de fases na Home: na fase knockout, os cards da fase de grupos
+    // (jogos do dia, pontos, super palpites) somem. Participantes do mata-mata
+    // veem um atalho para o KO; os demais veem "Fase de grupos encerrada".
+    final groupOn = ref.watch(groupStageVisibleProvider).valueOrNull ?? true;
+    final koVisible = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    // Participação na fase de grupos (independente da fase). Quem não participou
+    // não vê os cards/Super Palpite de grupos, mesmo na fase mista.
+    final groupParticipant =
+        ref.watch(groupParticipantProvider).valueOrNull ?? true;
 
     // Pop a celebration on the home screen when new achievements unlock.
     ref.listen(achievementSyncProvider, (prev, next) {
@@ -165,19 +177,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _ProfileHeader(stats: stats),
                 const SizedBox(height: 24),
 
-                // ── Matches of the Day ────────────────────
-                // (substitui o card "Apostas Preenchidas" agora que a fase de
-                //  apostas terminou; _BetProgressCard fica preservado abaixo
-                //  para reuso futuro.)
+                // ── Jogos do dia ──────────────────────────
+                // Independente da fase: reflete os jogos do dia da FASE DE
+                // GRUPOS e do MATA-MATA juntos. Cada card leva ao destino certo
+                // (grupo ou aba do mata-mata).
                 const _TodayMatchesSection(),
 
-                // ── Points Card ───────────────────────────
-                _PointsCard(stats: stats, l: l),
-                const SizedBox(height: 24),
+                // ── Pontos por fase ───────────────────────
+                // Grupos → só pontos de grupos; Mista → grupos + mata-mata;
+                // Mata-Mata → só pontos do mata-mata. Cada um respeita também a
+                // participação do usuário na fase respectiva.
+                if (groupOn && groupParticipant) ...[
+                  _PointsCard(stats: stats, l: l),
+                  const SizedBox(height: 24),
+                ],
+                if (koVisible) ...[
+                  _KoPointsCard(l: l),
+                  const SizedBox(height: 24),
+                ],
 
-                // ── Super Palpite Card ─────────────────────────
-                _SuperPalpiteCard(stats: stats, l: l),
-                const SizedBox(height: 24),
+                // ── Super Palpite: só na fase de grupos e p/ participante ──
+                // (removido nas fases que não mostram grupos, ex.: Mata-Mata).
+                if (groupOn && groupParticipant) ...[
+                  _SuperPalpiteCard(stats: stats, l: l),
+                  const SizedBox(height: 24),
+                ],
               ],
             ),
           ),
@@ -262,6 +286,87 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
+// KO POINTS CARD — pontos do MATA-MATA na Home (espelha o card de Pontos da
+// fase de grupos). Toque abre a aba do mata-mata.
+// ─────────────────────────────────────────────
+class _KoPointsCard extends ConsumerWidget {
+  final AppLocalizations l;
+  const _KoPointsCard({required this.l});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final points = ref.watch(myKoPointsProvider).valueOrNull ?? 0;
+    final exact = ref.watch(myKoExactHitsProvider).valueOrNull ?? 0;
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.go('/knockout'),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text('⚔️', style: TextStyle(fontSize: 18)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${l.totalPoints} · ${l.koMenu}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [kPrimaryGreen, kPrimaryGreenLight],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$points',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _StatTile(
+                icon: '🎯',
+                label: l.exactHits,
+                value: '$exact',
+                subtitle: l.koMenu,
+                color: kGold,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
 // MATCHES OF THE DAY
 // ─────────────────────────────────────────────
 /// Date-only (year/month/day) in the user's timezone, used to group matches by
@@ -310,30 +415,56 @@ class _TodayMatchesSectionState extends ConsumerState<_TodayMatchesSection> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final offset = ref.watch(timezoneProvider);
-    final bets = ref.watch(allBetsProvider).valueOrNull ?? {};
+    final groupBets =
+        ref.watch(allBetsProvider).valueOrNull ?? const <String, BetModel>{};
+    final groupMatches =
+        ref.watch(allMatchesProvider).valueOrNull ?? const <MatchModel>[];
+    final koMatches =
+        ref.watch(koMatchesProvider).valueOrNull ?? const <KoMatch>[];
+    final koBets =
+        ref.watch(koMyBetsProvider).valueOrNull ?? const <String, (int, int)>{};
 
-    final all = ref.watch(allMatchesProvider).valueOrNull ?? const [];
-    final dated = all.where((m) => m.matchDate != null).toList();
-    if (dated.isEmpty) return const SizedBox.shrink();
+    // "Jogos do dia" segue a FASE do torneio (igual ao resto do app):
+    //   • grupos entram nas fases Grupos/Mista (groupStageVisible);
+    //   • mata-mata entra nas fases Mista/Mata-Mata, e só p/ quem participa
+    //     (knockoutVisible — mesmo gate do menu/telas do KO).
+    // Como os dias do calendário derivam destas entradas, o filtro por data
+    // também fica restrito aos jogos da fase atual.
+    final groupOn = ref.watch(groupStageVisibleProvider).valueOrNull ?? true;
+    final koOn = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
 
-    // Distinct matchdays (for the picker) and the default = current tournament
-    // day, falling back to the last matchday once the tournament is over.
-    final matchDays = <DateTime>{
-      for (final m in dated) _localDate(m.matchDate!, offset)
-    }.toList()
-      ..sort();
-    // Default = current tournament day (the next day with games, in the user's
-    // timezone), falling back to the last matchday once the tournament is over.
-    final todays = ref.watch(matchesOfDayProvider);
-    final defaultDay = todays.isNotEmpty && todays.first.matchDate != null
-        ? _localDate(todays.first.matchDate!, offset)
-        : matchDays.last;
+    final entries = <({DateTime date, _DayMatch dm})>[];
+    if (groupOn) {
+      for (final m in groupMatches) {
+        if (m.matchDate == null) continue;
+        entries.add((
+          date: _localDate(m.matchDate!, offset),
+          dm: _DayMatch.fromGroup(m, groupBets[m.id]),
+        ));
+      }
+    }
+    if (koOn) {
+      for (final m in koMatches) {
+        if (m.matchDate == null) continue;
+        entries.add((
+          date: _localDate(m.matchDate!, offset),
+          dm: _DayMatch.fromKo(m, koBets[m.id]),
+        ));
+      }
+    }
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    // Dias com jogos (para o seletor) e o default = primeiro dia com jogos a
+    // partir de hoje (fuso do usuário); se o torneio acabou, o último dia.
+    final matchDays = entries.map((e) => e.date).toSet().toList()..sort();
+    final today = _localDate(DateTime.now().toUtc(), offset);
+    final defaultDay = matchDays.firstWhere((d) => !d.isBefore(today),
+        orElse: () => matchDays.last);
     final day = _selectedDay ?? defaultDay;
 
-    final shown = dated
-        .where((m) => _localDate(m.matchDate!, offset) == day)
-        .toList()
-      ..sort((a, b) => a.matchDate!.compareTo(b.matchDate!));
+    final shown = entries.where((e) => e.date == day).map((e) => e.dm).toList()
+      ..sort((a, b) =>
+          (a.kickoff ?? DateTime(0)).compareTo(b.kickoff ?? DateTime(0)));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,30 +518,127 @@ class _TodayMatchesSectionState extends ConsumerState<_TodayMatchesSection> {
           ),
         ),
         // Coluna única de cards full-width (mesma largura de Pontos/Super).
-        ...shown.map((m) => _MatchOfDayCard(
-              match: m,
-              bet: bets[m.id],
-              offset: offset,
-            )),
+        ...shown.map((dm) => _MatchOfDayCard(dm: dm, offset: offset)),
         const SizedBox(height: 8),
       ],
     );
   }
 }
 
+// View-model unificado de um "jogo do dia": vale para a fase de grupos OU para
+// o mata-mata. Normaliza ambos para o card renderizar igual e rotear ao destino
+// certo (grupo vs aba do mata-mata).
+class _DayMatch {
+  final String idLabel;
+  final MatchStatus status;
+  final DateTime? kickoff;
+  final String homeName;
+  final String? homeFlag;
+  final String awayName;
+  final String? awayFlag;
+  final int? homeScore;
+  final int? awayScore;
+  final int? homePens; // só mata-mata
+  final int? awayPens;
+  final int? betHome;
+  final int? betAway;
+  final int? points;
+  final bool isPartial;
+  final String routeTarget;
+
+  const _DayMatch({
+    required this.idLabel,
+    required this.status,
+    required this.kickoff,
+    required this.homeName,
+    required this.homeFlag,
+    required this.awayName,
+    required this.awayFlag,
+    required this.homeScore,
+    required this.awayScore,
+    required this.homePens,
+    required this.awayPens,
+    required this.betHome,
+    required this.betAway,
+    required this.points,
+    required this.isPartial,
+    required this.routeTarget,
+  });
+
+  factory _DayMatch.fromGroup(MatchModel m, BetModel? bet) {
+    final hasReal = (m.status == MatchStatus.live ||
+            m.status == MatchStatus.finished) &&
+        m.homeScore != null &&
+        m.awayScore != null;
+    int? pts;
+    if (bet != null && hasReal) {
+      pts = m.status == MatchStatus.finished
+          ? bet.points
+          : computeBetPoints(
+              homeBet: bet.homeScoreBet,
+              awayBet: bet.awayScoreBet,
+              homeReal: m.homeScore!,
+              awayReal: m.awayScore!,
+            );
+    }
+    return _DayMatch(
+      idLabel: '#${m.apiMatchId ?? m.id.substring(0, 4)}',
+      status: m.status,
+      kickoff: m.matchDate,
+      homeName: m.homeTeam.name,
+      homeFlag: m.homeTeam.flagUrl,
+      awayName: m.awayTeam.name,
+      awayFlag: m.awayTeam.flagUrl,
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      homePens: null,
+      awayPens: null,
+      betHome: bet?.homeScoreBet,
+      betAway: bet?.awayScoreBet,
+      points: pts,
+      isPartial: m.status == MatchStatus.live,
+      routeTarget: '/groups/${m.groupLetter}',
+    );
+  }
+
+  factory _DayMatch.fromKo(KoMatch m, (int, int)? bet) {
+    final hasReal = (m.status == MatchStatus.live ||
+            m.status == MatchStatus.finished) &&
+        m.homeScore != null &&
+        m.awayScore != null;
+    int? pts;
+    if (bet != null && hasReal) {
+      pts = koBetPoints(m.round, bet.$1, bet.$2, m.homeScore!, m.awayScore!);
+    }
+    return _DayMatch(
+      idLabel: m.gameNoLabel,
+      status: m.status,
+      kickoff: m.matchDate,
+      homeName: m.homeText,
+      homeFlag: m.home?.flagUrl,
+      awayName: m.awayText,
+      awayFlag: m.away?.flagUrl,
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      homePens: m.homePens,
+      awayPens: m.awayPens,
+      betHome: bet?.$1,
+      betAway: bet?.$2,
+      points: pts,
+      isPartial: m.status == MatchStatus.live,
+      routeTarget: '/knockout',
+    );
+  }
+}
+
 // Card de jogo no estilo da aba de Grupos (agendado → caixas de placar com o
 // palpite) e do Perfil Visitante (ao vivo/encerrado → placar real + rodapé com
-// o palpite e os pontos). Somente leitura; toque abre o grupo.
+// o palpite e os pontos). Somente leitura; toque abre o grupo ou o mata-mata.
 class _MatchOfDayCard extends StatelessWidget {
-  final MatchModel match;
-  final BetModel? bet;
+  final _DayMatch dm;
   final Duration offset;
 
-  const _MatchOfDayCard({
-    required this.match,
-    required this.bet,
-    required this.offset,
-  });
+  const _MatchOfDayCard({required this.dm, required this.offset});
 
   String _formatTime(DateTime d, Duration offset) {
     final t = d.toUtc().add(offset);
@@ -424,29 +652,17 @@ class _MatchOfDayCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final isScheduled = match.status == MatchStatus.scheduled;
-    final hasRealScore = (match.status == MatchStatus.live ||
-            match.status == MatchStatus.finished) &&
-        match.homeScore != null &&
-        match.awayScore != null;
-    final isPartial = match.status == MatchStatus.live;
-
-    int? points;
-    if (bet != null && hasRealScore) {
-      points = match.status == MatchStatus.finished
-          ? bet!.points
-          : computeBetPoints(
-              homeBet: bet!.homeScoreBet,
-              awayBet: bet!.awayScoreBet,
-              homeReal: match.homeScore!,
-              awayReal: match.awayScore!,
-            );
-    }
+    final isScheduled = dm.status == MatchStatus.scheduled;
+    final hasRealScore = (dm.status == MatchStatus.live ||
+            dm.status == MatchStatus.finished) &&
+        dm.homeScore != null &&
+        dm.awayScore != null;
+    final hasPens = dm.homePens != null && dm.awayPens != null;
 
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.go('/groups/${match.groupLetter}'),
+        onTap: () => context.go(dm.routeTarget),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: Column(
@@ -455,18 +671,18 @@ class _MatchOfDayCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '#${match.apiMatchId ?? match.id.substring(0, 4)}',
+                    dm.idLabel,
                     style: tt.labelSmall?.copyWith(
                       color: cs.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _MatchStatusChip(status: match.status, l: l),
+                  _MatchStatusChip(status: dm.status, l: l),
                   const Spacer(),
-                  if (isScheduled && match.matchDate != null)
+                  if (isScheduled && dm.kickoff != null)
                     Text(
-                      _formatTime(match.matchDate!, offset),
+                      _formatTime(dm.kickoff!, offset),
                       style: tt.labelSmall?.copyWith(
                         color: cs.onSurface.withOpacity(0.5),
                         fontWeight: FontWeight.w600,
@@ -479,24 +695,35 @@ class _MatchOfDayCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _TeamCol(
-                      name: match.homeTeam.name,
-                      flagUrl: match.homeTeam.flagUrl,
-                    ),
+                    child: _TeamCol(name: dm.homeName, flagUrl: dm.homeFlag),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: hasRealScore
-                        ? Text(
-                            '${match.homeScore} - ${match.awayScore}',
-                            style: tt.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${dm.homeScore} - ${dm.awayScore}',
+                                style: tt.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              // Pênaltis (só mata-mata): "(4 - 3)" abaixo do placar.
+                              if (hasPens)
+                                Text(
+                                  '(${dm.homePens} - ${dm.awayPens})',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSurface.withOpacity(0.6),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                            ],
                           )
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _ReadOnlyScoreBox(value: bet?.homeScoreBet),
+                              _ReadOnlyScoreBox(value: dm.betHome),
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8),
@@ -508,15 +735,12 @@ class _MatchOfDayCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              _ReadOnlyScoreBox(value: bet?.awayScoreBet),
+                              _ReadOnlyScoreBox(value: dm.betAway),
                             ],
                           ),
                   ),
                   Expanded(
-                    child: _TeamCol(
-                      name: match.awayTeam.name,
-                      flagUrl: match.awayTeam.flagUrl,
-                    ),
+                    child: _TeamCol(name: dm.awayName, flagUrl: dm.awayFlag),
                   ),
                 ],
               ),
@@ -529,15 +753,15 @@ class _MatchOfDayCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      bet != null
-                          ? '${bet!.homeScoreBet} - ${bet!.awayScoreBet}'
+                      (dm.betHome != null && dm.betAway != null)
+                          ? '${dm.betHome} - ${dm.betAway}'
                           : '—',
                       style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                     ),
-                    if (points != null) ...[
+                    if (dm.points != null) ...[
                       const SizedBox(width: 8),
                       _MatchPointsBadge(
-                          points: points, isPartial: isPartial, l: l),
+                          points: dm.points!, isPartial: dm.isPartial, l: l),
                     ],
                   ],
                 ),

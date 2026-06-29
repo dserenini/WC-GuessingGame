@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
 import 'package:copa2026/shared/providers/timezone_provider.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 class HelpScreen extends ConsumerWidget {
   const HelpScreen({super.key});
@@ -19,6 +20,8 @@ class HelpScreen extends ConsumerWidget {
     final gmtStr = 'GMT${offset.inHours >= 0 ? '+' : ''}${offset.inHours}';
     // Regras do mata-mata só para quem tem acesso (inscrição confirmada).
     final koVisible = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
+    // Regras da fase de grupos: somem na fase knockout (segregação de fases).
+    final groupOn = ref.watch(groupStageVisibleProvider).valueOrNull ?? true;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -30,56 +33,59 @@ class HelpScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          _buildRuleCard(
-            context,
-            icon: Icons.emoji_events,
-            title: l10n.prizesTitle,
-            description: l10n.prizesCardDesc,
-            color: Colors.amber.shade700,
-            onTap: () => context.push('/prizes'),
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.scoreboard,
-            title: l10n.helpScoring,
-            description: l10n.helpScoringDesc,
-            color: Colors.green,
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.balance,
-            title: l10n.helpTiebreakTitle,
-            description: l10n.helpTiebreakDesc,
-            color: Colors.teal,
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.timer,
-            title: l10n.helpDeadlines,
-            description: l10n.helpDeadlinesDesc(dateStr, gmtStr),
-            color: Colors.redAccent,
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.star,
-            title: l10n.helpSuperPalpites,
-            description: l10n.helpSuperPalpitesDesc,
-            color: Colors.amber,
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.casino,
-            title: l10n.helpAgentOfChaosTitle,
-            description: l10n.helpAgentOfChaosDesc,
-            color: Colors.purpleAccent,
-          ),
-          _buildRuleCard(
-            context,
-            icon: Icons.bolt,
-            title: l10n.helpEasyBetTitle,
-            description: l10n.helpEasyBetDesc,
-            color: Colors.deepOrangeAccent,
-          ),
+          // ── Regras da Fase de Grupos (somem na fase knockout) ──
+          if (groupOn) ...[
+            _buildRuleCard(
+              context,
+              icon: Icons.emoji_events,
+              title: l10n.prizesTitle,
+              description: l10n.prizesCardDesc,
+              color: Colors.amber.shade700,
+              onTap: () => context.push('/prizes'),
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.scoreboard,
+              title: l10n.helpScoring,
+              description: l10n.helpScoringDesc,
+              color: Colors.green,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.balance,
+              title: l10n.helpTiebreakTitle,
+              description: l10n.helpTiebreakDesc,
+              color: Colors.teal,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.timer,
+              title: l10n.helpDeadlines,
+              description: l10n.helpDeadlinesDesc(dateStr, gmtStr),
+              color: Colors.redAccent,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.star,
+              title: l10n.helpSuperPalpites,
+              description: l10n.helpSuperPalpitesDesc,
+              color: Colors.amber,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.casino,
+              title: l10n.helpAgentOfChaosTitle,
+              description: l10n.helpAgentOfChaosDesc,
+              color: Colors.purpleAccent,
+            ),
+            _buildRuleCard(
+              context,
+              icon: Icons.bolt,
+              title: l10n.helpEasyBetTitle,
+              description: l10n.helpEasyBetDesc,
+              color: Colors.deepOrangeAccent,
+            ),
+          ],
           _buildRuleCard(
             context,
             icon: Icons.group,

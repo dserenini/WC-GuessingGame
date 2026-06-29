@@ -499,6 +499,7 @@
 
   "statsScopeGroups": "Group Stage",
   "statsScopeKnockout": "Knockout",
+  "groupStageClosed": "Group stage closed",
 
   "koStatsTabPool": "Pool",
   "koPoolPopularTitle": "Most-bet scores",

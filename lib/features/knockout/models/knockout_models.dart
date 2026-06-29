@@ -45,6 +45,21 @@ int koBetPoints(String round, int betHome, int betAway, int realHome, int realAw
   return 0;
 }
 
+/// O palpite de KO de um jogo já pode ser REVELADO aos outros? Mesmo critério do
+/// fechamento da aposta: 30 min antes do jogo, ao vivo ou encerrado. Espelha a
+/// RLS `ko_bet_read` (supabase/ko_bet_reveal_30min.sql) — antes disso o palpite
+/// alheio fica oculto para evitar cópia.
+bool koMatchRevealed(KoMatch m) {
+  if (m.status == MatchStatus.finished || m.status == MatchStatus.live) {
+    return true;
+  }
+  final d = m.matchDate;
+  if (d == null) return false;
+  return DateTime.now()
+      .toUtc()
+      .isAfter(d.toUtc().subtract(const Duration(minutes: 30)));
+}
+
 /// Um jogo do mata-mata (com a árvore do chaveamento via slot/round).
 class KoMatch {
   final String id;

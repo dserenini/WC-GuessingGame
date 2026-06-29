@@ -9,9 +9,13 @@ import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/screens/knockout_visitor_screen.dart';
+import 'package:copa2026/features/knockout/screens/knockout_match_bets_screen.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/features/leagues/screens/league_match_bets_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/shared/widgets/app_drawer.dart';
+import 'package:copa2026/shared/widgets/group_stage_closed.dart';
 import 'package:copa2026/features/notifications/widgets/notification_bell.dart';
 
 /// Escopo do Ranking Geral: tabela acumulada ("Geral") ou recortada por rodada
@@ -71,15 +75,19 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
     // assinada mesmo fora do escopo Geral para o botão responder de primeira.
     final allParticipants = ref.watch(rankingProvider).valueOrNull;
 
-    // O Mata-Mata no Ranking (toggle + view) só existe para quem PARTICIPA
-    // (knockoutVisibleProvider = master ligado E knockout_unlocked OU admin).
-    // Vira o PADRÃO a partir de kKoRankingDefaultFrom (29/06 15:00 GMT+0); antes
-    // disso, o participante abre na fase de grupos. Não-participante nunca vê.
-    final iParticipate = ref.watch(knockoutVisibleProvider).valueOrNull ?? false;
-    final koIsDefault =
-        iParticipate && DateTime.now().toUtc().isAfter(kKoRankingDefaultFrom);
-    final showKo =
-        iParticipate && (ref.watch(rankingViewKnockoutProvider) ?? koIsDefault);
+    // A view do Ranking é dirigida pela FASE do torneio (lógica centralizada em
+    // knockout_provider para Ranking e Ligas ficarem em sincronia):
+    //   • groups   → só Fase de Grupos, sem toggle.
+    //   • mixed    → toggle Grupos/Mata-Mata p/ quem participa do KO; default
+    //                Grupos. Quem não participa vê só Grupos.
+    //   • knockout → só Mata-Mata p/ quem participa. Quem NÃO participa (sem
+    //                inscrição no KO) vê "Fase de grupos encerrada".
+    final showToggle = ref.watch(rankingShowToggleProvider);
+    final showKo = ref.watch(rankingShowKoProvider);
+    final groupClosed = ref.watch(groupStageClosedProvider);
+    // Quem não participa da fase de grupos não pode escolher a visão de grupos.
+    final groupParticipant =
+        ref.watch(groupParticipantProvider).valueOrNull ?? true;
 
     // Mata-Mata: ranking zerado (koUserRankingProvider). Fase de grupos: "Geral"
     // usa a view acumulada (user_rankings); rodadas usam user_round_rankings.
@@ -109,7 +117,9 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           // participantes. Só após o prazo global (ninguém espia antes do fim
           // das apostas), igual às ligas privadas. Destacado em verde para
           // chamar atenção (ícone preenchido + fundo tonal).
-          if (isBettingLocked)
+          // Mata-mata: sempre disponível (revelação por jogo). Grupos: só após o
+          // prazo global. Abre a comparação de palpites da fase respectiva.
+          if (showKo || isBettingLocked)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: IconButton(
@@ -120,6 +130,20 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () {
+                  if (showKo) {
+                    final ko = ref.read(koUserRankingProvider).valueOrNull;
+                    if (ko == null || ko.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l.waitDataLoad)),
+                      );
+                      return;
+                    }
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) =>
+                          KnockoutMatchBetsScreen(title: l.ranking, members: ko),
+                    ));
+                    return;
+                  }
                   if (allParticipants == null || allParticipants.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l.waitDataLoad)),
@@ -150,16 +174,22 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         ],
       ),
       drawer: const AppDrawer(),
-      body: Column(
+      body: groupClosed
+          ? const GroupStageClosed()
+          : Column(
         children: [
-          if (iParticipate)
+          if (showToggle)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: SegmentedButton<bool>(
                 showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: true, label: Text('Mata-Mata')),
-                  ButtonSegment(value: false, label: Text('Fase de Grupos')),
+                segments: [
+                  ButtonSegment(value: true, label: Text(l.statsScopeKnockout)),
+                  ButtonSegment(
+                    value: false,
+                    label: Text(l.statsScopeGroups),
+                    enabled: groupParticipant,
+                  ),
                 ],
                 selected: {showKo},
                 onSelectionChanged: (s) => ref
@@ -244,7 +274,10 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         itemBuilder: (_, i) => RankingTile(
                           entry: filtered[i],
                           isMe: filtered[i].userId == currentUid,
-                          isPrize: isPrizeEntry(filtered[i]),
+                          // Mata-mata: sem realce de premiação (Top N/último) por
+                          // ora; e toque abre o perfil visitante do KO.
+                          isPrize: showKo ? false : isPrizeEntry(filtered[i]),
+                          knockout: showKo,
                           l: l,
                         ),
                       ),
@@ -254,7 +287,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         entry: myEntry,
                         myIndexInList: myIndexInList,
                         positionsListener: _positionsListener,
-                        isPrize: isPrizeEntry(myEntry),
+                        isPrize: showKo ? false : isPrizeEntry(myEntry),
                         l: l,
                         onTap: () {
                           if (_query.isNotEmpty) {
@@ -627,13 +660,18 @@ class RankingTile extends StatelessWidget {
   /// Ranking Geral para os 11 primeiros colocados + o último. Puramente visual.
   final bool isPrize;
 
+  /// Modo mata-mata: o toque abre o perfil visitante do KO (não o de grupos), e
+  /// a tappabilidade não depende do prazo global (a revelação é por jogo).
+  final bool knockout;
+
   const RankingTile(
       {super.key,
       required this.entry,
       required this.isMe,
       required this.l,
       this.subtitle,
-      this.isPrize = false});
+      this.isPrize = false,
+      this.knockout = false});
 
   @override
   Widget build(BuildContext context) {
@@ -654,10 +692,11 @@ class RankingTile extends StatelessWidget {
       _ => '${entry.rank}',
     };
 
-    // Tapping a name opens that user's bets. Other players are gated until
-    // betting is locked (so nobody peeks before the deadline); your own row is
-    // always tappable, since reviewing your own bets carries no copy risk.
-    final tappable = isMe || isBettingLocked;
+    // Tapping a name opens that user's bets. No grupo, outros jogadores só
+    // ficam clicáveis após o prazo global (ninguém espia antes); seu próprio
+    // card é sempre clicável. No mata-mata a tappabilidade é livre — a revelação
+    // é por jogo (só finalizados/fechados), tratada na própria tela visitante.
+    final tappable = knockout || isMe || isBettingLocked;
 
     // Realce discreto de premiação: APENAS a borda fica âmbar (sem preencher o
     // fundo). O fundo continua marcando só o "você" (tom primário). Os dois
@@ -769,7 +808,11 @@ class RankingTile extends StatelessWidget {
 
     if (!tappable) return tile;
     return InkWell(
-      onTap: () => context.push('/user/${entry.userId}', extra: entry),
+      onTap: () => knockout
+          ? Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) =>
+                  KnockoutVisitorScreen(userId: entry.userId, entry: entry)))
+          : context.push('/user/${entry.userId}', extra: entry),
       borderRadius: BorderRadius.circular(14),
       child: tile,
     );

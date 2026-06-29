@@ -18,6 +18,7 @@ import 'package:copa2026/features/leagues/providers/leagues_provider.dart';
 import 'package:copa2026/shared/models/match.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Admin: list of all matches for override
@@ -49,6 +50,14 @@ final adminUsersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asyn
 final adminKnockoutUnlockedProvider = FutureProvider<Set<String>>((ref) async {
   final response =
       await Supabase.instance.client.rpc('get_knockout_unlocked_ids');
+  return (response as List).map((e) => e.toString()).toSet();
+});
+
+// IDs dos usuários que participam da FASE DE GRUPOS (profiles.groups_unlocked).
+// RPC SECURITY DEFINER — ver supabase/groups_access.sql.
+final adminGroupsUnlockedProvider = FutureProvider<Set<String>>((ref) async {
+  final response =
+      await Supabase.instance.client.rpc('get_groups_unlocked_ids');
   return (response as List).map((e) => e.toString()).toSet();
 });
 
@@ -107,7 +116,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
     final matchesAsync = ref.watch(allMatchesProvider);
 
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: Text(' 👑'),
@@ -126,6 +135,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
           bottom: TabBar(
               isScrollable: true,
               tabs: [
+              Tab(icon: const Icon(Icons.flag), text: 'Fase'),
               Tab(icon: const Icon(Icons.sports_soccer), text: l.adminTabMatches),
               Tab(icon: const Icon(Icons.sports_mma), text: 'Mata-Mata'),
               Tab(icon: const Icon(Icons.notifications_active), text: 'Notificar'),
@@ -138,6 +148,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
       drawer: const AppDrawer(),
       body: TabBarView(
         children: [
+          const _AdminPhaseTab(),
           matchesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text(e.toString())),
@@ -183,6 +194,185 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
         ],
       ),
     ));
+  }
+}
+
+// ─────────────────────────────────────────────
+// Admin: ABA FASE DO BOLÃO (grava em app_config.phase)
+// Fonte única de verdade da fase atual — controla, para TODOS os usuários, o
+// que fica visível (ver tournamentPhaseProvider / phase_provider.dart).
+// A troca é em DOIS PASSOS: escolher a fase + Confirmar, e ainda um duplo check,
+// porque o impacto é global e sensível.
+// ─────────────────────────────────────────────
+String _phaseLabel(TournamentPhase p) => switch (p) {
+      TournamentPhase.groups => 'Grupos',
+      TournamentPhase.mixed => 'Mista',
+      TournamentPhase.knockout => 'Mata-Mata',
+    };
+
+class _AdminPhaseTab extends ConsumerStatefulWidget {
+  const _AdminPhaseTab();
+
+  @override
+  ConsumerState<_AdminPhaseTab> createState() => _AdminPhaseTabState();
+}
+
+class _AdminPhaseTabState extends ConsumerState<_AdminPhaseTab> {
+  /// Seleção pendente (ainda não salva). null = segue a fase atual do servidor.
+  TournamentPhase? _pending;
+  bool _saving = false;
+
+  String _phaseKey(TournamentPhase p) => switch (p) {
+        TournamentPhase.groups => 'groups',
+        TournamentPhase.mixed => 'mixed',
+        TournamentPhase.knockout => 'knockout',
+      };
+
+  Future<void> _confirmAndSave(TournamentPhase phase) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Deseja realmente alterar a fase do bolão?'),
+        content: Text(
+          'A fase passará para "${_phaseLabel(phase)}". Isso muda, para TODOS '
+          'os usuários, o que fica visível no app.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await _save(phase);
+  }
+
+  Future<void> _save(TournamentPhase phase) async {
+    setState(() => _saving = true);
+    try {
+      await Supabase.instance.client.from('app_config').upsert(
+        {
+          'key': 'phase',
+          'value': {'phase': _phaseKey(phase)},
+        },
+        onConflict: 'key',
+      );
+      ref.invalidate(tournamentPhaseProvider);
+      if (mounted) {
+        setState(() => _pending = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fase atualizada: ${_phaseLabel(phase)}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao mudar a fase: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final phaseAsync = ref.watch(tournamentPhaseProvider);
+
+    return phaseAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Erro ao carregar a fase: $e')),
+      data: (current) {
+        final selected = _pending ?? current;
+        final dirty = selected != current;
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fase do Bolão',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: cs.primary,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Fase atual: ${_phaseLabel(current)}',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Controla o que TODOS veem. Grupos: só a fase de grupos '
+                      '(esconde o mata-mata). Mista: grupos + mata-mata. '
+                      'Mata-Mata: só o mata-mata (esconde os grupos). '
+                      'Recomendado manter em "Mista" durante todo o mata-mata; '
+                      'use "Mata-Mata" só ao final, para aposentar os grupos.',
+                      style: TextStyle(fontSize: 12, height: 1.35),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<TournamentPhase>(
+                        showSelectedIcon: false,
+                        segments: const [
+                          ButtonSegment(
+                              value: TournamentPhase.groups,
+                              label: Text('Grupos')),
+                          ButtonSegment(
+                              value: TournamentPhase.mixed,
+                              label: Text('Mista')),
+                          ButtonSegment(
+                              value: TournamentPhase.knockout,
+                              label: Text('Mata-Mata')),
+                        ],
+                        selected: {selected},
+                        onSelectionChanged: _saving
+                            ? null
+                            : (s) => setState(() => _pending = s.first),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: (!dirty || _saving)
+                            ? null
+                            : () => _confirmAndSave(selected),
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.check),
+                        label: const Text('Confirmar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -810,12 +1000,32 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
     }
   }
 
+  // Marca/desmarca participação do usuário na FASE DE GRUPOS.
+  Future<void> _toggleGroups(Map<String, dynamic> u, bool currentlyOn) async {
+    final newVal = !currentlyOn;
+    try {
+      await Supabase.instance.client.from('profiles').update({
+        'groups_unlocked': newVal,
+        'groups_unlocked_at': newVal ? DateTime.now().toIso8601String() : null,
+      }).eq('id', u['id']);
+      ref.invalidate(adminGroupsUnlockedProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final usersAsync = ref.watch(adminUsersProvider);
     final koUnlockedIds =
         ref.watch(adminKnockoutUnlockedProvider).valueOrNull ?? const <String>{};
+    final groupsUnlockedIds =
+        ref.watch(adminGroupsUnlockedProvider).valueOrNull ?? const <String>{};
 
     return usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -905,6 +1115,8 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
                         final bool isPaid = u['paid'] == true;
                         final bool koOn =
                             koUnlockedIds.contains(u['id']?.toString());
+                        final bool grpOn =
+                            groupsUnlockedIds.contains(u['id']?.toString());
                         final cs = Theme.of(context).colorScheme;
                         final Color statusColor =
                             isPaid ? Colors.green : Colors.grey;
@@ -935,82 +1147,133 @@ class _AdminUsersTabState extends ConsumerState<_AdminUsersTab> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                // Badge clicável: libera/bloqueia o mata-mata
-                                // (inscrição separada do bolão principal).
-                                Tooltip(
-                                  message: koOn
-                                      ? 'Mata-Mata liberado — clique para bloquear'
-                                      : 'Mata-Mata bloqueado — clique para liberar',
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(20),
-                                    onTap: () => _toggleKnockout(u, koOn),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: (koOn ? Colors.deepPurple : Colors.grey)
-                                            .withOpacity(0.15),
+                                // Badges (empilhados p/ não estourar a largura):
+                                // Grupos, Mata-Mata e Pagamento.
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Badge clicável: participação na fase de grupos.
+                                    Tooltip(
+                                      message: grpOn
+                                          ? 'Fase de grupos liberada — clique para bloquear'
+                                          : 'Fase de grupos bloqueada — clique para liberar',
+                                      child: InkWell(
                                         borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                            color: koOn ? Colors.deepPurple : Colors.grey),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            koOn ? Icons.sports_mma : Icons.lock_outline,
-                                            size: 16,
-                                            color: koOn ? Colors.deepPurple : Colors.grey,
+                                        onTap: () => _toggleGroups(u, grpOn),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: (grpOn ? Colors.teal : Colors.grey)
+                                                .withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                                color: grpOn ? Colors.teal : Colors.grey),
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Mata-Mata',
-                                            style: TextStyle(
-                                              color: koOn ? Colors.deepPurple : Colors.grey,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                grpOn
+                                                    ? Icons.sports_soccer
+                                                    : Icons.lock_outline,
+                                                size: 16,
+                                                color: grpOn ? Colors.teal : Colors.grey,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Grupos',
+                                                style: TextStyle(
+                                                  color: grpOn ? Colors.teal : Colors.grey,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Badge clicável: alterna o status de pagamento.
-                                Tooltip(
-                                  message: isPaid
-                                      ? 'Clique para marcar como Pendente'
-                                      : 'Clique para marcar como Pago',
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(20),
-                                    onTap: () => _togglePaid(u),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.15),
+                                    const SizedBox(height: 6),
+                                    // Badge clicável: libera/bloqueia o mata-mata
+                                    // (inscrição separada do bolão principal).
+                                    Tooltip(
+                                      message: koOn
+                                          ? 'Mata-Mata liberado — clique para bloquear'
+                                          : 'Mata-Mata bloqueado — clique para liberar',
+                                      child: InkWell(
                                         borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(color: statusColor),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isPaid ? Icons.check_circle : Icons.attach_money,
-                                            size: 16,
-                                            color: statusColor,
+                                        onTap: () => _toggleKnockout(u, koOn),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: (koOn ? Colors.deepPurple : Colors.grey)
+                                                .withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                                color: koOn ? Colors.deepPurple : Colors.grey),
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            isPaid ? l.paymentRealized : l.paymentPending,
-                                            style: TextStyle(
-                                              color: statusColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                koOn ? Icons.sports_mma : Icons.lock_outline,
+                                                size: 16,
+                                                color: koOn ? Colors.deepPurple : Colors.grey,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Mata-Mata',
+                                                style: TextStyle(
+                                                  color: koOn ? Colors.deepPurple : Colors.grey,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 6),
+                                    // Badge clicável: alterna o status de pagamento.
+                                    Tooltip(
+                                      message: isPaid
+                                          ? 'Clique para marcar como Pendente'
+                                          : 'Clique para marcar como Pago',
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(20),
+                                        onTap: () => _togglePaid(u),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: statusColor.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: statusColor),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                isPaid ? Icons.check_circle : Icons.attach_money,
+                                                size: 16,
+                                                color: statusColor,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                isPaid ? l.paymentRealized : l.paymentPending,
+                                                style: TextStyle(
+                                                  color: statusColor,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

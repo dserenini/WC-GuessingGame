@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,6 +12,7 @@ import 'package:copa2026/features/leagues/screens/leagues_screen.dart';
 import 'package:copa2026/features/knockout/screens/knockout_screen.dart';
 import 'package:copa2026/features/knockout/screens/knockout_stats_screen.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/features/settings/screens/settings_screen.dart';
 import 'package:copa2026/features/admin/screens/admin_screen.dart';
 import 'package:copa2026/features/profile/screens/profile_screen.dart';
@@ -24,6 +26,17 @@ import 'package:copa2026/features/auth/screens/update_password_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+
+  // Bloqueia deep-link p/ rotas que são SÓ da fase de grupos quando: a fase é
+  // knockout (groupStageVisible == false) OU o usuário não participa dos grupos
+  // (groupParticipant == false). Enquanto os providers carregam (valueOrNull ==
+  // null), deixa passar para não piscar a tela.
+  String? groupOnlyGuard(BuildContext context, GoRouterState state) {
+    final visible = ref.read(groupStageVisibleProvider).valueOrNull;
+    final participant = ref.read(groupParticipantProvider).valueOrNull;
+    if (visible == false || participant == false) return '/profile';
+    return null;
+  }
 
   return GoRouter(
     initialLocation: '/profile',
@@ -73,6 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final group = state.pathParameters['group'] ?? 'A';
           return GroupScreen(groupLetter: group);
         },
+        redirect: groupOnlyGuard,
       ),
       GoRoute(
         path: '/ranking',
@@ -86,11 +100,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final tab = state.extra is int ? state.extra as int : 0;
           return AdvancedStatsScreen(initialTab: tab);
         },
+        redirect: groupOnlyGuard,
       ),
       GoRoute(
         path: '/achievements',
         name: 'achievements',
         builder: (_, __) => const AchievementsScreen(),
+        redirect: groupOnlyGuard,
       ),
       GoRoute(
         path: '/user/:userId',
@@ -156,6 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/prizes',
         name: 'prizes',
         builder: (_, __) => const PrizesScreen(),
+        redirect: groupOnlyGuard,
       ),
     ],
   );

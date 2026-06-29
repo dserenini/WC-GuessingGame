@@ -2407,7 +2407,7 @@ abstract class AppLocalizations {
   /// No description provided for @helpKoScoringDesc.
   ///
   /// In pt, this message translates to:
-  /// **'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3.'**
+  /// **'Cada jogo vale 3 pontos no placar exato e 1 ponto se você acertar só o resultado. Na Semifinal e na Final, o placar exato vale 5 pontos e o resultado vale 3. Vale apenas o tempo regular (90 min): prorrogação e pênaltis não contam para o palpite.'**
   String get helpKoScoringDesc;
 
   /// No description provided for @helpKoChampionTitle.
@@ -2601,6 +2601,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Mata-Mata'**
   String get statsScopeKnockout;
+
+  /// No description provided for @groupStageClosed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fase de grupos encerrada'**
+  String get groupStageClosed;
 
   /// No description provided for @koStatsTabPool.
   ///

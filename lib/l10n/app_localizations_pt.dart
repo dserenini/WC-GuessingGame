@@ -1335,6 +1335,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get statsScopeKnockout => 'Mata-Mata';
 
   @override
+  String get groupStageClosed => 'Fase de grupos encerrada';
+
+  @override
   String get koStatsTabPool => 'Bolão';
 
   @override

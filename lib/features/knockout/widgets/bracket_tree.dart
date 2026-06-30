@@ -8,9 +8,10 @@ import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 
 /// Árvore do chaveamento (16-avos → final) com linhas conectoras, navegável por
-/// pan/zoom. Ao abrir (ou no botão ↻), toca a ANIMAÇÃO DE PROGRESSÃO: fase a
-/// fase, o perdedor esmaece e a bandeira do vencedor percorre a linha até se
-/// instalar no slot da fase seguinte.
+/// pan/zoom. Ao abrir, a câmera foca o PRIMEIRO card da fase atual (frontier).
+/// A cada partida recém-finalizada (diff de avanços entre rebuilds), a bandeira
+/// do vencedor percorre a linha até o slot da fase seguinte, o perdedor esmaece
+/// e o conector acende — animação POR AVANÇO, não por rodada.
 class BracketTree extends StatefulWidget {
   final List<KoMatch> matches;
   final Map<String, (int, int)> myBets; // ko_match_id → (home, away)
@@ -31,8 +32,12 @@ class _BracketTreeState extends State<BracketTree>
     with SingleTickerProviderStateMixin {
   final _controller = TransformationController();
   bool _fitted = false;
-  late final AnimationController _intro;
+  late final AnimationController _advance;
   Size? _viewport;
+
+  // Feeders ('round:slot') que avançaram no último diff e devem animar agora.
+  // Mantido após o término p/ habilitar o replay; os travelers somem ao concluir.
+  Set<String> _animKeys = {};
 
   static const _cols = ['16avos', 'oitavas', 'quartas', 'semis', 'final'];
   static const double _cardW = 150;
@@ -42,72 +47,136 @@ class _BracketTreeState extends State<BracketTree>
   static const double _unit = _cardH + _vGap;
   static const double _rowDy = 10; // distância do centro do card até cada linha
   static const double _flagInset = 16; // x do centro da bandeira dentro do card
-
-  // Nº de transições a animar = ATÉ a fase atual (frontier). 0 = ainda nos
-  // 16-avos (nada avançou) → sem animação. Calculado no build a partir dos dados.
-  int _animPhases = 0;
-  bool _kicked = false;
+  static const double _camMargin = 16; // margem do foco inicial (topo-esquerda)
 
   @override
   void initState() {
     super.initState();
-    _intro = AnimationController(
+    _advance = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..addListener(_followCamera);
+      duration: const Duration(milliseconds: 1600),
+    );
+    // Reveal de boas-vindas: na 1ª abertura, anima UMA vez os avanços da rodada
+    // mais recente já decidida (ex.: 16avos → oitavas dos jogos finalizados).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final keys = _latestAdvances();
+      if (keys.isNotEmpty) {
+        setState(() => _animKeys = keys);
+        _advance.forward(from: 0);
+      }
+    });
   }
 
-  /// Auto-pan: durante a animação, move a câmera pra focar na fase ativa
-  /// (desliza da esquerda p/ direita acompanhando as bandeiras que avançam).
-  void _followCamera() {
-    final vp = _viewport;
-    if (vp == null || vp.width <= 0) return;
-    if (_intro.status == AnimationStatus.forward) {
-      _controller.value = _cameraFor(_pf, vp);
+  /// Avanços da rodada mais profunda que já tem jogos finalizados com vencedor
+  /// (os "últimos avanços"). Usado só no reveal de boas-vindas.
+  Set<String> _latestAdvances() {
+    int deepest = -1;
+    for (var pc = 0; pc < _cols.length - 1; pc++) {
+      if (widget.matches.any(
+          (m) => m.round == _cols[pc] && m.isFinished && m.advancing != null)) {
+        deepest = pc;
+      }
+    }
+    if (deepest < 0) return {};
+    return {
+      for (final m in widget.matches)
+        if (m.round == _cols[deepest] && m.isFinished && m.advancing != null)
+          '${m.round}:${m.slot}'
+    };
+  }
+
+  @override
+  void didUpdateWidget(covariant BracketTree old) {
+    super.didUpdateWidget(old);
+    // Diff de avanços: quem passou a ter vencedor desde o último build → anima.
+    final keys = _advancedSince(old.matches, widget.matches);
+    if (keys.isNotEmpty) {
+      setState(() => _animKeys = keys);
+      _advance.forward(from: 0);
     }
   }
 
-  // Câmera SEMPRE com zoom, focada na fase atual:
-  //  - Zoom vertical pela fase: 16as/8as mostram ~metade dos jogos (janela de
-  //    8 linhas); a partir das quartas, mostra todos (altura cheia do bracket).
-  //  - Horizontal: 16as estático centraliza; nas fases seguintes a coluna ativa
-  //    (pf) encosta no extremo direito (a câmera desliza p/ a direita na anim).
-  Matrix4 _cameraFor(double pf, Size vp) {
-    const canvasH = 16 * _unit;
-    final windowH = (_animPhases <= 1) ? 8 * _unit : canvasH;
-    final k = (vp.height / windowH).clamp(0.4, 1.5);
-
-    final double tx;
-    if (_animPhases == 0) {
-      tx = vp.width / 2 - k * (_cardW / 2); // centraliza os 16-avos
-    } else {
-      final rightCol = pf.clamp(0.0, _animPhases.toDouble());
-      final rightCanvasX = rightCol * _colW + _cardW; // borda direita da coluna ativa
-      tx = vp.width - 16 - k * rightCanvasX;
+  /// Lógica de "diff de avanços" isolada do desenho: chaves 'round:slot' dos
+  /// jogos que passaram de "sem vencedor" para "finalizado com `advancing`".
+  Set<String> _advancedSince(List<KoMatch> oldM, List<KoMatch> nowM) {
+    final oldById = {for (final m in oldM) m.id: m};
+    final out = <String>{};
+    for (final m in nowM) {
+      final nowAdv = m.isFinished && m.advancing != null;
+      final was = oldById[m.id];
+      final wasAdv = was != null && was.isFinished && was.advancing != null;
+      if (nowAdv && !wasAdv) out.add('${m.round}:${m.slot}');
     }
-    final ty = vp.height / 2 - k * (canvasH / 2);
-    return Matrix4(k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1);
+    return out;
   }
 
   @override
   void dispose() {
-    _intro.dispose();
+    _advance.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  double get _pf => _intro.value * _animPhases; // progresso em "fases" (0.._animPhases)
+  // ── Câmera ──────────────────────────────────────────────────────────────
+  // Zoom: fases iniciais (16as/8as) mostram ~metade dos jogos (janela de 8
+  // linhas); a partir das quartas, mostram todos (altura cheia do bracket).
+  double _zoomFor(Size vp, {required bool wholeHeight}) {
+    const canvasH = 16 * _unit;
+    final windowH = wholeHeight ? canvasH : 8 * _unit;
+    return (vp.height / windowH).clamp(0.4, 1.5);
+  }
 
-  // Round c já preenchido? (0 = 16-avos sempre revelado)
-  bool _revealed(int c) => c == 0 || _pf >= c - 0.02;
-
-  // Opacidade do perdedor num card finalizado do round k (esmaece na fase k+1).
-  double _loserOpacity(int k) => 1.0 - 0.6 * (_pf - k).clamp(0.0, 1.0);
+  // Foca um card (col, cellCy) no canto SUPERIOR-ESQUERDO da viewport (margem
+  // fixa), revelando os cards seguintes abaixo/à direita.
+  Matrix4 _cameraForCell(int col, double cellCy, Size vp) {
+    final k = _zoomFor(vp, wholeHeight: col >= 2);
+    final tx = _camMargin - k * (col * _colW);
+    final ty = _camMargin - k * (cellCy - _cardH / 2);
+    return Matrix4(k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1);
+  }
 
   VoidCallback? _tapFor(KoMatch? m) =>
       (m == null || widget.onTap == null) ? null : () => widget.onTap!(m);
 
   (int, int)? _betFor(KoMatch? m) => m == null ? null : widget.myBets[m.id];
+
+  // Time efetivo de um lado do card: o real, ou — se a rodada ainda não foi
+  // preenchida no banco — o VENCEDOR do confronto alimentador (preenche o
+  // "Venc. Jogo X" assim que o jogo de origem é decidido).
+  TeamModel? _resolvedTeam(Map<String, KoMatch> byKey, int c, int s,
+      {required bool home}) {
+    final m = byKey['${_cols[c]}:$s'];
+    final own = home ? m?.home : m?.away;
+    if (own != null || c == 0) return own;
+    final fSlot = home ? s * 2 - 1 : s * 2;
+    return byKey['${_cols[c - 1]}:$fSlot']?.advancing;
+  }
+
+  // Progresso de "entrega" (0→1) de um time herdado cujo confronto alimentador
+  // está animando agora: a seleção surge no slot conforme a bandeira chega.
+  // null = sem entrega em curso (mostra normal).
+  double? _deliveryT(Map<String, KoMatch> byKey, int c, int s,
+      {required bool home}) {
+    if (c == 0 || _animKeys.isEmpty || _advance.isCompleted) return null;
+    final own = home ? byKey['${_cols[c]}:$s']?.home : byKey['${_cols[c]}:$s']?.away;
+    if (own != null) return null; // já era real, não foi "entregue" pela anim
+    final fSlot = home ? s * 2 - 1 : s * 2;
+    final fKey = '${_cols[c - 1]}:$fSlot';
+    if (!_animKeys.contains(fKey) || byKey[fKey]?.advancing == null) return null;
+    // O time só surge quando a bandeira CHEGA (último trecho do voo), não antes.
+    final v = Curves.easeOut.transform(_advance.value);
+    return ((v - 0.8) / 0.2).clamp(0.0, 1.0);
+  }
+
+  // Opacidade do perdedor: card animando esmaece 1.0→0.4; estável 0.4 se
+  // finalizado, 1.0 caso contrário.
+  double _loserOpacityFor(String key, bool finished) {
+    if (_animKeys.contains(key)) {
+      return 1.0 - 0.6 * Curves.easeOut.transform(_advance.value);
+    }
+    return finished ? 0.4 : 1.0;
+  }
 
   // Posição ao longo do "cotovelo" start → (midX,startY) → (midX,endY) → end.
   Offset _along(Offset s, Offset e, double t) {
@@ -124,21 +193,11 @@ class _BracketTreeState extends State<BracketTree>
     final cs = Theme.of(context).colorScheme;
 
     // Fase atual (frontier): a rodada mais profunda (além dos 16-avos) que já
-    // tem seleções definidas. 0 = ainda nos 16-avos → sem animação.
+    // tem seleções definidas. 0 = ainda nos 16-avos.
     int frontier = 0;
     for (var c = 1; c < _cols.length; c++) {
       if (widget.matches.any((m) => m.round == _cols[c] && m.home != null)) {
         frontier = c;
-      }
-    }
-    _animPhases = frontier;
-    if (!_kicked) {
-      _kicked = true;
-      if (frontier > 0) {
-        _intro.duration = Duration(milliseconds: frontier * 1800);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _intro.forward();
-        });
       }
     }
 
@@ -175,8 +234,10 @@ class _BracketTreeState extends State<BracketTree>
         for (final f in [s * 2 - 1, s * 2]) {
           final fCy = cy['$prev:$f'];
           if (fCy == null) continue;
-          final feeder = byKey['$prev:$f'];
-          segments.add(_Seg(px, fCy, x, childCy, feeder?.isFinished ?? false, c));
+          final fKey = '$prev:$f';
+          final feeder = byKey[fKey];
+          segments.add(_Seg(px, fCy, x, childCy, feeder?.isFinished ?? false,
+              _animKeys.contains(fKey)));
         }
       }
     }
@@ -185,8 +246,10 @@ class _BracketTreeState extends State<BracketTree>
       final vh = box.maxHeight.isFinite ? box.maxHeight : 600.0;
       _viewport = Size(box.maxWidth, vh);
       if (!_fitted && box.maxWidth.isFinite) {
-        // Sempre abre com zoom focado na fase atual (não fit-to-width).
-        _controller.value = _cameraFor(0, _viewport!);
+        // Abre focado na fase atual: PRIMEIRO card (slot 1) da coluna do frontier
+        // no topo-esquerda. Com frontier 0 (ainda nos 16-avos) → 16avos:1.
+        _controller.value = _cameraForCell(
+            frontier, cy['${_cols[frontier]}:1'] ?? _cardH / 2, _viewport!);
         _fitted = true;
       }
       return Stack(
@@ -198,7 +261,7 @@ class _BracketTreeState extends State<BracketTree>
             minScale: 0.3,
             maxScale: 2.5,
             child: AnimatedBuilder(
-              animation: _intro,
+              animation: _advance,
               builder: (context, _) => SizedBox(
                 width: canvasW,
                 height: canvasH,
@@ -210,7 +273,7 @@ class _BracketTreeState extends State<BracketTree>
                           segments: segments,
                           base: cs.outline,
                           live: cs.primary,
-                          pf: _pf,
+                          t: Curves.easeOut.transform(_advance.value),
                         ),
                       ),
                     ),
@@ -225,8 +288,12 @@ class _BracketTreeState extends State<BracketTree>
                             height: _cardH,
                             child: _BracketCard(
                               match: byKey['${_cols[c]}:$s'],
-                              reveal: _revealed(c),
-                              loserOpacity: _loserOpacity(c),
+                              home: _resolvedTeam(byKey, c, s, home: true),
+                              away: _resolvedTeam(byKey, c, s, home: false),
+                              homeDeliveryT: _deliveryT(byKey, c, s, home: true),
+                              awayDeliveryT: _deliveryT(byKey, c, s, home: false),
+                              loserOpacity: _loserOpacityFor('${_cols[c]}:$s',
+                                  byKey['${_cols[c]}:$s']?.isFinished ?? false),
                               bet: _betFor(byKey['${_cols[c]}:$s']),
                               championTeamId: widget.championTeamId,
                               onTap: _tapFor(byKey['${_cols[c]}:$s']),
@@ -241,23 +308,25 @@ class _BracketTreeState extends State<BracketTree>
                         height: _cardH,
                         child: _BracketCard(
                           match: byKey['3lugar:1'],
-                          reveal: _animPhases > 0 ? _pf >= _animPhases - 0.5 : false,
-                          loserOpacity: 0.4,
+                          home: byKey['3lugar:1']?.home,
+                          away: byKey['3lugar:1']?.away,
+                          loserOpacity: _loserOpacityFor(
+                              '3lugar:1', byKey['3lugar:1']?.isFinished ?? false),
                           label: AppLocalizations.of(context)!.koThirdPlaceShort,
                           bet: _betFor(byKey['3lugar:1']),
                           championTeamId: widget.championTeamId,
                           onTap: _tapFor(byKey['3lugar:1']),
                         ),
                       ),
-                    // Bandeiras viajando (vencedores indo pra próxima fase)
+                    // Bandeiras viajando (avanços recém-finalizados)
                     ..._travelers(cy, byKey),
                   ],
                 ),
               ),
             ),
           ),
-          // Replay (só quando há animação, i.e., já passamos dos 16-avos)
-          if (_animPhases > 0)
+          // Replay do último avanço (só quando há um para reanimar).
+          if (_animKeys.isNotEmpty)
             Positioned(
               top: 8,
               right: 8,
@@ -267,7 +336,7 @@ class _BracketTreeState extends State<BracketTree>
                 elevation: 2,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () => _intro.forward(from: 0),
+                  onTap: () => _advance.forward(from: 0),
                   child: const Padding(
                     padding: EdgeInsets.all(9),
                     child: Icon(Icons.replay, size: 18, color: Colors.white),
@@ -280,54 +349,58 @@ class _BracketTreeState extends State<BracketTree>
     });
   }
 
-  /// Tokens (bandeiras) que percorrem o caminho durante a fase corrente.
+  /// Tokens (bandeiras) dos avanços ativos percorrendo o caminho. Some ao
+  /// concluir (mantemos `_animKeys` só p/ o replay).
   List<Widget> _travelers(Map<String, double> cy, Map<String, KoMatch> byKey) {
-    final phase = _pf.floor() + 1; // 1.._animPhases
-    if (phase > _animPhases) return const [];
-    final localT = (_pf - (phase - 1)).clamp(0.0, 1.0);
-    if (localT <= 0) return const [];
+    if (_animKeys.isEmpty || _advance.isCompleted) return const [];
+    final t = Curves.easeOut.transform(_advance.value);
+    if (t <= 0) return const [];
 
-    final c = phase; // round de destino
-    final prev = _cols[c - 1];
     final tokens = <Widget>[];
+    for (final key in _animKeys) {
+      final sep = key.indexOf(':');
+      final round = key.substring(0, sep);
+      final fSlot = int.tryParse(key.substring(sep + 1));
+      if (fSlot == null) continue;
+      final pc = _cols.indexOf(round); // coluna do feeder
+      if (pc < 0 || pc + 1 >= _cols.length) continue; // final/3lugar: sem destino
+      final c = pc + 1; // coluna de destino
+      final feeder = byKey[key];
+      final adv = feeder?.advancing;
+      if (adv == null) continue;
 
-    for (var s = 1; s <= (16 >> c); s++) {
+      final s = (fSlot + 1) ~/ 2; // slot de destino
+      final destIsHome = fSlot.isOdd; // ímpar = casa do confronto seguinte
+      final fCy = cy[key];
       final childCy = cy['${_cols[c]}:$s'];
-      if (childCy == null) continue;
-      for (final isHome in [true, false]) {
-        final fSlot = isHome ? s * 2 - 1 : s * 2;
-        final feeder = byKey['$prev:$fSlot'];
-        final adv = feeder?.advancing;
-        if (adv == null) continue;
-        final fCy = cy['$prev:$fSlot']!;
-        final advIsHome = adv.id == feeder!.home?.id;
+      if (fCy == null || childCy == null) continue;
+      final advIsHome = adv.id == feeder!.home?.id;
 
-        final start = Offset(
-          (c - 1) * _colW + _cardW,
-          fCy + (advIsHome ? -_rowDy : _rowDy),
-        );
-        final end = Offset(
-          c * _colW + _flagInset,
-          childCy + (isHome ? -_rowDy : _rowDy),
-        );
-        final p = _along(start, end, localT);
-        tokens.add(Positioned(
-          left: p.dx - 11,
-          top: p.dy - 11,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2))
-              ],
-            ),
-            child: FlagAvatar(flagUrl: adv.flagUrl, radius: 11),
+      final start = Offset(
+        pc * _colW + _cardW,
+        fCy + (advIsHome ? -_rowDy : _rowDy),
+      );
+      final end = Offset(
+        c * _colW + _flagInset,
+        childCy + (destIsHome ? -_rowDy : _rowDy),
+      );
+      final p = _along(start, end, t);
+      tokens.add(Positioned(
+        left: p.dx - 11,
+        top: p.dy - 11,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2))
+            ],
           ),
-        ));
-      }
+          child: FlagAvatar(flagUrl: adv.flagUrl, radius: 11),
+        ),
+      ));
     }
     return tokens;
   }
@@ -335,21 +408,21 @@ class _BracketTreeState extends State<BracketTree>
 
 class _Seg {
   final double x1, y1, x2, y2;
-  final bool live;
-  final int col;
-  _Seg(this.x1, this.y1, this.x2, this.y2, this.live, this.col);
+  final bool live; // feeder finalizado → conector aceso
+  final bool animating; // feeder no batch de avanço atual → ramp 0→1
+  _Seg(this.x1, this.y1, this.x2, this.y2, this.live, this.animating);
 }
 
 class _ConnectorPainter extends CustomPainter {
   final List<_Seg> segments;
   final Color base;
   final Color live;
-  final double pf; // progresso em fases
+  final double t; // 0..1 da animação de avanço
   _ConnectorPainter({
     required this.segments,
     required this.base,
     required this.live,
-    required this.pf,
+    required this.t,
   });
 
   @override
@@ -371,38 +444,50 @@ class _ConnectorPainter extends CustomPainter {
           ..style = PaintingStyle.stroke,
       );
 
-      // Destaque do vencedor: acende durante a animação da fase.
-      final r = (pf - (s.col - 1)).clamp(0.0, 1.0);
-      if (s.live && r > 0) {
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = live.withOpacity(r)
-            ..strokeWidth = 2.0
-            ..style = PaintingStyle.stroke,
-        );
+      // Destaque do vencedor: aceso constante p/ feeders finalizados; ramp 0→1
+      // só p/ os avanços em animação.
+      if (s.live) {
+        final r = s.animating ? t : 1.0;
+        if (r > 0) {
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = live.withOpacity(r)
+              ..strokeWidth = 2.0
+              ..style = PaintingStyle.stroke,
+          );
+        }
       }
     }
   }
 
   @override
   bool shouldRepaint(_ConnectorPainter old) =>
-      old.pf != pf || old.segments.length != segments.length;
+      old.t != t || old.segments.length != segments.length;
 }
 
 class _BracketCard extends StatelessWidget {
   final KoMatch? match;
+  // Times EFETIVOS exibidos (já resolvidos: reais ou herdados do vencedor do
+  // confronto alimentador). Null → mostra o rótulo do slot ("Venc. Jogo X").
+  final TeamModel? home;
+  final TeamModel? away;
+  // Fade-in (0→1) de um time herdado sendo "entregue" pela animação; null = sem.
+  final double? homeDeliveryT;
+  final double? awayDeliveryT;
   final String? label;
   final VoidCallback? onTap;
-  final bool reveal; // mostra as seleções? (false = "A definir")
   final double loserOpacity;
   final (int, int)? bet; // palpite do usuário (home, away)
   final String? championTeamId; // realce dourado da seleção-campeã
   const _BracketCard({
     this.match,
+    this.home,
+    this.away,
+    this.homeDeliveryT,
+    this.awayDeliveryT,
     this.label,
     this.onTap,
-    this.reveal = true,
     this.loserOpacity = 0.4,
     this.bet,
     this.championTeamId,
@@ -416,7 +501,7 @@ class _BracketCard extends StatelessWidget {
     final finished = m?.isFinished ?? false;
     // A seleção-campeã do usuário aparece neste confronto? (borda dourada)
     final hasChampion = championTeamId != null &&
-        (m?.home?.id == championTeamId || m?.away?.id == championTeamId);
+        (home?.id == championTeamId || away?.id == championTeamId);
     // Rótulo do topo: o explícito (ex.: "3º lugar") ou o nº oficial do jogo.
     final topLabel =
         label ?? (m?.matchNo != null ? 'Jogo ${m!.matchNo}' : null);
@@ -432,6 +517,18 @@ class _BracketCard extends StatelessWidget {
     final scoreIsBet = !hasReal && bet != null;
     // Selo abaixo só quando há placar real (aí o palpite vai pra baixo).
     final showPill = hasReal && bet != null;
+    // Cor do selo = CATEGORIA do acerto vs placar REAL (live ou final): verde
+    // (cravando o placar), amarelo (só o resultado), cinza (errando). O texto é
+    // os PONTOS quando o jogo encerra (+5/+3/+1/+0) ou o palpite ainda ao vivo.
+    int hitCat = 0;
+    String pillText = '';
+    if (hasReal && bet != null) {
+      final b = bet!;
+      hitCat = _hitCategory(b.$1, b.$2, m.homeScore!, m.awayScore!);
+      pillText = finished
+          ? '+${koBetPoints(m.round, b.$1, b.$2, m.homeScore!, m.awayScore!)}'
+          : '${b.$1}-${b.$2}';
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -457,13 +554,14 @@ class _BracketCard extends StatelessWidget {
                     child: Text(topLabel,
                         style: TextStyle(fontSize: 8, color: cs.onSurface.withOpacity(0.65))),
                   ),
-                _teamRow(context, m?.home, homeShown, advId, finished, scoreIsBet, m?.homeSlotLabel),
+                _teamRow(context, home, homeShown, advId, finished, scoreIsBet, m?.homeSlotLabel, homeDeliveryT),
                 Divider(height: 4, color: cs.outline.withOpacity(0.15)),
-                _teamRow(context, m?.away, awayShown, advId, finished, scoreIsBet, m?.awaySlotLabel),
+                _teamRow(context, away, awayShown, advId, finished, scoreIsBet, m?.awaySlotLabel, awayDeliveryT),
               ],
             ),
           ),
-          // Palpite do usuário abaixo do card (só quando há placar real).
+          // Selo abaixo do card: cor opaca pela categoria; texto = +pts (encerrado)
+          // ou palpite ao vivo.
           if (showPill)
             Positioned(
               bottom: -7,
@@ -473,12 +571,17 @@ class _BracketCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: cs.primary,
+                    color: _pillColors(hitCat).$1,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('${bet!.$1}-${bet!.$2}',
-                      style: const TextStyle(
-                          fontSize: 8, color: Colors.white, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    pillText,
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: _pillColors(hitCat).$2,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -487,13 +590,39 @@ class _BracketCard extends StatelessWidget {
     );
   }
 
+  // Categoria do palpite vs placar real: 2 = cravou o placar, 1 = só o
+  // resultado, 0 = errou o resultado. Independe da fase (a cor é sobre acerto,
+  // não sobre pontos — 3 pts numa final é "só resultado" = amarelo).
+  int _hitCategory(int bh, int ba, int rh, int ra) {
+    if (bh == rh && ba == ra) return 2;
+    if (bh.compareTo(ba) == rh.compareTo(ra)) return 1;
+    return 0;
+  }
+
+  // (fundo, texto) do selo por categoria: verde (cravada), amarelo (resultado),
+  // cinza (erro). Tudo opaco. O amarelo segue o tom do badge de pontos do
+  // ranking/perfil visitante (Colors.amber → ver bet_comparison_card.dart).
+  (Color, Color) _pillColors(int cat) {
+    switch (cat) {
+      case 2:
+        return (kPrimaryGreenLight, Colors.white);
+      case 1:
+        return (Colors.amber, Colors.black87);
+      default:
+        return (const Color(0xFF757575), Colors.white);
+    }
+  }
+
   Widget _teamRow(BuildContext context, TeamModel? team, int? score,
-      String? advId, bool finished, bool scoreIsBet, String? fallbackLabel) {
+      String? advId, bool finished, bool scoreIsBet, String? fallbackLabel,
+      [double? deliveryT]) {
     final cs = Theme.of(context).colorScheme;
-    final show = reveal && team != null;
+    final show = team != null;
     final isAdv = show && advId != null && team.id == advId;
     final isChampion = show && championTeamId != null && team.id == championTeamId;
-    final opacity = (finished && show && !isAdv) ? loserOpacity : 1.0;
+    // Entrega em curso → o time surge (fade-in) conforme a bandeira chega.
+    final opacity = deliveryT ??
+        ((finished && show && !isAdv) ? loserOpacity : 1.0);
 
     return Opacity(
       opacity: opacity,

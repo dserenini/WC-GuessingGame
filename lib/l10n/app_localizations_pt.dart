@@ -210,6 +210,95 @@ class AppLocalizationsPt extends AppLocalizations {
   String get advancedStatsSub => 'Veja como você se compara ao bolão';
 
   @override
+  String get resultsMenu => 'Resultados';
+
+  @override
+  String get resultsTabEvolution => 'Evolução';
+
+  @override
+  String get resultsTabSelection => 'Seleção do Bolão';
+
+  @override
+  String get evolutionByGame => 'Por jogo';
+
+  @override
+  String get evolutionByDay => 'Por dia';
+
+  @override
+  String get evolutionAxisPosition => 'Posição no ranking';
+
+  @override
+  String get evolutionAxisGame => 'Jogo';
+
+  @override
+  String get evolutionAxisDay => 'Dia';
+
+  @override
+  String get evolutionYou => 'Você';
+
+  @override
+  String get evolutionNeighbors => 'Vizinhos';
+
+  @override
+  String get evolutionBest => 'melhor';
+
+  @override
+  String get evolutionWorst => 'pior';
+
+  @override
+  String get evolutionFinal => 'final';
+
+  @override
+  String get compareWith => 'Comparar com:';
+
+  @override
+  String get addUser => 'Adicionar usuário';
+
+  @override
+  String get resultsEmpty =>
+      'Ainda não há jogos finalizados para mostrar a evolução.';
+
+  @override
+  String get lineupTitle => 'Seleção do Bolão';
+
+  @override
+  String get coach => 'Técnico';
+
+  @override
+  String get lastPlace => 'Último colocado';
+
+  @override
+  String get bench => 'Banco de reservas';
+
+  @override
+  String get reserveGoalkeeper => 'Goleiro reserva';
+
+  @override
+  String get tied => 'Empatado';
+
+  @override
+  String get posGoalkeeper => 'Goleiro';
+
+  @override
+  String get posDefense => 'Defesa';
+
+  @override
+  String get posDefensiveMid => 'Volante';
+
+  @override
+  String get posPlaymaker => 'Meia';
+
+  @override
+  String get posWinger => 'Ponta';
+
+  @override
+  String get posStriker => 'Centroavante';
+
+  @override
+  String get resultsLineupEmpty =>
+      'Participantes insuficientes para montar a seleção (mínimo 12).';
+
+  @override
   String get statsTabRankings => 'Rankings';
 
   @override

@@ -210,6 +210,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedStatsSub => 'See how you stack up against the pool';
 
   @override
+  String get resultsMenu => 'Results';
+
+  @override
+  String get resultsTabEvolution => 'Evolution';
+
+  @override
+  String get resultsTabSelection => 'Pool XI';
+
+  @override
+  String get evolutionByGame => 'By match';
+
+  @override
+  String get evolutionByDay => 'By day';
+
+  @override
+  String get evolutionAxisPosition => 'Ranking position';
+
+  @override
+  String get evolutionAxisGame => 'Match';
+
+  @override
+  String get evolutionAxisDay => 'Day';
+
+  @override
+  String get evolutionYou => 'You';
+
+  @override
+  String get evolutionNeighbors => 'Neighbors';
+
+  @override
+  String get evolutionBest => 'best';
+
+  @override
+  String get evolutionWorst => 'worst';
+
+  @override
+  String get evolutionFinal => 'final';
+
+  @override
+  String get compareWith => 'Compare with:';
+
+  @override
+  String get addUser => 'Add user';
+
+  @override
+  String get resultsEmpty => 'No finished matches yet to show the evolution.';
+
+  @override
+  String get lineupTitle => 'Pool XI';
+
+  @override
+  String get coach => 'Coach';
+
+  @override
+  String get lastPlace => 'Last place';
+
+  @override
+  String get bench => 'Bench';
+
+  @override
+  String get reserveGoalkeeper => 'Reserve goalkeeper';
+
+  @override
+  String get tied => 'Tied';
+
+  @override
+  String get posGoalkeeper => 'Goalkeeper';
+
+  @override
+  String get posDefense => 'Defense';
+
+  @override
+  String get posDefensiveMid => 'Defensive Mid';
+
+  @override
+  String get posPlaymaker => 'Playmaker';
+
+  @override
+  String get posWinger => 'Winger';
+
+  @override
+  String get posStriker => 'Striker';
+
+  @override
+  String get resultsLineupEmpty =>
+      'Not enough participants to build the XI (minimum 12).';
+
+  @override
   String get statsTabRankings => 'Rankings';
 
   @override

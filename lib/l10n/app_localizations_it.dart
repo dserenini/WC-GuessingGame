@@ -211,6 +211,95 @@ class AppLocalizationsIt extends AppLocalizations {
   String get advancedStatsSub => 'Scopri come ti confronti con il girone';
 
   @override
+  String get resultsMenu => 'Risultati';
+
+  @override
+  String get resultsTabEvolution => 'Evoluzione';
+
+  @override
+  String get resultsTabSelection => 'Top 11';
+
+  @override
+  String get evolutionByGame => 'Per partita';
+
+  @override
+  String get evolutionByDay => 'Per giorno';
+
+  @override
+  String get evolutionAxisPosition => 'Posizione in classifica';
+
+  @override
+  String get evolutionAxisGame => 'Partita';
+
+  @override
+  String get evolutionAxisDay => 'Giorno';
+
+  @override
+  String get evolutionYou => 'Tu';
+
+  @override
+  String get evolutionNeighbors => 'Vicini';
+
+  @override
+  String get evolutionBest => 'migliore';
+
+  @override
+  String get evolutionWorst => 'peggiore';
+
+  @override
+  String get evolutionFinal => 'finale';
+
+  @override
+  String get compareWith => 'Confronta con:';
+
+  @override
+  String get addUser => 'Aggiungi utente';
+
+  @override
+  String get resultsEmpty =>
+      'Ancora nessuna partita conclusa per mostrare l\'evoluzione.';
+
+  @override
+  String get lineupTitle => 'Top 11 del torneo';
+
+  @override
+  String get coach => 'Allenatore';
+
+  @override
+  String get lastPlace => 'Ultimo posto';
+
+  @override
+  String get bench => 'Panchina';
+
+  @override
+  String get reserveGoalkeeper => 'Portiere di riserva';
+
+  @override
+  String get tied => 'Pari merito';
+
+  @override
+  String get posGoalkeeper => 'Portiere';
+
+  @override
+  String get posDefense => 'Difesa';
+
+  @override
+  String get posDefensiveMid => 'Mediano';
+
+  @override
+  String get posPlaymaker => 'Trequartista';
+
+  @override
+  String get posWinger => 'Ala';
+
+  @override
+  String get posStriker => 'Attaccante';
+
+  @override
+  String get resultsLineupEmpty =>
+      'Partecipanti insufficienti per formare la squadra (minimo 12).';
+
+  @override
   String get statsTabRankings => 'Classifiche';
 
   @override

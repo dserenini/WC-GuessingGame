@@ -484,6 +484,180 @@ abstract class AppLocalizations {
   /// **'Veja como você se compara ao bolão'**
   String get advancedStatsSub;
 
+  /// No description provided for @resultsMenu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultados'**
+  String get resultsMenu;
+
+  /// No description provided for @resultsTabEvolution.
+  ///
+  /// In pt, this message translates to:
+  /// **'Evolução'**
+  String get resultsTabEvolution;
+
+  /// No description provided for @resultsTabSelection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seleção do Bolão'**
+  String get resultsTabSelection;
+
+  /// No description provided for @evolutionByGame.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por jogo'**
+  String get evolutionByGame;
+
+  /// No description provided for @evolutionByDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por dia'**
+  String get evolutionByDay;
+
+  /// No description provided for @evolutionAxisPosition.
+  ///
+  /// In pt, this message translates to:
+  /// **'Posição no ranking'**
+  String get evolutionAxisPosition;
+
+  /// No description provided for @evolutionAxisGame.
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogo'**
+  String get evolutionAxisGame;
+
+  /// No description provided for @evolutionAxisDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dia'**
+  String get evolutionAxisDay;
+
+  /// No description provided for @evolutionYou.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
+  String get evolutionYou;
+
+  /// No description provided for @evolutionNeighbors.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vizinhos'**
+  String get evolutionNeighbors;
+
+  /// No description provided for @evolutionBest.
+  ///
+  /// In pt, this message translates to:
+  /// **'melhor'**
+  String get evolutionBest;
+
+  /// No description provided for @evolutionWorst.
+  ///
+  /// In pt, this message translates to:
+  /// **'pior'**
+  String get evolutionWorst;
+
+  /// No description provided for @evolutionFinal.
+  ///
+  /// In pt, this message translates to:
+  /// **'final'**
+  String get evolutionFinal;
+
+  /// No description provided for @compareWith.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparar com:'**
+  String get compareWith;
+
+  /// No description provided for @addUser.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar usuário'**
+  String get addUser;
+
+  /// No description provided for @resultsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há jogos finalizados para mostrar a evolução.'**
+  String get resultsEmpty;
+
+  /// No description provided for @lineupTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seleção do Bolão'**
+  String get lineupTitle;
+
+  /// No description provided for @coach.
+  ///
+  /// In pt, this message translates to:
+  /// **'Técnico'**
+  String get coach;
+
+  /// No description provided for @lastPlace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último colocado'**
+  String get lastPlace;
+
+  /// No description provided for @bench.
+  ///
+  /// In pt, this message translates to:
+  /// **'Banco de reservas'**
+  String get bench;
+
+  /// No description provided for @reserveGoalkeeper.
+  ///
+  /// In pt, this message translates to:
+  /// **'Goleiro reserva'**
+  String get reserveGoalkeeper;
+
+  /// No description provided for @tied.
+  ///
+  /// In pt, this message translates to:
+  /// **'Empatado'**
+  String get tied;
+
+  /// No description provided for @posGoalkeeper.
+  ///
+  /// In pt, this message translates to:
+  /// **'Goleiro'**
+  String get posGoalkeeper;
+
+  /// No description provided for @posDefense.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defesa'**
+  String get posDefense;
+
+  /// No description provided for @posDefensiveMid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volante'**
+  String get posDefensiveMid;
+
+  /// No description provided for @posPlaymaker.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meia'**
+  String get posPlaymaker;
+
+  /// No description provided for @posWinger.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponta'**
+  String get posWinger;
+
+  /// No description provided for @posStriker.
+  ///
+  /// In pt, this message translates to:
+  /// **'Centroavante'**
+  String get posStriker;
+
+  /// No description provided for @resultsLineupEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Participantes insuficientes para montar a seleção (mínimo 12).'**
+  String get resultsLineupEmpty;
+
   /// No description provided for @statsTabRankings.
   ///
   /// In pt, this message translates to:

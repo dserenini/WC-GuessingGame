@@ -551,6 +551,62 @@ WHERE b.points = 3
   AND sp.n_same::numeric / mt.n_bets < 0.20;
 
 -- ─────────────────────────────────────────────
+-- EVOLUÇÃO DE POSIÇÃO (tela Resultados → aba Evolução). Ver group_evolution.sql.
+-- Snapshot do ranking acumulado ao fim de cada jogo (1..72) e de cada dia.
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE VIEW user_game_evolution WITH (security_invoker = on) AS
+WITH game_points AS (
+  SELECT b.user_id, (m.api_match_id)::int AS game_no, SUM(b.points) AS pts
+  FROM bets b JOIN matches m ON m.id = b.match_id
+  WHERE m.api_match_id ~ '^[0-9]+$' AND (m.api_match_id)::int BETWEEN 1 AND 72
+  GROUP BY b.user_id, (m.api_match_id)::int
+),
+finished_games AS (
+  SELECT (m.api_match_id)::int AS game_no FROM matches m
+  WHERE m.status = 'finished' AND m.api_match_id ~ '^[0-9]+$'
+    AND (m.api_match_id)::int BETWEEN 1 AND 72
+),
+cum AS (
+  SELECT p.id AS user_id, fg.game_no,
+    COALESCE(SUM(gp.pts) FILTER (WHERE gp.game_no <= fg.game_no), 0) AS cum_points
+  FROM profiles p
+  CROSS JOIN finished_games fg
+  LEFT JOIN game_points gp ON gp.user_id = p.id
+  WHERE p.participate_in_ranking = true
+  GROUP BY p.id, fg.game_no
+)
+SELECT user_id, game_no, cum_points,
+  RANK() OVER (PARTITION BY game_no ORDER BY cum_points DESC) AS rank
+FROM cum;
+
+CREATE OR REPLACE VIEW user_day_evolution WITH (security_invoker = on) AS
+WITH day_points AS (
+  SELECT b.user_id, (m.match_date AT TIME ZONE 'America/Sao_Paulo')::date AS match_day,
+    SUM(b.points) AS pts
+  FROM bets b JOIN matches m ON m.id = b.match_id
+  WHERE m.api_match_id ~ '^[0-9]+$' AND (m.api_match_id)::int BETWEEN 1 AND 72
+  GROUP BY b.user_id, (m.match_date AT TIME ZONE 'America/Sao_Paulo')::date
+),
+finished_days AS (
+  SELECT DISTINCT (m.match_date AT TIME ZONE 'America/Sao_Paulo')::date AS match_day
+  FROM matches m
+  WHERE m.status = 'finished' AND m.api_match_id ~ '^[0-9]+$'
+    AND (m.api_match_id)::int BETWEEN 1 AND 72
+),
+cum AS (
+  SELECT p.id AS user_id, fd.match_day,
+    COALESCE(SUM(dp.pts) FILTER (WHERE dp.match_day <= fd.match_day), 0) AS cum_points
+  FROM profiles p
+  CROSS JOIN finished_days fd
+  LEFT JOIN day_points dp ON dp.user_id = p.id
+  WHERE p.participate_in_ranking = true
+  GROUP BY p.id, fd.match_day
+)
+SELECT user_id, match_day, cum_points,
+  RANK() OVER (PARTITION BY match_day ORDER BY cum_points DESC) AS rank
+FROM cum;
+
+-- ─────────────────────────────────────────────
 -- POOL-WIDE CURIOSITIES (Estatísticas Avançadas — família F, aba "Bolão")
 -- Agregados sobre TODOS os palpites do bolão. Só expõem dados já legíveis
 -- (bets SELECT USING(true)); o gating de reveal é aplicado no cliente.

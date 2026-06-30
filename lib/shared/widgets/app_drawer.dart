@@ -160,6 +160,19 @@ class AppDrawer extends ConsumerWidget {
                       context.go('/ranking');
                     },
                   ),
+                  // Resultados (Seleção do Bolão + Evolução): liberado APENAS p/
+                  // quem tem a flag de fase de grupos (groups_unlocked OU admin),
+                  // em QUALQUER fase do torneio — não depende de groupOn.
+                  if (groupParticipant)
+                    _DrawerItem(
+                      icon: '📈',
+                      label: l.resultsMenu,
+                      selected: currentPath == '/results',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/results');
+                      },
+                    ),
                   _DrawerItem(
                     icon: '🛡️',
                     label: l.privateLeagues,

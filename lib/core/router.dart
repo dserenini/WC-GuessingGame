@@ -19,6 +19,7 @@ import 'package:copa2026/features/profile/screens/profile_screen.dart';
 import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
 import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
 import 'package:copa2026/features/profile/screens/achievements_screen.dart';
+import 'package:copa2026/features/results/screens/results_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/features/prizes/screens/prizes_screen.dart';
@@ -35,6 +36,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     final visible = ref.read(groupStageVisibleProvider).valueOrNull;
     final participant = ref.read(groupParticipantProvider).valueOrNull;
     if (visible == false || participant == false) return '/profile';
+    return null;
+  }
+
+  // Resultados (Seleção + Evolução): gated APENAS pela flag de fase de grupos do
+  // usuário (groups_unlocked OU admin). Fica disponível em QUALQUER fase do
+  // torneio (groups/mixed/knockout) — não depende de groupStageVisible.
+  String? groupParticipantGuard(BuildContext context, GoRouterState state) {
+    final participant = ref.read(groupParticipantProvider).valueOrNull;
+    if (participant == false) return '/profile';
     return null;
   }
 
@@ -107,6 +117,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'achievements',
         builder: (_, __) => const AchievementsScreen(),
         redirect: groupOnlyGuard,
+      ),
+      GoRoute(
+        path: '/results',
+        name: 'results',
+        builder: (_, __) => const ResultsScreen(),
+        redirect: groupParticipantGuard,
       ),
       GoRoute(
         path: '/user/:userId',

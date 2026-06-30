@@ -82,6 +82,17 @@ function toDb(enName: string): string | null {
   return EN_TO_DB[(enName ?? "").trim().toLowerCase()] ?? null;
 }
 
+// Tipos de jogo do MATA-MATA na fonte -> nosso round (ko_match.round).
+// Tudo que cair aqui é jogo de KO; o resto (group) segue o fluxo dos grupos.
+const KO_TYPE_TO_ROUND: Record<string, string> = {
+  r32: "16avos",
+  r16: "oitavas",
+  qf: "quartas",
+  sf: "semis",
+  final: "final",
+  third: "3lugar",
+};
+
 type Status = "scheduled" | "live" | "finished";
 
 function mapStatus(finished: string, timeElapsed: string): Status {
@@ -105,6 +116,13 @@ Deno.serve(async () => {
   const { data: cfg } = await supabase
     .from("app_config").select("value").eq("key", "sync_mode").maybeSingle();
   const mode: "shadow" | "live" = cfg?.value?.mode === "live" ? "live" : "shadow";
+
+  // Modo do MATA-MATA: flag PRÓPRIA (ko_sync_mode), segregada do sync_mode dos
+  // grupos — permite validar/ligar o KO sem mexer no fluxo da fase de grupos.
+  const { data: koCfgRow } = await supabase
+    .from("app_config").select("value").eq("key", "ko_sync_mode").maybeSingle();
+  const koMode: "shadow" | "live" =
+    koCfgRow?.value?.mode === "live" ? "live" : "shadow";
 
   // 2. Nossas partidas, indexadas por (grupo + par de seleções).
   const { data: matchesRaw, error: mErr } = await supabase
@@ -138,6 +156,7 @@ Deno.serve(async () => {
   //    mantém manualmente), mas o fillKnockout ainda roda (lê o banco, não a
   //    fonte), e o cron para de acumular invocações com erro.
   let games: any[] = [];
+  let koGames: any[] = [];
   let sourceError: string | null = null;
   // Timeout DURO de 8s: a fonte às vezes PENDURA (TLS/rede) e, sem cortar, a
   // função levava ~28s por ciclo (caro, roda a cada 3min). O AbortController
@@ -153,7 +172,9 @@ Deno.serve(async () => {
       sourceError = `source HTTP ${res.status}`;
     } else {
       const body = await res.json();
-      games = (body?.games ?? []).filter((g: any) => g.type === "group");
+      const all = body?.games ?? [];
+      games = all.filter((g: any) => g.type === "group");
+      koGames = all.filter((g: any) => KO_TYPE_TO_ROUND[g.type] != null);
     }
   } catch (e) {
     sourceError = `source fetch failed: ${(e as Error).message}`;
@@ -272,6 +293,18 @@ Deno.serve(async () => {
     }
   }
 
+  // 5. MATA-MATA: sincroniza placares dos jogos do KO (infra SEGREGADA —
+  //    flag ko_sync_mode + log ko_api_sync_runs). Não-fatal: erro aqui não
+  //    derruba o ciclo dos grupos. Roda mesmo com a fonte fora (propaga os
+  //    confrontos a partir do que o admin já finalizou no banco).
+  let knockout: Record<string, unknown>;
+  try {
+    knockout = await syncKnockout(supabase, koMode, koGames);
+  } catch (e) {
+    console.error("syncKnockout: " + (e as Error).message);
+    knockout = { koMode, error: (e as Error).message };
+  }
+
   return json(200, {
     mode,
     sourceError, // null quando a fonte respondeu; string quando caiu (sync pulado)
@@ -280,6 +313,7 @@ Deno.serve(async () => {
     unmatchedNames,
     unmatchedFixtures,
     ...(mode === "shadow" ? { logged } : { changed, koFilled }),
+    knockout,
   });
 });
 
@@ -441,6 +475,221 @@ function clinchedPositions(
   }
 
   return { winner, runnerUp };
+}
+
+// =============================================================================
+// SINCRONIZAÇÃO DO MATA-MATA (segregada da fase de grupos)
+//   Mesmos padrões de robustez dos grupos: casamento à prova de inversão,
+//   anti-fantasma, anti-flap, escrita só-quando-muda e log em ko_api_sync_runs.
+//
+//   Regras PRÓPRIAS do KO (decididas com o dono do bolão):
+//     * REGRA-MESTRA: a API NUNCA toca num jogo já 'finished'. Assim que alguém
+//       finaliza (a própria API num placar decisivo, OU o admin na mão), o jogo
+//       fica congelado — finalização manual de empate/pênaltis nunca é
+//       sobrescrita e o trigger de pontuação não re-dispara à toa.
+//     * Placar DECISIVO + finished -> finaliza e define advancing_team_id (maior
+//       placar). Confia na fonte (o dono acompanha os jogos).
+//     * Placar EMPATADO + finished -> vai a pênaltis: a fonte NÃO diz quem
+//       passou, então a API NÃO finaliza — segura em 'live' e sinaliza no log
+//       (note) para o admin finalizar e escolher quem avança.
+//
+//   Limite conhecido da fonte: ela traz UM placar e o flag 'finished', sem
+//   separar 90' de prorrogação nem trazer pênaltis/vencedor. Por isso o empate é
+//   manual e o decisivo é gravado como veio.
+// =============================================================================
+// deno-lint-ignore no-explicit-any
+async function syncKnockout(
+  supabase: any,
+  mode: "shadow" | "live",
+  koGames: any[],
+): Promise<Record<string, unknown>> {
+  // Nossos jogos do KO + nomes dos times (p/ casar por par, à prova de inversão).
+  const { data: koRows, error } = await supabase
+    .from("ko_match")
+    .select(
+      "id, round, status, home_score, away_score, match_date, " +
+        "home_team_id, away_team_id, " +
+        "home_team:teams!ko_match_home_team_id_fkey(name), " +
+        "away_team:teams!ko_match_away_team_id_fkey(name)",
+    );
+  if (error) throw new Error("ko_match: " + error.message);
+
+  const { data: teams } = await supabase.from("teams").select("id, name");
+  const idByName = new Map<string, string>();
+  for (const t of teams ?? []) idByName.set(t.name, t.id);
+
+  // Index por par NÃO-ordenado de seleções (único em toda a árvore do KO, então
+  // dispensa depender da posição mandante/visitante da fonte).
+  const byPair = new Map<string, {
+    id: string; round: string; home: string; away: string;
+    curHome: number | null; curAway: number | null; curStatus: string;
+    matchDate: string | null;
+  }>();
+  for (const m of koRows ?? []) {
+    const home = (m as any).home_team?.name;
+    const away = (m as any).away_team?.name;
+    if (!home || !away) continue; // confronto ainda não definido
+    byPair.set(koPairKey(home, away), {
+      id: m.id, round: m.round, home, away,
+      curHome: m.home_score, curAway: m.away_score, curStatus: m.status,
+      matchDate: m.match_date,
+    });
+  }
+
+  const unmatched: string[] = [];
+  let matched = 0, changed = 0, logged = 0;
+
+  for (const g of koGames) {
+    const homeDb = toDb(g.home_team_name_en);
+    const awayDb = toDb(g.away_team_name_en);
+    if (!homeDb || !awayDb) continue; // jogo futuro sem as duas seleções definidas
+    const our = byPair.get(koPairKey(homeDb, awayDb));
+    if (!our) { unmatched.push(`${homeDb} x ${awayDb}`); continue; }
+    matched++;
+
+    // REGRA-MESTRA: jogo já finalizado (por nós OU pelo admin) é INTOCÁVEL.
+    if (our.curStatus === "finished") continue;
+
+    let status = mapStatus(g.finished, g.time_elapsed);
+
+    // Anti-fantasma: não pode estar live/finished antes do horário marcado.
+    if (status !== "scheduled" && our.matchDate) {
+      const kickoff = new Date(our.matchDate).getTime();
+      if (Number.isFinite(kickoff) && kickoff > Date.now()) status = "scheduled";
+    }
+
+    // Orienta o placar pela identidade do time (à prova de inversão de lado).
+    const srcHome = parseInt(g.home_score ?? "0", 10);
+    const srcAway = parseInt(g.away_score ?? "0", 10);
+    const homeScore = our.home === homeDb ? srcHome : srcAway;
+    const awayScore = our.home === homeDb ? srcAway : srcHome;
+    const decisive = homeScore !== awayScore;
+
+    let note: string | null = null;
+
+    if (status === "finished") {
+      if (!decisive) {
+        // Empate -> pênaltis. A fonte não diz quem passou: NÃO finaliza.
+        status = "live";
+        note = "empate: aguardando finalização manual (pênaltis)";
+      } else if (our.curStatus !== "live") {
+        // Anti-flap: só finaliza quem já passou por 'live'. Captura o placar
+        // agora como 'live'; finaliza no próximo ciclo (já com curStatus=live).
+        status = "live";
+        note = "anti-flap: finished sem passar por live; mantido em live";
+      }
+    }
+
+    const setScores = status !== "scheduled"; // jogo não iniciado não grava placar
+    const targetHome = setScores ? homeScore : null;
+    const targetAway = setScores ? awayScore : null;
+
+    // advancing_team_id só quando a API FINALIZA com placar decisivo.
+    let advancingId: string | null = null;
+    if (status === "finished" && decisive) {
+      advancingId = idByName.get(homeScore > awayScore ? our.home : our.away) ?? null;
+    }
+
+    const logRow = {
+      mode,
+      source_game_id: String(g.id),
+      ko_match_id: our.id,
+      round: our.round,
+      home_team: our.home,
+      away_team: our.away,
+      src_home_score: targetHome,
+      src_away_score: targetAway,
+      src_status: status,
+      src_raw_finished: String(g.finished ?? ""),
+      src_time_elapsed: String(g.time_elapsed ?? ""),
+      applied: false,
+      note,
+    };
+
+    if (mode === "shadow") {
+      // Registra só jogos em andamento/encerrados (mantém o log enxuto).
+      if (status !== "scheduled") {
+        await supabase.from("ko_api_sync_runs").insert(logRow);
+        logged++;
+      }
+      continue;
+    }
+
+    // LIVE: escreve só quando muda (evita re-disparo do trigger de pontuação).
+    const sameStatus = our.curStatus === status;
+    const sameScore = our.curHome === targetHome && our.curAway === targetAway;
+    if (sameStatus && sameScore) continue;
+
+    const patch: Record<string, unknown> = {
+      status,
+      api_fixture_id: Number(g.id),
+      home_score: targetHome,
+      away_score: targetAway,
+    };
+    if (advancingId) patch.advancing_team_id = advancingId;
+
+    const { error: uErr } = await supabase
+      .from("ko_match").update(patch).eq("id", our.id);
+    if (uErr) { console.error(`ko update ${our.id}: ${uErr.message}`); continue; }
+    changed++;
+    await supabase.from("ko_api_sync_runs").insert({ ...logRow, applied: true });
+  }
+
+  // Propaga os vencedores para as fases seguintes — vale tanto p/ jogos que a
+  // API finalizou quanto p/ os que o ADMIN finalizou na mão (lê o banco).
+  let propagated = 0;
+  if (mode === "live") {
+    try { propagated = await propagateKnockout(supabase); }
+    catch (e) { console.error("propagateKnockout: " + (e as Error).message); }
+  }
+
+  return {
+    koMode: mode,
+    koGames: koGames.length,
+    matched,
+    unmatched,
+    ...(mode === "shadow" ? { logged } : { changed, propagated }),
+  };
+}
+
+function koPairKey(a: string, b: string): string {
+  return [a, b].sort().join("/");
+}
+
+// Preenche os confrontos das fases seguintes a partir do advancing_team_id dos
+// jogos JÁ finalizados (por nós OU pelo admin). Idempotente, só-quando-muda.
+// Análogo ao fillKnockout dos grupos, mas seguindo a árvore home/away_src_match.
+// deno-lint-ignore no-explicit-any
+async function propagateKnockout(supabase: any): Promise<number> {
+  const { data: rows } = await supabase
+    .from("ko_match")
+    .select(
+      "id, status, advancing_team_id, home_src_match, away_src_match, " +
+        "home_team_id, away_team_id",
+    );
+
+  const adv = new Map<string, string>();
+  for (const r of rows ?? []) {
+    if (r.status === "finished" && r.advancing_team_id) {
+      adv.set(r.id, r.advancing_team_id);
+    }
+  }
+  if (adv.size === 0) return 0;
+
+  let filled = 0;
+  for (const r of rows ?? []) {
+    const patch: Record<string, unknown> = {};
+    const wantHome = r.home_src_match ? adv.get(r.home_src_match) : undefined;
+    const wantAway = r.away_src_match ? adv.get(r.away_src_match) : undefined;
+    if (wantHome && wantHome !== r.home_team_id) patch.home_team_id = wantHome;
+    if (wantAway && wantAway !== r.away_team_id) patch.away_team_id = wantAway;
+    if (Object.keys(patch).length > 0) {
+      const { error } = await supabase
+        .from("ko_match").update(patch).eq("id", r.id);
+      if (!error) filled++;
+    }
+  }
+  return filled;
 }
 
 function json(status: number, body: unknown): Response {

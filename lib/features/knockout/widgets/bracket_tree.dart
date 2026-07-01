@@ -192,12 +192,16 @@ class _BracketTreeState extends State<BracketTree>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // Fase atual (frontier): a rodada mais profunda (além dos 16-avos) que já
-    // tem seleções definidas. 0 = ainda nos 16-avos.
-    int frontier = 0;
-    for (var c = 1; c < _cols.length; c++) {
-      if (widget.matches.any((m) => m.round == _cols[c] && m.home != null)) {
+    // Fase atual (frontier) p/ focar: a rodada mais RASA que ainda não teve
+    // TODOS os jogos finalizados. O foco só avança pra próxima fase quando a
+    // anterior encerra por completo. Tudo encerrado → foca a final.
+    int frontier = _cols.length - 1;
+    for (var c = 0; c < _cols.length; c++) {
+      final games = widget.matches.where((m) => m.round == _cols[c]);
+      if (games.isEmpty) continue;
+      if (games.any((m) => !m.isFinished)) {
         frontier = c;
+        break;
       }
     }
 
@@ -246,8 +250,8 @@ class _BracketTreeState extends State<BracketTree>
       final vh = box.maxHeight.isFinite ? box.maxHeight : 600.0;
       _viewport = Size(box.maxWidth, vh);
       if (!_fitted && box.maxWidth.isFinite) {
-        // Abre focado na fase atual: PRIMEIRO card (slot 1) da coluna do frontier
-        // no topo-esquerda. Com frontier 0 (ainda nos 16-avos) → 16avos:1.
+        // Abre focado na fase atual (1ª rodada não totalmente encerrada):
+        // PRIMEIRO card (slot 1) dessa coluna no topo-esquerda.
         _controller.value = _cameraForCell(
             frontier, cy['${_cols[frontier]}:1'] ?? _cardH / 2, _viewport!);
         _fitted = true;

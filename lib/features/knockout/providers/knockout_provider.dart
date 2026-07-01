@@ -117,9 +117,12 @@ final koUserRankingProvider =
       .from('ko_user_rankings')
       .select()
       .order('rank', ascending: true);
-  return applyDenseRank((data as List)
+  // Ranking de COMPETIÇÃO: empate mantém a posição e o próximo pula (3, 3, 5),
+  // igual ao Ranking Geral da fase de grupos. A view já entrega o RANK() com
+  // buracos — NÃO aplicar dense rank aqui.
+  return (data as List)
       .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
-      .toList());
+      .toList();
 });
 
 /// Pontos do mata-mata do usuário logado (soma de ko_bet.points + bônus de
@@ -168,9 +171,11 @@ final koLeagueRankingProvider = FutureProvider.autoDispose
       .select()
       .eq('league_id', leagueId)
       .order('rank', ascending: true);
-  return applyDenseRank((data as List)
+  // Ranking de COMPETIÇÃO (empate → próximo pula: 3, 3, 5), igual às ligas da
+  // fase de grupos. A view já entrega o RANK() com buracos — sem dense rank.
+  return (data as List)
       .map((r) => RankingEntry.fromJson(r as Map<String, dynamic>))
-      .toList());
+      .toList();
 });
 
 // ── Palpites do usuário logado ───────────────────────────────────────────────

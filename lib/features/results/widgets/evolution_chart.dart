@@ -293,10 +293,12 @@ class _Chart extends ConsumerWidget {
     const groupGames = 72;
     final xCount = data.xLabels.length;
     final dayStep = xCount <= 0 ? 1 : (xCount / 8).ceil();
-    final minX = data.byGame ? 1.0 : 0.0;
-    final maxX = data.byGame
-        ? groupGames.toDouble()
-        : (xCount - 1).clamp(1, 1 << 30).toDouble();
+    // Folga no eixo X (além do 1º e do último ponto) pra os marcadores das
+    // pontas não colarem/serem cortados nas laterais.
+    final lastDay = (xCount - 1).clamp(1, 1 << 30);
+    final minX = data.byGame ? 0.0 : -0.6;
+    final maxX =
+        data.byGame ? (groupGames + 1).toDouble() : (lastDay + 0.6).toDouble();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,13 +331,14 @@ class _Chart extends ConsumerWidget {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(8, 12, 22, 16),
             child: LineChart(
               LineChartData(
                 // Eixo invertido: plotamos -rank, então o 1º (rank menor) fica
-                // no topo. minY/maxY também negativos.
-                minY: -bottom.toDouble() - 0.8,
-                maxY: -top.toDouble() + 0.8,
+                // no topo. minY/maxY também negativos. Folga generosa (1.6) pra
+                // os anéis de melhor/pior/final não serem cortados nas pontas.
+                minY: -bottom.toDouble() - 1.6,
+                maxY: -top.toDouble() + 1.6,
                 minX: minX,
                 maxX: maxX,
                 lineTouchData: const LineTouchData(enabled: false),

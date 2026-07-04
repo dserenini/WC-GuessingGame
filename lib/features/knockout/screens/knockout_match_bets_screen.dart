@@ -4,30 +4,42 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 import 'package:copa2026/shared/models/bet.dart' show RankingEntry;
+import 'package:copa2026/shared/providers/timezone_provider.dart';
 import 'package:copa2026/shared/utils/bet_filter.dart';
 import 'package:copa2026/shared/widgets/flag_avatar.dart';
 import 'package:copa2026/l10n/team_translator.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/widgets/ko_scope_filter_bar.dart';
 
 /// "Ver apostas" do MATA-MATA: escolhe um jogo (só finalizados/ao vivo/fechados
 /// 30 min antes) e vê o palpite de todo mundo agrupado por placar. Sem filtro
 /// "Top N" e sem realce de premiação (suprimidos no KO por ora).
-class KnockoutMatchBetsScreen extends ConsumerWidget {
+class KnockoutMatchBetsScreen extends ConsumerStatefulWidget {
   final String title;
   final List<RankingEntry> members;
   const KnockoutMatchBetsScreen(
       {super.key, required this.title, required this.members});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KnockoutMatchBetsScreen> createState() =>
+      _KnockoutMatchBetsScreenState();
+}
+
+class _KnockoutMatchBetsScreenState
+    extends ConsumerState<KnockoutMatchBetsScreen> {
+  String _scope = kKoScopeAll;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final matchesAsync = ref.watch(koMatchesProvider);
+    final offset = ref.watch(timezoneProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(title, overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(title: Text(widget.title, overflow: TextOverflow.ellipsis)),
       body: matchesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
@@ -35,10 +47,18 @@ class KnockoutMatchBetsScreen extends ConsumerWidget {
           final sorted = [...matches]
             ..sort((a, b) => (a.matchDate ?? DateTime(0))
                 .compareTo(b.matchDate ?? DateTime(0)));
+          final visible = sorted
+              .where((m) => koMatchPassScope(_scope, m, offset))
+              .toList();
           return Column(
             children: [
+              KoScopeFilterBar(
+                scope: _scope,
+                rounds: koRoundsPresent(sorted),
+                onScope: (s) => setState(() => _scope = s),
+              ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(l.leagueBetsSelectMatch,
@@ -47,15 +67,17 @@ class KnockoutMatchBetsScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: sorted.length,
-                  itemBuilder: (_, i) => _KoMatchSelectTile(
-                    match: sorted[i],
-                    title: title,
-                    members: members,
-                  ),
-                ),
+                child: visible.isEmpty
+                    ? _Centered(text: l.filterNoGames)
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        itemCount: visible.length,
+                        itemBuilder: (_, i) => _KoMatchSelectTile(
+                          match: visible[i],
+                          title: widget.title,
+                          members: widget.members,
+                        ),
+                      ),
               ),
             ],
           );

@@ -10,26 +10,36 @@ import 'package:copa2026/l10n/team_translator.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
+import 'package:copa2026/features/knockout/widgets/ko_scope_filter_bar.dart';
 
 /// Perfil visitante do MATA-MATA: palpites de KO de outro usuário, revelando só
 /// jogos finalizados/ao vivo/fechados (30 min antes). A RLS `ko_bet_read`
 /// garante que jogos ainda abertos nem vêm do servidor (anti-cópia).
-class KnockoutVisitorScreen extends ConsumerWidget {
+class KnockoutVisitorScreen extends ConsumerStatefulWidget {
   final String userId;
   final RankingEntry? entry;
   const KnockoutVisitorScreen({super.key, required this.userId, this.entry});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KnockoutVisitorScreen> createState() =>
+      _KnockoutVisitorScreenState();
+}
+
+class _KnockoutVisitorScreenState extends ConsumerState<KnockoutVisitorScreen> {
+  String _scope = kKoScopeAll;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final currentUid = ref.watch(currentUserProvider)?.id;
-    final isSelf = userId == currentUid;
-    final name = entry?.displayName ?? '';
+    final isSelf = widget.userId == currentUid;
+    final name = widget.entry?.displayName ?? '';
 
     final matchesAsync = ref.watch(koMatchesProvider);
-    final bBetsAsync = ref.watch(koUserBetsProvider(userId));
+    final bBetsAsync = ref.watch(koUserBetsProvider(widget.userId));
     final myBetsAsync = ref.watch(koMyBetsProvider);
+    final offset = ref.watch(timezoneProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,24 +84,43 @@ class KnockoutVisitorScreen extends ConsumerWidget {
         final sorted = [...matches]
           ..sort((a, b) =>
               (a.matchDate ?? DateTime(0)).compareTo(b.matchDate ?? DateTime(0)));
+        final visible =
+            sorted.where((m) => koMatchPassScope(_scope, m, offset)).toList();
         return RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(koMatchesProvider);
-            ref.invalidate(koUserBetsProvider(userId));
+            ref.invalidate(koUserBetsProvider(widget.userId));
             ref.invalidate(koMyBetsProvider);
           },
           child: ListView(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
             children: [
-              for (final m in sorted)
-                _KoCompareCard(
-                  match: m,
-                  revealed: isSelf || koMatchRevealed(m),
-                  bBet: bBets[m.id],
-                  myBet: isSelf ? null : myBets[m.id],
-                  isSelf: isSelf,
-                  l: l,
-                ),
+              KoScopeFilterBar(
+                scope: _scope,
+                rounds: koRoundsPresent(sorted),
+                onScope: (s) => setState(() => _scope = s),
+              ),
+              const SizedBox(height: 4),
+              if (visible.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+                  child: Center(
+                    child: Text(l.filterNoGames,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurface.withOpacity(0.6))),
+                  ),
+                )
+              else
+                for (final m in visible)
+                  _KoCompareCard(
+                    match: m,
+                    revealed: isSelf || koMatchRevealed(m),
+                    bBet: bBets[m.id],
+                    myBet: isSelf ? null : myBets[m.id],
+                    isSelf: isSelf,
+                    l: l,
+                  ),
             ],
           ),
         );

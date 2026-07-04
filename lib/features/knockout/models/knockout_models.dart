@@ -45,6 +45,36 @@ int koBetPoints(String round, int betHome, int betAway, int realHome, int realAw
   return 0;
 }
 
+/// Filtro de escopo das telas de "ver apostas / ver jogos" do mata-mata:
+/// `'all'` (todos), `'day'` (jogos de hoje no fuso do usuário) ou o nome de uma
+/// fase de [kKoRounds] (16avos, oitavas, …). Modelado como String única porque as
+/// fases disponíveis variam conforme o chaveamento carregado.
+const String kKoScopeAll = 'all';
+const String kKoScopeDay = 'day';
+
+/// Um jogo do mata-mata acontece HOJE, no fuso do usuário ([offset])?
+bool koMatchIsToday(KoMatch m, Duration offset) {
+  final d = m.matchDate;
+  if (d == null) return false;
+  final now = DateTime.now().toUtc().add(offset);
+  final ld = d.toUtc().add(offset);
+  return ld.year == now.year && ld.month == now.month && ld.day == now.day;
+}
+
+/// O jogo passa pelo filtro de escopo selecionado.
+bool koMatchPassScope(String scope, KoMatch m, Duration offset) {
+  if (scope == kKoScopeAll) return true;
+  if (scope == kKoScopeDay) return koMatchIsToday(m, offset);
+  return m.round == scope; // uma fase específica
+}
+
+/// Fases presentes na lista de jogos, na ordem canônica de [kKoRounds]. Usado
+/// para montar só os chips de fase que realmente têm jogos carregados.
+List<String> koRoundsPresent(Iterable<KoMatch> matches) {
+  final have = matches.map((m) => m.round).toSet();
+  return [for (final r in kKoRounds) if (have.contains(r)) r];
+}
+
 /// O palpite de KO de um jogo já pode ser REVELADO aos outros? Mesmo critério do
 /// fechamento da aposta: 30 min antes do jogo, ao vivo ou encerrado. Espelha a
 /// RLS `ko_bet_read` (supabase/ko_bet_reveal_30min.sql) — antes disso o palpite

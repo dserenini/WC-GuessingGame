@@ -501,6 +501,11 @@
   "helpKoDeadlineDesc": "Bets for each knockout match can be placed or changed up to 30 minutes before kickoff.",
   "helpKoRankingTitle": "Knockout Ranking",
   "helpKoRankingDesc": "The knockout stage has its own ranking, separate from the group stage (starts from zero).",
+  "helpKoPrizesTitle": "Knockout Prizes",
+  "helpKoPrizesDesc": "See how the knockout prize pool is split across the top 8 places.",
+  "koPrizesTitle": "Knockout Prizes",
+  "koPrizesSectionTitle": "Knockout Ranking",
+  "koPrizesNote": "Based on the final knockout standings (its own ranking).",
 
   "koStatsTitle": "Knockout Stats",
   "koStatsTabRankings": "Rankings",

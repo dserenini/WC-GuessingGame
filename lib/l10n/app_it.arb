@@ -501,6 +501,11 @@
   "helpKoDeadlineDesc": "Le scommesse di ogni partita a eliminazione possono essere fatte o modificate fino a 30 minuti prima del calcio d'inizio.",
   "helpKoRankingTitle": "Classifica Eliminazione",
   "helpKoRankingDesc": "La fase a eliminazione ha una classifica propria, separata dalla fase a gironi (parte da zero).",
+  "helpKoPrizesTitle": "Premi Eliminazione",
+  "helpKoPrizesDesc": "Scopri come il montepremi della fase a eliminazione è suddiviso tra i primi 8 classificati.",
+  "koPrizesTitle": "Premi Eliminazione",
+  "koPrizesSectionTitle": "Classifica Eliminazione",
+  "koPrizesNote": "In base alla classifica finale della fase a eliminazione (classifica propria).",
 
   "koStatsTitle": "Statistiche Eliminazione",
   "koStatsTabRankings": "Classifiche",

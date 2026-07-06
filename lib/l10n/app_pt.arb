@@ -501,6 +501,11 @@
   "helpKoDeadlineDesc": "As apostas de cada jogo do mata-mata podem ser feitas ou alteradas até 30 minutos antes do início da partida.",
   "helpKoRankingTitle": "Ranking do Mata-Mata",
   "helpKoRankingDesc": "O mata-mata tem ranking próprio, separado da fase de grupos (começa do zero).",
+  "helpKoPrizesTitle": "Premiação do Mata-Mata",
+  "helpKoPrizesDesc": "Veja como a premiação do mata-mata é distribuída entre os 8 primeiros colocados.",
+  "koPrizesTitle": "Premiação do Mata-Mata",
+  "koPrizesSectionTitle": "Ranking do Mata-Mata",
+  "koPrizesNote": "Considerando a classificação final do mata-mata (ranking próprio).",
 
   "koStatsTitle": "Estatísticas Mata-Mata",
   "koStatsTabRankings": "Rankings",

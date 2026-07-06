@@ -1336,6 +1336,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'The knockout stage has its own ranking, separate from the group stage (starts from zero).';
 
   @override
+  String get helpKoPrizesTitle => 'Knockout Prizes';
+
+  @override
+  String get helpKoPrizesDesc =>
+      'See how the knockout prize pool is split across the top 8 places.';
+
+  @override
+  String get koPrizesTitle => 'Knockout Prizes';
+
+  @override
+  String get koPrizesSectionTitle => 'Knockout Ranking';
+
+  @override
+  String get koPrizesNote =>
+      'Based on the final knockout standings (its own ranking).';
+
+  @override
   String get koStatsTitle => 'Knockout Stats';
 
   @override

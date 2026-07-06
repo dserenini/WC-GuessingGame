@@ -1353,6 +1353,23 @@ class AppLocalizationsIt extends AppLocalizations {
       'La fase a eliminazione ha una classifica propria, separata dalla fase a gironi (parte da zero).';
 
   @override
+  String get helpKoPrizesTitle => 'Premi Eliminazione';
+
+  @override
+  String get helpKoPrizesDesc =>
+      'Scopri come il montepremi della fase a eliminazione è suddiviso tra i primi 8 classificati.';
+
+  @override
+  String get koPrizesTitle => 'Premi Eliminazione';
+
+  @override
+  String get koPrizesSectionTitle => 'Classifica Eliminazione';
+
+  @override
+  String get koPrizesNote =>
+      'In base alla classifica finale della fase a eliminazione (classifica propria).';
+
+  @override
   String get koStatsTitle => 'Statistiche Eliminazione';
 
   @override

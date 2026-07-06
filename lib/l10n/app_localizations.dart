@@ -2620,6 +2620,36 @@ abstract class AppLocalizations {
   /// **'O mata-mata tem ranking próprio, separado da fase de grupos (começa do zero).'**
   String get helpKoRankingDesc;
 
+  /// No description provided for @helpKoPrizesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Premiação do Mata-Mata'**
+  String get helpKoPrizesTitle;
+
+  /// No description provided for @helpKoPrizesDesc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja como a premiação do mata-mata é distribuída entre os 8 primeiros colocados.'**
+  String get helpKoPrizesDesc;
+
+  /// No description provided for @koPrizesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Premiação do Mata-Mata'**
+  String get koPrizesTitle;
+
+  /// No description provided for @koPrizesSectionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking do Mata-Mata'**
+  String get koPrizesSectionTitle;
+
+  /// No description provided for @koPrizesNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Considerando a classificação final do mata-mata (ranking próprio).'**
+  String get koPrizesNote;
+
   /// No description provided for @koStatsTitle.
   ///
   /// In pt, this message translates to:

@@ -1345,6 +1345,23 @@ class AppLocalizationsPt extends AppLocalizations {
       'O mata-mata tem ranking próprio, separado da fase de grupos (começa do zero).';
 
   @override
+  String get helpKoPrizesTitle => 'Premiação do Mata-Mata';
+
+  @override
+  String get helpKoPrizesDesc =>
+      'Veja como a premiação do mata-mata é distribuída entre os 8 primeiros colocados.';
+
+  @override
+  String get koPrizesTitle => 'Premiação do Mata-Mata';
+
+  @override
+  String get koPrizesSectionTitle => 'Ranking do Mata-Mata';
+
+  @override
+  String get koPrizesNote =>
+      'Considerando a classificação final do mata-mata (ranking próprio).';
+
+  @override
   String get koStatsTitle => 'Estatísticas Mata-Mata';
 
   @override

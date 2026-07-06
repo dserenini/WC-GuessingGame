@@ -48,6 +48,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     return null;
   }
 
+  // Bloqueia deep-link p/ rotas exclusivas do mata-mata quando o usuário não
+  // tem acesso ao KO (knockoutVisible == false). Enquanto o provider carrega
+  // (valueOrNull == null), deixa passar para não piscar a tela.
+  String? knockoutGuard(BuildContext context, GoRouterState state) {
+    final visible = ref.read(knockoutVisibleProvider).valueOrNull;
+    if (visible == false) return '/profile';
+    return null;
+  }
+
   return GoRouter(
     initialLocation: '/profile',
     redirect: (context, state) {
@@ -189,6 +198,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'prizes',
         builder: (_, __) => const PrizesScreen(),
         redirect: groupOnlyGuard,
+      ),
+      GoRoute(
+        path: '/ko-prizes',
+        name: 'ko-prizes',
+        builder: (_, __) => const PrizesScreen(knockout: true),
+        redirect: knockoutGuard,
       ),
     ],
   );

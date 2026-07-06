@@ -5,10 +5,26 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 /// Tela dedicada de Premiação, acessada pelo card "Premiação" na Ajuda.
 /// Os valores são fixos (definidos pela organização) e expressos em reais (R$).
-///   • Ranking geral, após todos os jogos: 11 primeiros + último colocado.
-///   • Por rodada (1ª, 2ª e 3ª): os 3 primeiros de CADA rodada.
+///   • Fase de grupos: ranking geral (11 primeiros + último) + por rodada.
+///   • Mata-mata ([knockout] == true): os 8 primeiros do ranking próprio do KO.
 class PrizesScreen extends StatelessWidget {
-  const PrizesScreen({super.key});
+  /// Quando true, mostra a premiação do mata-mata (ranking próprio, 8 lugares)
+  /// em vez da premiação da fase de grupos.
+  final bool knockout;
+
+  const PrizesScreen({super.key, this.knockout = false});
+
+  // Mata-mata (ranking próprio) — posição (key) : valor em R$ (value).
+  static const List<MapEntry<int, int>> _koPrizes = [
+    MapEntry(1, 400),
+    MapEntry(2, 300),
+    MapEntry(3, 250),
+    MapEntry(4, 220),
+    MapEntry(5, 180),
+    MapEntry(6, 150),
+    MapEntry(7, 110),
+    MapEntry(8, 70),
+  ];
 
   // Ranking geral (após todos os jogos) — posição (key) : valor em R$ (value).
   static const List<MapEntry<int, int>> _generalPrizes = [
@@ -45,13 +61,29 @@ class PrizesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.prizesTitle),
+        title: Text(knockout ? l.koPrizesTitle : l.prizesTitle),
         centerTitle: true,
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (knockout) ...[
+            _SectionCard(
+              icon: Icons.emoji_events,
+              iconColor: kGold,
+              title: l.koPrizesSectionTitle,
+              note: l.koPrizesNote,
+              children: [
+                for (final p in _koPrizes)
+                  _PrizeRow(
+                    pos: p.key,
+                    label: l.rankPositionShort(p.key),
+                    value: _money(p.value),
+                  ),
+              ],
+            ),
+          ] else ...[
           _SectionCard(
             icon: Icons.emoji_events,
             iconColor: kGold,
@@ -79,6 +111,7 @@ class PrizesScreen extends StatelessWidget {
                 _PrizeRow(pos: p.key, label: l.rankPositionShort(p.key), value: _money(p.value)),
             ],
           ),
+          ],
           const SizedBox(height: 24),
           Center(
             child: Text(

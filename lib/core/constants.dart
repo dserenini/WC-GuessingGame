@@ -84,6 +84,10 @@ const Color kPrizeHighlight = Color(0xFFFFB300);
 // de palpites.
 const int kPrizeTopN = 11;
 
+// Quantos primeiros colocados do Ranking do Mata-Mata entram na zona de
+// premiação. Mesmo realce âmbar dos grupos, mas sem "último colocado".
+const int kKoPrizeTopN = 8;
+
 // ─────────────────────────────────────────────
 // WIKIPEDIA FLAG BASE URL
 // Usage: '$kFlagBaseUrl/Flag_of_Brazil.svg'

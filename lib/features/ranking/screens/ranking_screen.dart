@@ -227,8 +227,8 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           final myIndexInList =
               filtered.indexWhere((e) => e.userId == currentUid);
 
-          // Realce de premiação — SOMENTE no Ranking Geral: os 11 primeiros
-          // colocados (rank 1..11) e o último colocado (maior rank) recebem um
+          // Realce de premiação — Ranking Geral (fase de grupos): os 11
+          // primeiros (rank 1..11) e o último colocado (maior rank) recebem um
           // destaque âmbar no card. No ranking por rodada não há realce: as
           // medalhas já marcam o top 3 premiado. `lastRank` é calculado sobre a
           // lista completa (não a filtrada pela busca).
@@ -239,6 +239,12 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
               isGeneralScope &&
               e.rank >= 1 &&
               (e.rank <= kPrizeTopN || e.rank == lastRank);
+          // Mata-mata: mesmo realce âmbar, mas só os 8 primeiros (sem último);
+          // o KO tem ranking único (sem rodadas), então vale sempre.
+          bool isKoPrizeEntry(RankingEntry e) =>
+              e.rank >= 1 && e.rank <= kKoPrizeTopN;
+          bool prizeOf(RankingEntry e) =>
+              showKo ? isKoPrizeEntry(e) : isPrizeEntry(e);
 
           return Column(
             children: [
@@ -274,9 +280,10 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         itemBuilder: (_, i) => RankingTile(
                           entry: filtered[i],
                           isMe: filtered[i].userId == currentUid,
-                          // Mata-mata: sem realce de premiação (Top N/último) por
-                          // ora; e toque abre o perfil visitante do KO.
-                          isPrize: showKo ? false : isPrizeEntry(filtered[i]),
+                          // Realce da zona de premiação: top 11+último (grupos)
+                          // ou top 8 (mata-mata). Toque abre o perfil visitante
+                          // do KO quando showKo.
+                          isPrize: prizeOf(filtered[i]),
                           knockout: showKo,
                           l: l,
                         ),
@@ -287,7 +294,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                         entry: myEntry,
                         myIndexInList: myIndexInList,
                         positionsListener: _positionsListener,
-                        isPrize: showKo ? false : isPrizeEntry(myEntry),
+                        isPrize: prizeOf(myEntry),
                         l: l,
                         onTap: () {
                           if (_query.isNotEmpty) {

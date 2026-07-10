@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:copa2026/l10n/app_localizations.dart';
 
+import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/match.dart' show MatchStatus;
 import 'package:copa2026/shared/models/bet.dart' show RankingEntry;
 import 'package:copa2026/shared/providers/timezone_provider.dart';
@@ -14,8 +15,8 @@ import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/features/knockout/widgets/ko_scope_filter_bar.dart';
 
 /// "Ver apostas" do MATA-MATA: escolhe um jogo (só finalizados/ao vivo/fechados
-/// 30 min antes) e vê o palpite de todo mundo agrupado por placar. Sem filtro
-/// "Top N" e sem realce de premiação (suprimidos no KO por ora).
+/// 30 min antes) e vê o palpite de todo mundo agrupado por placar. Inclui o
+/// filtro "Top 8" (zona de premiação do KO) + realce âmbar nos chips premiados.
 class KnockoutMatchBetsScreen extends ConsumerStatefulWidget {
   final String title;
   final List<RankingEntry> members;
@@ -29,7 +30,11 @@ class KnockoutMatchBetsScreen extends ConsumerStatefulWidget {
 
 class _KnockoutMatchBetsScreenState
     extends ConsumerState<KnockoutMatchBetsScreen> {
-  String _scope = kKoScopeAll;
+  // Escopo padrão "Do dia": há poucos jogos por vez, então já abrimos nos jogos
+  // de hoje. Resolvido no 1º build (precisa da lista + fuso); se não houver jogo
+  // hoje (intervalo entre fases), cai para "Todos" para não abrir numa lista
+  // vazia. null = ainda não resolvido.
+  String? _scope;
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +52,18 @@ class _KnockoutMatchBetsScreenState
           final sorted = [...matches]
             ..sort((a, b) => (a.matchDate ?? DateTime(0))
                 .compareTo(b.matchDate ?? DateTime(0)));
+          // Lazy-init do padrão: "Do dia" se houver jogo hoje, senão "Todos".
+          final scope = _scope ??=
+              sorted.any((m) => koMatchIsToday(m, offset))
+                  ? kKoScopeDay
+                  : kKoScopeAll;
           final visible = sorted
-              .where((m) => koMatchPassScope(_scope, m, offset))
+              .where((m) => koMatchPassScope(scope, m, offset))
               .toList();
           return Column(
             children: [
               KoScopeFilterBar(
-                scope: _scope,
+                scope: scope,
                 rounds: koRoundsPresent(sorted),
                 onScope: (s) => setState(() => _scope = s),
               ),
@@ -198,6 +208,14 @@ class _KnockoutScorelinesScreenState
   final List<String> _userFilters = [];
   final Map<String, bool> _expandOverride = {};
 
+  // Filtro "Top 8": quando ligado, exibe só os palpites dos usuários na zona de
+  // premiação do mata-mata (rank 1..kKoPrizeTopN do ranking do KO).
+  bool _onlyTop = false;
+
+  // Cache dos grupos do build atual, p/ expandir os placares afetados quando o
+  // "Top 8" é ligado (sem reprocessar os bets).
+  List<_ScoreGroup> _groupsCache = const [];
+
   @override
   void dispose() {
     _searchCtrl.dispose();
@@ -205,16 +223,29 @@ class _KnockoutScorelinesScreenState
   }
 
   bool get _hasFilters => _scoreFilters.isNotEmpty || _userFilters.isNotEmpty;
+  bool get _anyFilter => _hasFilters || _onlyTop;
+
+  /// Usuário na zona de premiação do mata-mata (rank 1..kKoPrizeTopN).
+  bool _isPrize(RankingEntry u) => u.rank >= 1 && u.rank <= kKoPrizeTopN;
+
+  /// Existe gente suficiente para o filtro "Top 8" fazer sentido?
+  bool get _topFilterAvailable => widget.members.length > kKoPrizeTopN;
 
   bool _userHit(RankingEntry u) {
     final n = u.displayName.toLowerCase();
     return _userFilters.any((f) => n.contains(f.toLowerCase()));
   }
 
+  /// Filtros como UNIÃO no nível do apostador: placar casado traz o grupo
+  /// inteiro; nome traz só os apostadores casados; "Top 8" traz só os premiados.
   _ScoreGroup? _viewGroup(_ScoreGroup g) {
-    if (!_hasFilters) return g;
+    if (!_anyFilter) return g;
     if (_scoreFilters.contains('${g.home}-${g.away}')) return g;
-    final users = g.users.where(_userHit).toList();
+    final users = g.users
+        .where((u) =>
+            (_userFilters.isNotEmpty && _userHit(u)) ||
+            (_onlyTop && _isPrize(u)))
+        .toList();
     if (users.isEmpty) return null;
     return _ScoreGroup(
         home: g.home,
@@ -222,6 +253,13 @@ class _KnockoutScorelinesScreenState
         users: users,
         bucket: g.bucket,
         distance: g.distance);
+  }
+
+  /// Ao ligar o "Top 8", marca como expandidos os placares que têm premiados.
+  void _expandForTop() {
+    for (final g in _groupsCache) {
+      if (g.users.any(_isPrize)) _expandOverride['${g.home}-${g.away}'] = true;
+    }
   }
 
   void _addToken(String raw) {
@@ -243,7 +281,7 @@ class _KnockoutScorelinesScreenState
 
   bool _defaultExpanded(String key) {
     final scoreOnly = _scoreFilters.contains(key);
-    return !scoreOnly && _userFilters.isNotEmpty;
+    return !scoreOnly && (_userFilters.isNotEmpty || _onlyTop);
   }
 
   bool _isExpanded(_ScoreGroup g) {
@@ -297,6 +335,7 @@ class _KnockoutScorelinesScreenState
     final scheduled = match.status == MatchStatus.scheduled;
     final finished = match.status == MatchStatus.finished;
     final groups = _buildGroups(match, bets);
+    _groupsCache = groups; // p/ _expandForTop ao ligar o "Top 8"
 
     final shown = <_ScoreGroup>[];
     for (final g in groups) {
@@ -340,6 +379,38 @@ class _KnockoutScorelinesScreenState
                 controller: _searchCtrl,
                 hint: l.searchScoreOrPlayer,
                 onSubmit: _addToken),
+            // Filtro "Top 8": só os palpites de quem está na zona de premiação
+            // do mata-mata (com gente suficiente para o recorte fazer sentido).
+            if (_topFilterAvailable)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilterChip(
+                    avatar: Icon(
+                      Icons.emoji_events_outlined,
+                      size: 16,
+                      color: _onlyTop ? kPrizeHighlight : null,
+                    ),
+                    label: Text(l.topNFilter(kKoPrizeTopN)),
+                    selected: _onlyTop,
+                    onSelected: (v) => setState(() {
+                      _onlyTop = v;
+                      if (v) _expandForTop();
+                    }),
+                    selectedColor: kPrizeHighlight.withOpacity(0.18),
+                    checkmarkColor: kPrizeHighlight,
+                    side: BorderSide(
+                      color: _onlyTop
+                          ? kPrizeHighlight.withOpacity(0.6)
+                          : Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withOpacity(0.4),
+                    ),
+                  ),
+                ),
+              ),
             if (_hasFilters)
               _ActiveFilters(
                 scores: _scoreFilters,
@@ -383,6 +454,7 @@ class _KnockoutScorelinesScreenState
         expanded: _isExpanded(g),
         onToggle: () => _toggle(g),
         isHit: _userHit,
+        isPrize: _isPrize,
       );
 
   List<_ScoreGroup> _buildGroups(KoMatch match, Map<String, (int, int)> bets) {
@@ -664,13 +736,17 @@ class _ScoreCard extends StatelessWidget {
   final bool expanded;
   final VoidCallback onToggle;
   final bool Function(RankingEntry) isHit;
+
+  /// Marca um apostador na zona de premiação (top 8 do ranking do mata-mata).
+  final bool Function(RankingEntry) isPrize;
   const _ScoreCard(
       {required this.group,
       required this.match,
       required this.currentUid,
       required this.expanded,
       required this.onToggle,
-      required this.isHit});
+      required this.isHit,
+      required this.isPrize});
 
   @override
   Widget build(BuildContext context) {
@@ -733,7 +809,8 @@ class _ScoreCard extends StatelessWidget {
                       _UserChip(
                           name: u.displayName,
                           isMe: u.userId == currentUid,
-                          isHit: isHit(u)),
+                          isHit: isHit(u),
+                          isPrize: isPrize(u)),
                   ],
                 ),
               ],
@@ -749,34 +826,44 @@ class _UserChip extends StatelessWidget {
   final String name;
   final bool isMe;
   final bool isHit;
+
+  /// Na zona de premiação (top 8 do ranking do mata-mata) — borda âmbar.
+  final bool isPrize;
   const _UserChip(
-      {required this.name, required this.isMe, this.isHit = false});
+      {required this.name,
+      required this.isMe,
+      this.isHit = false,
+      this.isPrize = false});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Cores ortogonais: fundo/texto marcam "você"/busca; a borda âmbar da
+    // premiação (top 8) sobrepõe as demais (premiado buscado = fundo + âmbar).
     final (Color bg, Color fg) = isMe
         ? (cs.primary.withOpacity(0.15), cs.primary)
         : isHit
             ? (cs.primary, cs.onPrimary)
             : (cs.surfaceContainerHighest.withOpacity(0.6), cs.onSurface);
-    final Color border = isMe
-        ? cs.primary.withOpacity(0.5)
-        : isHit
-            ? cs.primary
-            : Colors.transparent;
+    final Color border = isPrize
+        ? kPrizeHighlight.withOpacity(0.75)
+        : isMe
+            ? cs.primary.withOpacity(0.5)
+            : isHit
+                ? cs.primary
+                : Colors.transparent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: border),
+        border: Border.all(color: border, width: isPrize ? 1.5 : 1),
       ),
       child: Text(name,
           style: TextStyle(
               fontSize: 12.5,
               fontWeight:
-                  (isMe || isHit) ? FontWeight.w700 : FontWeight.w500,
+                  (isMe || isHit || isPrize) ? FontWeight.w700 : FontWeight.w500,
               color: fg)),
     );
   }

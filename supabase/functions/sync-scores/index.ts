@@ -656,31 +656,39 @@ function koPairKey(a: string, b: string): string {
   return [a, b].sort().join("/");
 }
 
-// Preenche os confrontos das fases seguintes a partir do advancing_team_id dos
-// jogos JÁ finalizados (por nós OU pelo admin). Idempotente, só-quando-muda.
-// Análogo ao fillKnockout dos grupos, mas seguindo a árvore home/away_src_match.
+// Preenche os confrontos das fases seguintes a partir dos jogos JÁ finalizados
+// (por nós OU pelo admin). Idempotente, só-quando-muda. Análogo ao fillKnockout
+// dos grupos, mas seguindo a árvore home/away_src_match. O destino normal herda
+// o VENCEDOR (advancing) da origem; a disputa de 3º lugar herda o PERDEDOR.
 // deno-lint-ignore no-explicit-any
 async function propagateKnockout(supabase: any): Promise<number> {
   const { data: rows } = await supabase
     .from("ko_match")
     .select(
-      "id, status, advancing_team_id, home_src_match, away_src_match, " +
+      "id, round, status, advancing_team_id, home_src_match, away_src_match, " +
         "home_team_id, away_team_id",
     );
 
   const adv = new Map<string, string>();
+  const losers = new Map<string, string>();
   for (const r of rows ?? []) {
     if (r.status === "finished" && r.advancing_team_id) {
       adv.set(r.id, r.advancing_team_id);
+      const loser = r.advancing_team_id === r.home_team_id
+        ? r.away_team_id
+        : r.home_team_id;
+      if (loser) losers.set(r.id, loser);
     }
   }
   if (adv.size === 0) return 0;
 
   let filled = 0;
   for (const r of rows ?? []) {
+    // 3º lugar recebe os PERDEDORES das semis; o resto, os vencedores.
+    const src = r.round === "3lugar" ? losers : adv;
     const patch: Record<string, unknown> = {};
-    const wantHome = r.home_src_match ? adv.get(r.home_src_match) : undefined;
-    const wantAway = r.away_src_match ? adv.get(r.away_src_match) : undefined;
+    const wantHome = r.home_src_match ? src.get(r.home_src_match) : undefined;
+    const wantAway = r.away_src_match ? src.get(r.away_src_match) : undefined;
     if (wantHome && wantHome !== r.home_team_id) patch.home_team_id = wantHome;
     if (wantAway && wantAway !== r.away_team_id) patch.away_team_id = wantAway;
     if (Object.keys(patch).length > 0) {

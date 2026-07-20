@@ -160,10 +160,15 @@ class AppDrawer extends ConsumerWidget {
                       context.go('/ranking');
                     },
                   ),
-                  // Resultados (Seleção do Bolão + Evolução): liberado APENAS p/
-                  // quem tem a flag de fase de grupos (groups_unlocked OU admin),
-                  // em QUALQUER fase do torneio — não depende de groupOn.
-                  if (groupParticipant)
+                  // Resultados (Seleção do Bolão + Evolução), dirigido pelo acesso:
+                  //   • grupos + KO → submenu (Fase de Grupos / Mata-Mata)
+                  //   • só grupos   → link direto p/ /results
+                  //   • só KO       → link direto p/ /ko-results
+                  // "Fase de grupos" exige a flag de grupos (groups_unlocked OU
+                  // admin), em QUALQUER fase; "Mata-Mata" exige acesso ao KO.
+                  if (groupParticipant && knockoutOn)
+                    _ResultsExpansion(currentPath: currentPath, l: l)
+                  else if (groupParticipant)
                     _DrawerItem(
                       icon: '📈',
                       label: l.resultsMenu,
@@ -171,6 +176,16 @@ class AppDrawer extends ConsumerWidget {
                       onTap: () {
                         Navigator.pop(context);
                         context.go('/results');
+                      },
+                    )
+                  else if (knockoutOn)
+                    _DrawerItem(
+                      icon: '📈',
+                      label: l.resultsMenu,
+                      selected: currentPath == '/ko-results',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/ko-results');
                       },
                     ),
                   _DrawerItem(
@@ -407,6 +422,65 @@ class _StatsExpansion extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 context.go('/knockout-stats');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Menu "Resultados" com dois escopos (Fase de Grupos / Mata-Mata), espelho do
+/// [_StatsExpansion]. Só é usado quando o usuário tem acesso aos DOIS.
+class _ResultsExpansion extends StatelessWidget {
+  final String currentPath;
+  final AppLocalizations l;
+
+  const _ResultsExpansion({required this.currentPath, required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final onResults =
+        currentPath == '/results' || currentPath == '/ko-results';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: onResults,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.only(left: 16, bottom: 4),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          leading: const Text('📈', style: TextStyle(fontSize: 18)),
+          title: Text(
+            l.resultsMenu,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: onResults ? FontWeight.w600 : FontWeight.w400,
+              color: onResults ? cs.primary : null,
+            ),
+          ),
+          children: [
+            _DrawerItem(
+              icon: '🎯',
+              label: l.statsScopeGroups,
+              selected: currentPath == '/results',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/results');
+              },
+            ),
+            _DrawerItem(
+              icon: '⚔️',
+              label: l.statsScopeKnockout,
+              selected: currentPath == '/ko-results',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/ko-results');
               },
             ),
           ],

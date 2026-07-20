@@ -5,6 +5,7 @@ import 'package:copa2026/l10n/app_localizations.dart';
 
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/features/results/providers/evolution_provider.dart';
 import 'package:copa2026/features/results/providers/evolution_selection_provider.dart';
 
@@ -32,25 +33,27 @@ Color _colorForIndex(int i) => _palette[i % _palette.length];
 /// ou por dia). Sua linha é fixa; você vai acumulando usuários para comparar
 /// (busca livre ou escopada a uma liga). Eixo Y dinâmico pela faixa do conjunto.
 class EvolutionTab extends ConsumerWidget {
-  const EvolutionTab({super.key});
+  final EvolutionScope scope;
+  const EvolutionTab({super.key, this.scope = EvolutionScope.groups});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final granularity = ref.watch(evolutionGranularityProvider);
-    final dataAsync = ref.watch(evolutionDataProvider(granularity));
+    final granularity = ref.watch(evolutionGranularityProvider(scope));
+    final dataAsync = ref
+        .watch(evolutionDataProvider((granularity: granularity, scope: scope)));
 
     return Column(
       children: [
-        _Controls(l: l, granularity: granularity),
-        const _SelectionChips(),
+        _Controls(l: l, granularity: granularity, scope: scope),
+        _SelectionChips(scope: scope),
         Expanded(
           child: dataAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text(e.toString())),
             data: (data) => data.isEmpty
                 ? _empty(context, l.resultsEmpty)
-                : _Chart(data: data, l: l),
+                : _Chart(data: data, l: l, scope: scope),
           ),
         ),
       ],
@@ -81,7 +84,9 @@ class EvolutionTab extends ConsumerWidget {
 class _Controls extends ConsumerWidget {
   final AppLocalizations l;
   final EvolutionGranularity granularity;
-  const _Controls({required this.l, required this.granularity});
+  final EvolutionScope scope;
+  const _Controls(
+      {required this.l, required this.granularity, required this.scope});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,7 +111,7 @@ class _Controls extends ConsumerWidget {
             ],
             selected: {granularity},
             onSelectionChanged: (s) => ref
-                .read(evolutionGranularityProvider.notifier)
+                .read(evolutionGranularityProvider(scope).notifier)
                 .state = s.first,
           ),
           const SizedBox(height: 10),
@@ -141,7 +146,7 @@ class _Controls extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => const _AddUserSheet(),
+      builder: (_) => _AddUserSheet(scope: scope),
     );
   }
 }
@@ -176,13 +181,18 @@ class _PillButton extends StatelessWidget {
 // CHIPS — Você (fixo) + cada usuário adicionado (removível, cor = cor da linha)
 // ─────────────────────────────────────────────────────────────────────────────
 class _SelectionChips extends ConsumerWidget {
-  const _SelectionChips();
+  final EvolutionScope scope;
+  const _SelectionChips({required this.scope});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final selected = ref.watch(evolutionSelectionProvider).toList();
-    final ranking = ref.watch(rankingProvider).valueOrNull ?? const [];
+    final selected = ref.watch(evolutionSelectionProvider(scope)).toList();
+    final ranking = ref.watch(scope == EvolutionScope.knockout
+                ? koUserRankingProvider
+                : rankingProvider)
+            .valueOrNull ??
+        const [];
     final nameOf = {for (final e in ranking) e.userId: e.displayName};
 
     return Padding(
@@ -206,7 +216,7 @@ class _SelectionChips extends ConsumerWidget {
                   radius: 7, backgroundColor: _colorForIndex(i)),
               label: Text(nameOf[selected[i]] ?? '—'),
               onDeleted: () => ref
-                  .read(evolutionSelectionProvider.notifier)
+                  .read(evolutionSelectionProvider(scope).notifier)
                   .remove(selected[i]),
             ),
         ],
@@ -221,14 +231,15 @@ class _SelectionChips extends ConsumerWidget {
 class _Chart extends ConsumerWidget {
   final EvolutionData data;
   final AppLocalizations l;
-  const _Chart({required this.data, required this.l});
+  final EvolutionScope scope;
+  const _Chart({required this.data, required this.l, required this.scope});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final me = ref.watch(currentUserProvider)?.id;
-    final selected = ref.watch(evolutionSelectionProvider).toList();
+    final selected = ref.watch(evolutionSelectionProvider(scope)).toList();
     final byUser = data.byUser;
 
     // Linhas a desenhar: Você (se tiver série) + adicionados presentes nos dados.
@@ -288,17 +299,22 @@ class _Chart extends ConsumerWidget {
       meFinalX = ln.points.last.x.toDouble();
     }
 
-    // Fase de grupos = 72 jogos: eixo X fixo de 1 a 72 (mostra todos), mesmo
-    // que só alguns estejam finalizados. Modo "por dia" usa índice ordinal.
-    const groupGames = 72;
+    // Faixa fixa do eixo X no modo "por jogo": grupos = 1..72; mata-mata =
+    // 73..104 (nº oficial dos jogos). Mostra todos, mesmo os não finalizados.
+    // Modo "por dia" usa índice ordinal.
+    final ko = scope == EvolutionScope.knockout;
+    final xFirst = ko ? 73 : 1;
+    final xLast = ko ? 104 : 72;
+    // Espaçamento dos rótulos no eixo X: KO tem menos jogos → de 4 em 4.
+    final gameStep = ko ? 4 : 6;
     final xCount = data.xLabels.length;
     final dayStep = xCount <= 0 ? 1 : (xCount / 8).ceil();
     // Folga no eixo X (além do 1º e do último ponto) pra os marcadores das
     // pontas não colarem/serem cortados nas laterais.
     final lastDay = (xCount - 1).clamp(1, 1 << 30);
-    final minX = data.byGame ? -1.5 : -1.0;
+    final minX = data.byGame ? (xFirst - 2.5) : -1.0;
     final maxX =
-        data.byGame ? (groupGames + 2).toDouble() : (lastDay + 1.0).toDouble();
+        data.byGame ? (xLast + 2).toDouble() : (lastDay + 1.0).toDouble();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,12 +397,12 @@ class _Chart extends ConsumerWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 24,
-                      // Por jogo: de 6 em 6 (6, 12, … 72). Por dia: ~8 rótulos.
-                      interval: data.byGame ? 6 : 1,
+                      // Por jogo: passo por escopo (6 grupos / 4 KO). Dia: ~8.
+                      interval: data.byGame ? gameStep.toDouble() : 1,
                       getTitlesWidget: (value, meta) {
                         if (data.byGame) {
                           final g = value.round();
-                          if (g < 1 || g > groupGames) {
+                          if (g < xFirst || g > xLast) {
                             return const SizedBox.shrink();
                           }
                           return Padding(
@@ -517,7 +533,8 @@ class _MarkerLabel extends StatelessWidget {
 // BOTTOM SHEET — busca/adiciona qualquer usuário do bolão
 // ─────────────────────────────────────────────────────────────────────────────
 class _AddUserSheet extends ConsumerStatefulWidget {
-  const _AddUserSheet();
+  final EvolutionScope scope;
+  const _AddUserSheet({required this.scope});
 
   @override
   ConsumerState<_AddUserSheet> createState() => _AddUserSheetState();
@@ -531,10 +548,12 @@ class _AddUserSheetState extends ConsumerState<_AddUserSheet> {
     final l = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final me = ref.watch(currentUserProvider)?.id;
-    final selected = ref.watch(evolutionSelectionProvider);
+    final selected = ref.watch(evolutionSelectionProvider(widget.scope));
 
-    // Sugestões: qualquer participante do bolão.
-    final candidatesAsync = ref.watch(rankingProvider);
+    // Sugestões: participantes do escopo atual (grupos ou mata-mata).
+    final candidatesAsync = ref.watch(widget.scope == EvolutionScope.knockout
+        ? koUserRankingProvider
+        : rankingProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -593,7 +612,8 @@ class _AddUserSheetState extends ConsumerState<_AddUserSheet> {
                       return ListTile(
                         dense: true,
                         onTap: () => ref
-                            .read(evolutionSelectionProvider.notifier)
+                            .read(evolutionSelectionProvider(widget.scope)
+                                .notifier)
                             .toggle(e.userId),
                         leading: CircleAvatar(
                           radius: 18,

@@ -491,6 +491,12 @@
   "koChampionSheetTitle": "Pick the World Cup champion",
   "koChampionSearchHint": "Search team",
   "koChampionNoResults": "No team found",
+  "koChampionCrowned": "{team} are the 2026 World Cup champions! 🏆",
+  "@koChampionCrowned": { "placeholders": { "team": { "type": "String" } } },
+  "koChampionLabel": "CHAMPION",
+  "koResultsMenu": "Knockout Results",
+  "koLineupEmpty": "Not enough participants for the knockout lineup.",
+  "reservePlayer": "Substitute",
 
   "helpKoSection": "Knockout",
   "helpKoScoringTitle": "Knockout Scoring",

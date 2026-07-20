@@ -550,7 +550,11 @@ class _AdminKoMatchTile extends StatelessWidget {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String?>(
                   initialValue: advValue,
-                  decoration: const InputDecoration(labelText: 'Quem avança'),
+                  decoration: InputDecoration(
+                    // Na FINAL não há "próxima fase": o vencedor é a Campeã.
+                    labelText:
+                        match.round == 'final' ? 'Campeã' : 'Quem avança',
+                  ),
                   items: advItems,
                   onChanged: (v) => setState(() => advancingId = v),
                 ),

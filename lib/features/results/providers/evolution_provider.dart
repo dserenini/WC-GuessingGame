@@ -3,14 +3,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:copa2026/features/results/providers/evolution_selection_provider.dart';
 
-/// Granularidade do gráfico de evolução: ao fim de cada JOGO (api_match_id 1..72)
-/// ou ao fim de cada DIA de jogos. Trocada por um toggle na própria aba.
+/// Granularidade do gráfico de evolução: ao fim de cada JOGO ou de cada DIA de
+/// jogos. Trocada por um toggle na própria aba.
 enum EvolutionGranularity { perGame, perDay }
 
-/// Estado do toggle (jogo/dia). Default = por jogo (mais granular).
+/// Chave do [evolutionDataProvider]: granularidade (jogo/dia) × escopo
+/// (grupos/mata-mata). Record → igualdade estrutural para a family do Riverpod.
+typedef EvolutionKey = ({EvolutionGranularity granularity, EvolutionScope scope});
+
+/// Estado do toggle (jogo/dia), por ESCOPO. Default = por jogo (mais granular).
 final evolutionGranularityProvider =
-    StateProvider.autoDispose<EvolutionGranularity>(
-        (ref) => EvolutionGranularity.perGame);
+    StateProvider.autoDispose.family<EvolutionGranularity, EvolutionScope>(
+        (ref, scope) => EvolutionGranularity.perGame);
 
 /// Um ponto da série: a POSIÇÃO (rank) de um usuário num instante do eixo X.
 /// `x` é o índice ordinal (0-based) dentro dos snapshots disponíveis; o rótulo
@@ -74,10 +78,13 @@ String _formatDay(String isoDate) {
 /// para o gráfico. autoDispose: requery a cada abertura da aba; refletindo novos
 /// resultados finalizados. Mesmo padrão de query de ranking_provider.dart.
 final evolutionDataProvider = FutureProvider.autoDispose
-    .family<EvolutionData, EvolutionGranularity>((ref, granularity) async {
+    .family<EvolutionData, EvolutionKey>((ref, key) async {
   final client = Supabase.instance.client;
-  final byGame = granularity == EvolutionGranularity.perGame;
-  final view = byGame ? 'user_game_evolution' : 'user_day_evolution';
+  final byGame = key.granularity == EvolutionGranularity.perGame;
+  final ko = key.scope == EvolutionScope.knockout;
+  final view = ko
+      ? (byGame ? 'ko_user_game_evolution' : 'ko_user_day_evolution')
+      : (byGame ? 'user_game_evolution' : 'user_day_evolution');
   final keyCol = byGame ? 'game_no' : 'match_day';
 
   // Buscamos SÓ os usuários desenhados: você + os adicionados à comparação.
@@ -86,8 +93,10 @@ final evolutionDataProvider = FutureProvider.autoDispose
   // primeiros jogos. Filtrando por user_id, o volume fica pequeno. O `rank` de
   // cada linha continua sendo a posição real entre TODOS (calculada na view).
   final me = client.auth.currentUser?.id;
-  final ids = <String>{if (me != null) me, ...ref.watch(evolutionSelectionProvider)}
-      .toList();
+  final ids = <String>{
+    if (me != null) me,
+    ...ref.watch(evolutionSelectionProvider(key.scope))
+  }.toList();
   if (ids.isEmpty) {
     return EvolutionData(
         points: const [], xLabels: const [], byGame: byGame, maxRank: 0);

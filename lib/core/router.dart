@@ -20,6 +20,7 @@ import 'package:copa2026/features/profile/screens/visitor_profile_screen.dart';
 import 'package:copa2026/features/profile/screens/advanced_stats_screen.dart';
 import 'package:copa2026/features/profile/screens/achievements_screen.dart';
 import 'package:copa2026/features/results/screens/results_screen.dart';
+import 'package:copa2026/features/results/screens/ko_results_screen.dart';
 import 'package:copa2026/shared/models/bet.dart';
 import 'package:copa2026/features/help/screens/help_screen.dart';
 import 'package:copa2026/features/prizes/screens/prizes_screen.dart';
@@ -203,6 +204,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ko-prizes',
         name: 'ko-prizes',
         builder: (_, __) => const PrizesScreen(knockout: true),
+        redirect: knockoutGuard,
+      ),
+      GoRoute(
+        path: '/ko-results',
+        name: 'ko-results',
+        builder: (_, __) => const KoResultsScreen(),
         redirect: knockoutGuard,
       ),
     ],

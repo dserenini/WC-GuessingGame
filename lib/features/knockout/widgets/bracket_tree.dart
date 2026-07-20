@@ -322,6 +322,14 @@ class _BracketTreeState extends State<BracketTree>
                           onTap: _tapFor(byKey['3lugar:1']),
                         ),
                       ),
+                    // Troféu da CAMPEÃ acima do card da final (quando decidida).
+                    if (_championTeam(byKey) != null)
+                      Positioned(
+                        left: (_cols.length - 1) * _colW,
+                        top: (cy['final:1'] ?? _cardH / 2) - _cardH / 2 - 96,
+                        width: _cardW,
+                        child: _ChampionCrown(team: _championTeam(byKey)!),
+                      ),
                     // Bandeiras viajando (avanços recém-finalizados)
                     ..._travelers(cy, byKey),
                   ],
@@ -351,6 +359,13 @@ class _BracketTreeState extends State<BracketTree>
         ],
       );
     });
+  }
+
+  /// Campeã da Copa: vencedora da final quando já finalizada; senão null.
+  TeamModel? _championTeam(Map<String, KoMatch> byKey) {
+    final f = byKey['final:1'];
+    if (f != null && f.isFinished && f.advancing != null) return f.advancing;
+    return null;
   }
 
   /// Tokens (bandeiras) dos avanços ativos percorrendo o caminho. Some ao
@@ -407,6 +422,95 @@ class _BracketTreeState extends State<BracketTree>
       ));
     }
     return tokens;
+  }
+}
+
+/// Coroa/troféu da CAMPEÃ, posicionado acima do card da final. Faz um pequeno
+/// pop (escala + fade) ao entrar em cena. Controller próprio para não interferir
+/// no controller de avanço do bracket.
+class _ChampionCrown extends StatefulWidget {
+  final TeamModel team;
+  const _ChampionCrown({required this.team});
+
+  @override
+  State<_ChampionCrown> createState() => _ChampionCrownState();
+}
+
+class _ChampionCrownState extends State<_ChampionCrown>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final scale = CurvedAnimation(parent: _c, curve: Curves.easeOutBack);
+    final fade = CurvedAnimation(parent: _c, curve: Curves.easeOut);
+
+    return FadeTransition(
+      opacity: fade,
+      child: ScaleTransition(
+        scale: scale,
+        alignment: Alignment.bottomCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🏆', style: TextStyle(fontSize: 30)),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: kGold.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: kGold, width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FlagAvatar(flagUrl: widget.team.flagUrl, radius: 10),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      widget.team.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF8A6D00),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              l.koChampionLabel,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -5,110 +5,177 @@ import 'package:copa2026/l10n/app_localizations.dart';
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/features/auth/providers/auth_provider.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
+import 'package:copa2026/features/knockout/providers/knockout_provider.dart';
 import 'package:copa2026/shared/models/bet.dart';
 
-/// Aba "Seleção do Bolão": escalação lúdica montada com o ranking (geral) da fase
-/// de grupos. Os 11 primeiros viram os titulares — mapeados a posições do campo —
-/// e o ÚLTIMO colocado vira o Técnico. Formação 4-3-2-1:
-///   1º → Centroavante · 2º/3º → Pontas · 4º → Meia · 5º/6º → Volantes ·
-///   7º–10º → Defesa/Laterais · 11º → Goleiro · último → Técnico.
+/// Aba "Seleção do Bolão": escalação lúdica montada com o ranking geral. Os
+/// titulares (mapeados a posições do campo) vêm do topo do ranking e o ÚLTIMO
+/// colocado vira o Técnico.
+///   • Grupos (4-3-2-1, 11 titulares): 1º→Centroavante · 2º/3º→Pontas · 4º→Meia ·
+///     5º/6º→Volantes · 7º–10º→Defesa · 11º→Goleiro · último→Técnico.
+///   • Mata-mata (zona de premiação, rank ≤ 8; SEM goleiro, SEM banco/técnico):
+///     agrupa por faixa de colocação do ranking FINAL do KO. Como houve empates:
+///     1º→Centroavante · 2º(×3)→Meias · 5º(×2)→Volantes · 7º/8º(×3)→Defesa.
 class LineupTab extends ConsumerWidget {
-  const LineupTab({super.key});
+  /// Monta a seleção com o ranking do MATA-MATA (zona de premiação) em vez do
+  /// de grupos.
+  final bool knockout;
+  const LineupTab({super.key, this.knockout = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final rankingAsync = ref.watch(rankingProvider);
+    final rankingAsync =
+        ref.watch(knockout ? koUserRankingProvider : rankingProvider);
     final currentUid = ref.watch(currentUserProvider)?.id;
 
+    return knockout
+        ? _koLineup(context, l, rankingAsync, currentUid)
+        : _groupLineup(context, l, rankingAsync, currentUid);
+  }
+
+  // ── FASE DE GRUPOS ──────────────────────────────────────────────────────────
+  Widget _groupLineup(BuildContext context, AppLocalizations l,
+      AsyncValue<List<RankingEntry>> rankingAsync, String? currentUid) {
     return rankingAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text(e.toString())),
       data: (entries) {
-        // Só entram na seleção quem realmente jogou: no mínimo 10 pontos. Isso
-        // evita que o "técnico" (último colocado) seja alguém sem participação
-        // (0 pontos). Ordena por rank e, em caso de empate, por user_id — assim
-        // quem fica em campo vs. no banco é ESTÁVEL entre carregamentos (o RANK()
-        // da view não desempata além dos critérios, e o Postgres pode variar a
-        // ordem dos empatados).
+        // Só entra na seleção quem realmente jogou: no mínimo 10 pontos. Isso
+        // evita que o "técnico" (último colocado) seja alguém sem participação.
+        // Ordena por rank e, em caso de empate, por user_id — assim quem fica em
+        // campo vs. no banco é ESTÁVEL entre carregamentos.
         final eligible = entries.where((e) => e.totalPoints >= 10).toList()
           ..sort((a, b) {
             final r = a.rank.compareTo(b.rank);
             return r != 0 ? r : a.userId.compareTo(b.userId);
           });
 
-        // Precisa de pelo menos 12 elegíveis (11 titulares + 1 técnico).
-        if (eligible.length < 12) {
-          final cs = Theme.of(context).colorScheme;
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                l.resultsLineupEmpty,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurface.withOpacity(0.55)),
-              ),
-            ),
-          );
-        }
+        if (eligible.length < 12) return _empty(context, l.resultsLineupEmpty);
 
-        final starters = eligible.take(11).toList(); // índices 0..10 = 1º..11º
+        final starters = eligible.take(11).toList(); // 0..10 = 1º..11º
         final coach = eligible.last;
 
         // Empate na FRONTEIRA da escalação: quem dividiu a 11ª colocação com o
-        // titular do gol (mesmo rank), mas ficou de fora do corte, não é
-        // descartado — vai para o banco de reservas (mesmo badge da colocação).
+        // titular do gol, mas ficou de fora do corte, vai para o banco.
         final cutRank = eligible[10].rank;
         final reserves = eligible
             .skip(11)
             .where((e) => e.rank == cutRank && e.userId != coach.userId)
             .toList();
 
-        // Mapa por posição no ranking (1-based) para montar as linhas.
         RankingEntry at(int rankPos) => starters[rankPos - 1];
 
-        return LayoutBuilder(
-          builder: (context, _) {
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                Text(l.lineupTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 14),
-                _Field(
-                  rows: [
-                    // De cima (ataque) para baixo (gol).
-                    [_P(at(1), l.posStriker)],
-                    [_P(at(2), l.posWinger), _P(at(3), l.posWinger)],
-                    [_P(at(4), l.posPlaymaker)],
-                    [_P(at(5), l.posDefensiveMid), _P(at(6), l.posDefensiveMid)],
-                    [
-                      _P(at(7), l.posDefense),
-                      _P(at(8), l.posDefense),
-                      _P(at(9), l.posDefense),
-                      _P(at(10), l.posDefense),
-                    ],
-                    [_P(at(11), l.posGoalkeeper)],
-                  ],
-                  currentUid: currentUid,
-                  l: l,
-                ),
-                const SizedBox(height: 16),
-                _Bench(
-                  reserves: reserves,
-                  coach: coach,
-                  currentUid: currentUid,
-                  l: l,
-                ),
-              ],
-            );
-          },
+        // De cima (ataque) para baixo. Formação 4-3-2-1 (com goleiro).
+        final rows = <List<_P>>[
+          [_P(at(1), l.posStriker)],
+          [_P(at(2), l.posWinger), _P(at(3), l.posWinger)],
+          [_P(at(4), l.posPlaymaker)],
+          [_P(at(5), l.posDefensiveMid), _P(at(6), l.posDefensiveMid)],
+          [
+            _P(at(7), l.posDefense),
+            _P(at(8), l.posDefense),
+            _P(at(9), l.posDefense),
+            _P(at(10), l.posDefense),
+          ],
+          [_P(at(11), l.posGoalkeeper)],
+        ];
+
+        return _scaffold(context, l, currentUid, rows, [
+          _Bench(
+            reserves: reserves,
+            coach: coach,
+            currentUid: currentUid,
+            reserveLabel: l.reserveGoalkeeper,
+            l: l,
+          ),
+        ]);
+      },
+    );
+  }
+
+  // ── MATA-MATA ───────────────────────────────────────────────────────────────
+  Widget _koLineup(BuildContext context, AppLocalizations l,
+      AsyncValue<List<RankingEntry>> rankingAsync, String? currentUid) {
+    return rankingAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text(e.toString())),
+      data: (entries) {
+        // Zona de premiação = colocação (rank) ≤ 8. Com os empates do ranking
+        // FINAL do KO, isso dá 9 jogadores (1 + 3 + 2 + 3). Ordena por rank e,
+        // em caso de empate, por user_id (estável entre carregamentos).
+        final prize = entries.where((e) => e.rank <= 8).toList()
+          ..sort((a, b) {
+            final r = a.rank.compareTo(b.rank);
+            return r != 0 ? r : a.userId.compareTo(b.userId);
+          });
+
+        // Layout fixo do pódio final (1/3/2/3). Se por algum motivo o ranking
+        // não tiver os 9 esperados, mostra o aviso em vez de estourar o layout.
+        if (prize.length < 9) return _empty(context, l.koLineupEmpty);
+
+        RankingEntry at(int pos) => prize[pos - 1]; // 1-based
+
+        // De cima (ataque) para baixo, agrupado por faixa de colocação:
+        //   1º → Centroavante · 2º(×3) → Meias · 5º(×2) → Volantes ·
+        //   7º/8º(×3) → Defesa. Sem goleiro, sem banco, sem técnico.
+        final rows = <List<_P>>[
+          [_P(at(1), l.posStriker)],
+          [
+            _P(at(2), l.posPlaymaker),
+            _P(at(3), l.posPlaymaker),
+            _P(at(4), l.posPlaymaker),
+          ],
+          [_P(at(5), l.posDefensiveMid), _P(at(6), l.posDefensiveMid)],
+          [
+            _P(at(7), l.posDefense),
+            _P(at(8), l.posDefense),
+            _P(at(9), l.posDefense),
+          ],
+        ];
+
+        return _scaffold(context, l, currentUid, rows, const []);
+      },
+    );
+  }
+
+  Widget _empty(BuildContext context, String msg) {
+    final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          msg,
+          textAlign: TextAlign.center,
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: cs.onSurface.withOpacity(0.55)),
+        ),
+      ),
+    );
+  }
+
+  /// Corpo comum: título + campo + (opcional) banco/extras.
+  Widget _scaffold(BuildContext context, AppLocalizations l, String? currentUid,
+      List<List<_P>> rows, List<Widget> extras) {
+    return LayoutBuilder(
+      builder: (context, _) {
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            Text(l.lineupTitle,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 14),
+            _Field(rows: rows, currentUid: currentUid, l: l),
+            if (extras.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ...extras,
+            ],
+          ],
         );
       },
     );
@@ -305,12 +372,14 @@ class _Bench extends StatelessWidget {
   final List<RankingEntry> reserves;
   final RankingEntry coach;
   final String? currentUid;
+  final String reserveLabel;
   final AppLocalizations l;
 
   const _Bench({
     required this.reserves,
     required this.coach,
     required this.currentUid,
+    required this.reserveLabel,
     required this.l,
   });
 
@@ -327,12 +396,14 @@ class _Bench extends StatelessWidget {
           entry: r,
           isMe: r.userId == currentUid,
           isCoach: false,
+          reserveLabel: reserveLabel,
           l: l,
         ),
       _BenchToken(
         entry: coach,
         isMe: coach.userId == currentUid,
         isCoach: true,
+        reserveLabel: reserveLabel,
         l: l,
       ),
     ];
@@ -379,12 +450,14 @@ class _BenchToken extends StatelessWidget {
   final RankingEntry entry;
   final bool isMe;
   final bool isCoach;
+  final String reserveLabel;
   final AppLocalizations l;
 
   const _BenchToken({
     required this.entry,
     required this.isMe,
     required this.isCoach,
+    required this.reserveLabel,
     required this.l,
   });
 
@@ -467,7 +540,7 @@ class _BenchToken extends StatelessWidget {
             style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           Text(
-            isCoach ? l.coach : l.reserveGoalkeeper,
+            isCoach ? l.coach : reserveLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,

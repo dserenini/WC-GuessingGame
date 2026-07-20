@@ -491,6 +491,12 @@
   "koChampionSheetTitle": "Escolha o campeão da Copa",
   "koChampionSearchHint": "Buscar seleção",
   "koChampionNoResults": "Nenhuma seleção encontrada",
+  "koChampionCrowned": "{team} é a campeã da Copa 2026! 🏆",
+  "@koChampionCrowned": { "placeholders": { "team": { "type": "String" } } },
+  "koChampionLabel": "CAMPEÃ",
+  "koResultsMenu": "Resultados Mata-Mata",
+  "koLineupEmpty": "Participantes insuficientes para montar a seleção do mata-mata.",
+  "reservePlayer": "Reserva",
 
   "helpKoSection": "Mata-Mata",
   "helpKoScoringTitle": "Pontuação do Mata-Mata",

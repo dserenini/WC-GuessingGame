@@ -1322,6 +1322,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get koChampionNoResults => 'Nessuna nazionale trovata';
 
   @override
+  String koChampionCrowned(String team) {
+    return '$team è campione del Mondiale 2026! 🏆';
+  }
+
+  @override
+  String get koChampionLabel => 'CAMPIONE';
+
+  @override
+  String get koResultsMenu => 'Risultati Eliminazione Diretta';
+
+  @override
+  String get koLineupEmpty => 'Partecipanti insufficienti per la formazione.';
+
+  @override
+  String get reservePlayer => 'Riserva';
+
+  @override
   String get helpKoSection => 'Eliminazione';
 
   @override

@@ -2566,6 +2566,36 @@ abstract class AppLocalizations {
   /// **'Nenhuma seleção encontrada'**
   String get koChampionNoResults;
 
+  /// No description provided for @koChampionCrowned.
+  ///
+  /// In pt, this message translates to:
+  /// **'{team} é a campeã da Copa 2026! 🏆'**
+  String koChampionCrowned(String team);
+
+  /// No description provided for @koChampionLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'CAMPEÃ'**
+  String get koChampionLabel;
+
+  /// No description provided for @koResultsMenu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultados Mata-Mata'**
+  String get koResultsMenu;
+
+  /// No description provided for @koLineupEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Participantes insuficientes para montar a seleção do mata-mata.'**
+  String get koLineupEmpty;
+
+  /// No description provided for @reservePlayer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reserva'**
+  String get reservePlayer;
+
   /// No description provided for @helpKoSection.
   ///
   /// In pt, this message translates to:

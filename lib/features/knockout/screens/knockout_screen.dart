@@ -102,6 +102,7 @@ class _BracketTab extends ConsumerWidget {
 
     return Column(
       children: [
+        const _ChampionBanner(),
         const _ChampionCard(),
         _ViewToggle(isBracket: isBracket),
         Expanded(
@@ -153,6 +154,60 @@ class _ViewToggle extends ConsumerWidget {
         selected: {isBracket},
         onSelectionChanged: (s) =>
             ref.read(koBracketViewProvider.notifier).state = s.first,
+      ),
+    );
+  }
+}
+
+/// Faixa comemorativa da CAMPEÃ da Copa (a seleção que venceu a final), no topo
+/// do mata-mata. Só aparece depois que a final é finalizada — antes disso some.
+/// Diferente do [_ChampionCard], que é o PALPITE de campeão do usuário.
+class _ChampionBanner extends ConsumerWidget {
+  const _ChampionBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final champion = ref.watch(koChampionProvider).valueOrNull;
+    if (champion == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kGold, Color(0xFFB8860B)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: kGold.withOpacity(0.5),
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            const Text('🏆', style: TextStyle(fontSize: 34)),
+            const SizedBox(width: 14),
+            FlagAvatar(flagUrl: champion.flagUrl, radius: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l.koChampionCrowned(champion.name),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

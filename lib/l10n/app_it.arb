@@ -491,6 +491,12 @@
   "koChampionSheetTitle": "Scegli il campione del Mondiale",
   "koChampionSearchHint": "Cerca nazionale",
   "koChampionNoResults": "Nessuna nazionale trovata",
+  "koChampionCrowned": "{team} è campione del Mondiale 2026! 🏆",
+  "@koChampionCrowned": { "placeholders": { "team": { "type": "String" } } },
+  "koChampionLabel": "CAMPIONE",
+  "koResultsMenu": "Risultati Eliminazione Diretta",
+  "koLineupEmpty": "Partecipanti insufficienti per la formazione.",
+  "reservePlayer": "Riserva",
 
   "helpKoSection": "Eliminazione",
   "helpKoScoringTitle": "Punteggio Eliminazione",

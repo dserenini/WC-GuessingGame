@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:copa2026/core/constants.dart';
 import 'package:copa2026/shared/models/bet.dart';
+import 'package:copa2026/shared/models/team.dart';
 import 'package:copa2026/shared/providers/phase_provider.dart';
 import 'package:copa2026/features/knockout/models/knockout_models.dart';
 import 'package:copa2026/features/ranking/providers/ranking_provider.dart';
@@ -63,6 +64,16 @@ final koMatchesProvider = FutureProvider.autoDispose<List<KoMatch>>((ref) async 
   return (response as List)
       .map((m) => KoMatch.fromJson((m as Map).cast<String, dynamic>()))
       .toList();
+});
+
+/// Campeã da Copa: seleção que venceu a FINAL, quando já finalizada. `null`
+/// enquanto a final não está decidida (usado p/ mostrar/ocultar a celebração).
+final koChampionProvider = FutureProvider.autoDispose<TeamModel?>((ref) async {
+  final matches = await ref.watch(koMatchesProvider.future);
+  for (final m in matches) {
+    if (m.round == 'final' && m.isFinished) return m.advancing;
+  }
+  return null;
 });
 
 /// Override manual do toggle de fase no Ranking/Ligas. null = segue o default

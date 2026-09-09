@@ -1,4 +1,4 @@
-services:
+﻿services:
   app-bolao:
     build:
       context: .
@@ -12,19 +12,6 @@ services:
       - "8002:80"
     networks:
       - npm_default
-
-  dump-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.dump
-    image: bolao-copa-dump:latest
-    container_name: app-bolao-dump
-    restart: unless-stopped
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-    volumes:
-      - ./backups:/app/backups
 
 networks:
   npm_default:

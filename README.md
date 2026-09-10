@@ -1,4 +1,5 @@
 # Make Bolão Great Again
+[![CI](https://github.com/dserenini/WC-GuessingGame/actions/workflows/ci.yml/badge.svg)](https://github.com/dserenini/WC-GuessingGame/actions/workflows/ci.yml)
 
 A Flutter Web PWA for predicting World Cup 2026 group-stage scores with friends.
 
